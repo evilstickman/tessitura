@@ -9,9 +9,9 @@
         var webaudio_tooling_obj = function () {
       
           var audioContext = new AudioContext();
-      
           console.log("audio is starting up ...");
       
+
           var BUFF_SIZE = 16384;
       
           var audioInput = null,
@@ -67,6 +67,14 @@
       
           function start_microphone(stream){
       
+            audioContext.resume().then(() => {
+            console.log('Playback resumed successfully');
+          });
+          document.querySelector('#button').addEventListener('click', function() {
+            audioContext.resume().then(() => {
+              console.log('Playback resumed successfully');
+            });
+          });
             gain_node = audioContext.createGain();
             gain_node.connect( audioContext.destination );
       
@@ -127,6 +135,7 @@
 <body>
     <p>Volume</p>
     <input id="volume" type="range" min="0" max="1" step="0.1" value="0.5"/>
+    <input id="button" type="button" min="0" max="1" step="0.1" value="0.5"/>
 
 <h1>HI THERE</h1>
 <marquee>HELLOOOOOOO</marquee>
