@@ -2,7 +2,10 @@
 
     <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
       <title>capture microphone audio into buffer</title>
-      
+      <script
+  src="https://code.jquery.com/jquery-3.4.0.min.js"
+  integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg="
+  crossorigin="anonymous"></script>
       <script type="text/javascript">
       
       
@@ -157,14 +160,16 @@
               var size_buffer = given_typed_array.length;
               var index = 0;
               var max_index = num_row_to_display;
-              $("#notetracking").content = given_typed_array.to_s
+              var myoutput = $("#notetracking").val()+"\n";
       
               console.log("__________ " + label);
       
               for (; index < max_index && index < size_buffer; index += 1) {
-      
+                  myoutput += given_typed_array[index] + ",";
                   console.log(given_typed_array[index]);
               }
+              $("#notetracking").val(myoutput);//"NOW PLAYING"given_typed_array.join(",");
+              //$("#notetracking").text =myoutput;// given_typed_array.join(",");
           }
       
           function process_microphone_buffer(event) { // invoked by event loop
@@ -230,7 +235,7 @@
       
               // draw the spectrogram
               if (microphone_stream.playbackState == microphone_stream.PLAYING_STATE) {
-                  for(var i = 0; i < array.size(); ++i) {
+                  for(var i = 0; i < array.length; ++i) {
                     var freq=array[i];
                   }
                   show_some_data(array, 5, "from fft");
@@ -254,6 +259,6 @@
 
 <h1>HI THERE</h1>
 <marquee>HELLOOOOOOO</marquee>
-<input type="textarea" id="notetracking"></body>input>
+<textarea id="notetracking" type="textarea" aria-multiline="true" rows=20  />
 </body>
 </html>
