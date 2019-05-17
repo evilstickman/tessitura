@@ -1,5 +1,4 @@
 
-{% load static %}
     <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
       <title>capture microphone audio into buffer</title>
       <script
@@ -147,19 +146,6 @@
               function () { alert("The current browser does not support getUserMedia"); });
           }
           audioContext = new AudioContext();
-
-//          if (!navigator.getUserMedia)
-//                  
-
-//          if (navigator.getUserMedia){
-
-/*              navigator.mediaDevicesgetUserMedia({audio:true}).then(function(stream) {
-                    start_microphone(stream);
-                }).catch( function(e) {
-                  alert('Error capturing audio.');
-                });
-
-    //      } else { alert('getUserMedia not supported in this browser.'); } */
         }
 
       function show_some_data(given_typed_array, num_row_to_display, label) {
@@ -326,14 +312,16 @@
 
                 curr_freq += frequency_step
                 for(var j=0; j < 5; ++j) {
-                  if(array[i] > loudest_five_frequencies[j]['db'])
+                  if(array[i] > loudest_five_frequencies[j]["db"])
                   {
-                    loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+                    loudest_five_frequencies[j] = {"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+                    // loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
                     //loudest_five_frequencies[j]=curr_freq;
-                    console.log("MODIFIED");
+                    //loudest_five_frequencies.sort((a,b) => { return (a && b) && a['db'] > b['db'];});
+                    //loudest_five_frequencies.pop();
+                    //bubbleSort(loudest_five_frequencies)
+                    continue;
                   }
-                  //bubbleSort(loudest_five_frequencies)
-                  continue;
                 }
                 
               }
