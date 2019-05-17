@@ -130,24 +130,36 @@
             analyserNode = null;
 
         function createAudioContext() {
+
+          navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;;
+          if (navigator.mediaDevices.getUserMedia) {
+              navigator.mediaDevices.getUserMedia({  audio: true })
+              .then(function (stream) {
+                start_microphone(stream);
+              })
+              .catch(function (e) { logError(e.name + ": " + e.message); });
+          }
+          else {
+          navigator.getUserMedia({ audio: true }, 
+              function (stream) {
+                start_microphone(stream);
+              }, 
+              function () { logError("Web cam is not accessible."); });
+          }
           audioContext = new AudioContext();
 
-          if (!navigator.getUserMedia)
-                  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
-                                navigator.mozGetUserMedia || navigator.msGetUserMedia;
+//          if (!navigator.getUserMedia)
+//                  
 
-          if (navigator.getUserMedia){
+//          if (navigator.getUserMedia){
 
-              navigator.getUserMedia({audio:true}, 
-                function(stream) {
+/*              navigator.mediaDevicesgetUserMedia({audio:true}).then(function(stream) {
                     start_microphone(stream);
-                },
-                function(e) {
+                }).catch( function(e) {
                   alert('Error capturing audio.');
-                }
-              );
+                });
 
-          } else { alert('getUserMedia not supported in this browser.'); }
+    //      } else { alert('getUserMedia not supported in this browser.'); } */
         }
 
       function show_some_data(given_typed_array, num_row_to_display, label) {
