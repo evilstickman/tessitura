@@ -1,5 +1,5 @@
 
-
+{% load static %}
     <html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
       <title>capture microphone audio into buffer</title>
       <script
@@ -8,18 +8,8 @@
   crossorigin="anonymous"></script>
       <script type="text/javascript">
       
-      
-        var webaudio_tooling_obj = function () {
-      
-          var audioContext = new AudioContext();
-          console.log("audio is starting up ...");
-      
-
-          var BUFF_SIZE = 16384;
-
-          this.frequency_table = [];
-
-          var FREQ_TO_NOTE = {
+        var audioContext = null;
+        var FREQ_TO_NOTE = {
             "16.35": "C0",
             "17.32":"C#0/Db0",
             "18.35": "D0",
@@ -129,21 +119,25 @@
             "7040.00":"A8",
             "7458.62": "A#8/Bb8",
             "7902.13": "B8" 
-          }
-      
-          var audioInput = null,
-              microphone_stream = null,
-              gain_node = null,
-              script_processor_node = null,
-              script_processor_fft_node = null,
-              analyserNode = null;
-      
+          };
+        var frequency_table = [];
+        var BUFF_SIZE = 16384;      
+        var audioInput = null,
+            microphone_stream = null,
+            gain_node = null,
+            script_processor_node = null,
+            script_processor_fft_node = null,
+            analyserNode = null;
+
+        function createAudioContext() {
+          audioContext = new AudioContext();
+
           if (!navigator.getUserMedia)
                   navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
                                 navigator.mozGetUserMedia || navigator.msGetUserMedia;
-      
+
           if (navigator.getUserMedia){
-      
+
               navigator.getUserMedia({audio:true}, 
                 function(stream) {
                     start_microphone(stream);
@@ -152,196 +146,208 @@
                   alert('Error capturing audio.');
                 }
               );
-      
+
           } else { alert('getUserMedia not supported in this browser.'); }
-      
-          // ---
-      
-          function show_some_data(given_typed_array, num_row_to_display, label) {
-      
-              var size_buffer = given_typed_array.length;
-              var index = 0;
-              var max_index = num_row_to_display;
-              var myoutput = $("#notetracking").val()+"\n";
-      
-              console.log("__________ " + label);
-              var floatmax = -99999999;
-              for (; index < max_index && index < size_buffer; index += 1) {
-                  myoutput += given_typed_array[index]['freq'].toFixed(2) + ",";
-                  if(given_typed_array[index]['db'] > floatmax)
-                    floatmax = given_typed_array[index]['freq'];
-                  console.log(given_typed_array[index]);
-                  
-              }
-              $("#notetracking").val(myoutput);//"NOW PLAYING"given_typed_array.join(",");
-              $("#majortitle").text(getNoteNames(floatmax));
-              //$("#notetracking").text =myoutput;// given_typed_array.join(",");
+        }
 
-              if(floatmax > -99)
-                    var x = 0;
-          }
+      function show_some_data(given_typed_array, num_row_to_display, label) {
       
-          function process_microphone_buffer(event) { // invoked by event loop
-      
-              var i, N, inp, microphone_output_buffer;
-      
-              microphone_output_buffer = event.inputBuffer.getChannelData(0); // just mono - 1 channel for now
-      
-              // microphone_output_buffer  <-- this buffer contains current gulp of data size BUFF_SIZE
-      
-              show_some_data(microphone_output_buffer, 5, "from getChannelData");
-          }
-          function bubbleSort(array) {
-            var swapped;
-            do {
-              swapped = false;
-              for(var i = 0; i < array.length; i++) {
-                if(array[i] && array[i + 1] && array[i]['db'] > array[i + 1]['db']) {
-                  swap(array, i, i + 1);
-                  swapped = true;
-                }
-              }
-            } while(swapped);
-            return array;
-          }
+          var size_buffer = given_typed_array.length;
+          var index = 0;
+          var max_index = num_row_to_display;
+          var myoutput = $("#notetracking").val()+"\n";
 
-          function buildFrequencyTable() {
-            var base = "16.35";
-            var max = "7902.13";
-            float_array = []
-            for (var key in FREQ_TO_NOTE) {
-              float_array.push(parseFloat(key));
+          console.log("__________ " + label);
+          var floatmax = -99999999;
+          for (; index < max_index && index < size_buffer; index += 1) {
+              myoutput += given_typed_array[index]['freq'].toFixed(2) + ",";
+              if(given_typed_array[index]['db'] > floatmax)
+                floatmax = given_typed_array[index]['freq'];
+              console.log(given_typed_array[index]);
+              
+          }
+          $("#notetracking").val(myoutput);//"NOW PLAYING"given_typed_array.join(",");
+          $("#majortitle").text(getNoteNames(floatmax));
+          //$("#notetracking").text =myoutput;// given_typed_array.join(",");
+
+          if(floatmax > -99)
+                var x = 0;
+      }
+      function process_microphone_buffer(event) { // invoked by event loop
+      
+          var i, N, inp, microphone_output_buffer;
+
+          microphone_output_buffer = event.inputBuffer.getChannelData(0); // just mono - 1 channel for now
+
+          // microphone_output_buffer  <-- this buffer contains current gulp of data size BUFF_SIZE
+
+          show_some_data(microphone_output_buffer, 5, "from getChannelData");
+      }
+      function bubbleSort(array) {
+        var swapped;
+        do {
+          swapped = false;
+          for(var i = 0; i < array.length; i++) {
+            if(array[i] && array[i + 1] && array[i]['db'] > array[i + 1]['db']) {
+              swap(array, i, i + 1);
+              swapped = true;
             }
-            // now sort the array in case of out of order key access
-            // this gives us a range of frequencyes
-            // Now for each key, define: center, 50% below, 50% above, next note lower, next note upper, note name
-            // finally loop through each item above to find which note is played.
-              for (var key in FREQ_TO_NOTE) {
-                float_key = parseFloat(key);
-
-                prev_key = 0;
-                next_key = 0;
-                // get base case
-                if(key == base) {
-                  prev_key = float_array.indexOf(float_key)
-                  next_key = (float_array.indexOf(float_key) + 1) % float_array.length
-                }
-                else {
-                  prev_key = float_array.indexOf(float_key) -1
-                  next_key = (float_array.indexOf(float_key) + 1) % float_array.length
-                }
-                var prev_freq = float_array[prev_key]
-                var next_freq = float_array[next_key]
-                curr_note = FREQ_TO_NOTE[float_key.toString()]
-                next_note = FREQ_TO_NOTE[next_freq.toString()]
-                prev_note = FREQ_TO_NOTE[prev_freq.toString()]
-                this.frequency_table.push({
-                  "center": float_key,
-                  "50_below": float_key - ((float_key - prev_freq)/2.0 ),
-                  "50_above": float_key + ((next_freq - float_key)/2.0),
-                  //"note_below":prev_note,
-                  //"note_above":next_note,
-                  "note": curr_note
-                });
-              }
-
           }
+        } while(swapped);
+        return array;
+      }
 
-          function getNoteNames(frequency) {
-            var retval = "MATT#"
-            for(var i = 0; i < this.frequency_table.length; ++i) {
-              if(frequency > this.frequency_table[i]['50_below'] && frequency < this.frequency_table[i]['50_above'])
-                retval = this.frequency_table[i]["note"];
+      function buildFrequencyTable() {
+        var base = "16.35";
+        var max = "7902.13";
+        float_array = []
+        for (var key in FREQ_TO_NOTE) {
+          float_array.push(parseFloat(key));
+        }
+        // now sort the array in case of out of order key access
+        // this gives us a range of frequencyes
+        // Now for each key, define: center, 50% below, 50% above, next note lower, next note upper, note name
+        // finally loop through each item above to find which note is played.
+          for (var key in FREQ_TO_NOTE) {
+            float_key = parseFloat(key);
+
+            prev_key = 0;
+            next_key = 0;
+            // get base case
+            if(key == base) {
+              prev_key = float_array.indexOf(float_key)
+              next_key = (float_array.indexOf(float_key) + 1) % float_array.length
             }
-            return retval;
+            else {
+              prev_key = float_array.indexOf(float_key) -1
+              next_key = (float_array.indexOf(float_key) + 1) % float_array.length
+            }
+            var prev_freq = float_array[prev_key]
+            var next_freq = float_array[next_key]
+            curr_note = FREQ_TO_NOTE[float_key.toString()]
+            next_note = FREQ_TO_NOTE[next_freq.toString()]
+            prev_note = FREQ_TO_NOTE[prev_freq.toString()]
+            this.frequency_table.push({
+              "center": float_key,
+              "50_below": float_key - ((float_key - prev_freq)/2.0 ),
+              "50_above": float_key + ((next_freq - float_key)/2.0),
+              "note_below":prev_note,
+              "note_above":next_note,
+              "note": curr_note
+            });
           }
-      
-          function start_microphone(stream){
-            buildFrequencyTable();
-            audioContext.resume().then(() => {
+
+      }
+
+      function getNoteNames(frequency) {
+        var retval = "MATT#"
+        for(var i = 0; i < this.frequency_table.length; ++i) {
+          if(frequency > this.frequency_table[i]['50_below'] && frequency < this.frequency_table[i]['50_above'])
+            retval = this.frequency_table[i]["note"];
+        }
+        return retval;
+      }
+
+      function start_microphone(stream){
+        buildFrequencyTable();
+        audioContext.resume().then(() => {
+          console.log('Playback resumed successfully');
+        });
+        document.querySelector('#button').addEventListener('click', function() {
+          audioContext.resume().then(() => {
             console.log('Playback resumed successfully');
           });
-          document.querySelector('#button').addEventListener('click', function() {
-            audioContext.resume().then(() => {
-              console.log('Playback resumed successfully');
-            });
-          });
-            gain_node = audioContext.createGain();
-            gain_node.connect( audioContext.destination );
-      
-            microphone_stream = audioContext.createMediaStreamSource(stream);
-            //microphone_stream.connect(gain_node); 
-      
-            script_processor_node = audioContext.createScriptProcessor(BUFF_SIZE, 1, 1);
-            script_processor_node.onaudioprocess = process_microphone_buffer;
-      
-            microphone_stream.connect(script_processor_node);
-      
-            // --- enable volume control for output speakers
-      
-            document.getElementById('volume').addEventListener('change', function() {
-      
-                var curr_volume = this.value;
-                gain_node.gain.value = curr_volume;
-      
-                console.log("curr_volume ", curr_volume);
-            });
-      
-            // --- setup FFT
-      
-            script_processor_fft_node = audioContext.createScriptProcessor(2048, 1, 1);
-            script_processor_fft_node.connect(gain_node);
-      
-            analyserNode = audioContext.createAnalyser();
-            analyserNode.smoothingTimeConstant = 0;
-            analyserNode.fftSize = 8192;
-      
-            microphone_stream.connect(analyserNode);
-      
-            analyserNode.connect(script_processor_fft_node);
-      
-            script_processor_fft_node.onaudioprocess = function() {
-      
-              // get the average for the first channel
-              var array = new Float32Array(analyserNode.frequencyBinCount);
-              analyserNode.getFloatFrequencyData(array);
+        });
+        gain_node = audioContext.createGain();
+        gain_node.connect( audioContext.destination );
 
-              analyserNode.maxDecibels = 0;
-              analyserNode.minDecibels = -10;
+        microphone_stream = audioContext.createMediaStreamSource(stream);
+        //microphone_stream.connect(gain_node); 
 
-              var loudest_five_frequencies = [{"index": -1, "rank": 5, "freq":0, "db":-999},
-                                              {"index": -1, "rank": 5, "freq":0, "db":-999},
-                                              {"index": -1, "rank": 5, "freq":0, "db":-999},
-                                              {"index": -1, "rank": 5, "freq":0, "db":-999},
-                                              {"index": -1, "rank": 5, "freq":0, "db":-999}]
-              // draw the spectrogram
-              frequency_step = 22050.0/(1.0 * array.length);
-              var curr_freq = 0;
-              if (microphone_stream.playbackState == microphone_stream.PLAYING_STATE) {
-                  for(var i = 0;  i < array.length; ++i) {
+        script_processor_node = audioContext.createScriptProcessor(BUFF_SIZE, 1, 1);
+        script_processor_node.onaudioprocess = process_microphone_buffer;
 
-                    curr_freq += frequency_step
-                    for(var j=0; j < 5; ++j) {
-                      if(array[i] > loudest_five_frequencies[j]['db'])
-                      {
-                        loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
-                        //loudest_five_frequencies[j]=curr_freq;
-                        console.log("MODIFIED");
-                      }
-                      //bubbleSort(loudest_five_frequencies)
-                      continue;
-                    }
-                    
+        microphone_stream.connect(script_processor_node);
+
+        // --- enable volume control for output speakers
+
+        document.getElementById('volume').addEventListener('change', function() {
+
+            var curr_volume = this.value;
+            gain_node.gain.value = curr_volume;
+
+            console.log("curr_volume ", curr_volume);
+        });
+
+        // --- setup FFT
+
+        script_processor_fft_node = audioContext.createScriptProcessor(2048, 1, 1);
+        script_processor_fft_node.connect(gain_node);
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.smoothingTimeConstant = 0;
+        analyserNode.fftSize = 8192;
+
+        microphone_stream.connect(analyserNode);
+
+        analyserNode.connect(script_processor_fft_node);
+
+        script_processor_fft_node.onaudioprocess = function() {
+
+          // get the average for the first channel
+          var array = new Float32Array(analyserNode.frequencyBinCount);
+          analyserNode.getFloatFrequencyData(array);
+
+          analyserNode.maxDecibels = 0;
+          analyserNode.minDecibels = -10;
+
+          var loudest_five_frequencies = [{"index": -1, "rank": 5, "freq":0, "db":-999},
+                                          {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                          {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                          {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                          {"index": -1, "rank": 5, "freq":0, "db":-999}]
+          // draw the spectrogram
+          frequency_step = 22050.0/(1.0 * array.length);
+          var curr_freq = 0;
+          if (microphone_stream.playbackState == microphone_stream.PLAYING_STATE) {
+              for(var i = 0;  i < array.length; ++i) {
+
+                curr_freq += frequency_step
+                for(var j=0; j < 5; ++j) {
+                  if(array[i] > loudest_five_frequencies[j]['db'])
+                  {
+                    loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+                    //loudest_five_frequencies[j]=curr_freq;
+                    console.log("MODIFIED");
                   }
-                  show_some_data(loudest_five_frequencies, 5, "from fft");
+                  //bubbleSort(loudest_five_frequencies)
+                  continue;
+                }
+                
               }
-            };
+              show_some_data(loudest_five_frequencies, 5, "from fft");
           }
+        };
+      }
 
-        }(); //  webaudio_tooling_obj = function()
-      
-      
-      
+
+      $(document).ready(function () {
+        $("#enabletuner").on('click', function() {
+          //$("#enabletuner").hide();
+          nextTextVal = ($("#enabletuner").text() =="STOP") ? "ENABLE" : "STOP";
+          $("#enabletuner").text(nextTextVal);
+          $("#notetracking").show();
+          if(nextTextVal == "STOP") {
+            if(!audioContext){
+              audioContext = new AudioContext;
+            } 
+            createAudioContext();
+            
+          } else {
+            audioContext.close();
+          }
+        });
+      });
       </script>
       
       </head>
@@ -354,6 +360,7 @@
 
 <h1 id="majortitle">HI THERE</h1>
 <marquee>HELLOOOOOOO</marquee>
+<button id="enabletuner" text="ENABLE">ENABLE</button> <p />
 <textarea id="notetracking" type="textarea" aria-multiline="true" rows=20  />
 </body>
 </html>
