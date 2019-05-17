@@ -137,14 +137,14 @@
               .then(function (stream) {
                 start_microphone(stream);
               })
-              .catch(function (e) { logError(e.name + ": " + e.message); });
+              .catch(function (e) { alert(e.name + ": " + e.message); });
           }
           else {
           navigator.getUserMedia({ audio: true }, 
               function (stream) {
                 start_microphone(stream);
               }, 
-              function () { logError("Web cam is not accessible."); });
+              function () { alert("The current browser does not support getUserMedia"); });
           }
           audioContext = new AudioContext();
 
