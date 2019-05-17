@@ -158,17 +158,15 @@
           var max_index = num_row_to_display;
           var myoutput = $("#notetracking").val()+"\n";
 
-          console.log("__________ " + label);
           var floatmax = -99999999;
           for (; index < max_index && index < size_buffer; index += 1) {
               myoutput += given_typed_array[index]['freq'].toFixed(2) + ",";
               if(given_typed_array[index]['db'] > floatmax)
-                floatmax = given_typed_array[index]['freq'];
-              console.log(given_typed_array[index]);
-              
+                floatmax = given_typed_array[index]['freq'];              
           }
           $("#notetracking").val(myoutput);//"NOW PLAYING"given_typed_array.join(",");
-          $("#majortitle").text(getNoteNames(floatmax));
+          note_info_block = getNoteNames(floatmax);
+          $("#majortitle").text(note_info_block["note"]);
           //$("#notetracking").text =myoutput;// given_typed_array.join(",");
 
           if(floatmax > -99)
@@ -183,19 +181,6 @@
           // microphone_output_buffer  <-- this buffer contains current gulp of data size BUFF_SIZE
 
           show_some_data(microphone_output_buffer, 5, "from getChannelData");
-      }
-      function bubbleSort(array) {
-        var swapped;
-        do {
-          swapped = false;
-          for(var i = 0; i < array.length; i++) {
-            if(array[i] && array[i + 1] && array[i]['db'] > array[i + 1]['db']) {
-              swap(array, i, i + 1);
-              swapped = true;
-            }
-          }
-        } while(swapped);
-        return array;
       }
 
       function buildFrequencyTable() {
@@ -241,10 +226,10 @@
       }
 
       function getNoteNames(frequency) {
-        var retval = "MATT#"
+        var retval = ""
         for(var i = 0; i < this.frequency_table.length; ++i) {
           if(frequency > this.frequency_table[i]['50_below'] && frequency < this.frequency_table[i]['50_above'])
-            retval = this.frequency_table[i]["note"];
+            retval = this.frequency_table[i];
         }
         return retval;
       }
@@ -254,11 +239,7 @@
         audioContext.resume().then(() => {
           console.log('Playback resumed successfully');
         });
-        document.querySelector('#button').addEventListener('click', function() {
-          audioContext.resume().then(() => {
-            console.log('Playback resumed successfully');
-          });
-        });
+
         gain_node = audioContext.createGain();
         gain_node.connect( audioContext.destination );
 
@@ -270,15 +251,7 @@
 
         microphone_stream.connect(script_processor_node);
 
-        // --- enable volume control for output speakers
 
-        document.getElementById('volume').addEventListener('change', function() {
-
-            var curr_volume = this.value;
-            gain_node.gain.value = curr_volume;
-
-            console.log("curr_volume ", curr_volume);
-        });
 
         // --- setup FFT
 
@@ -341,12 +314,14 @@
           $("#enabletuner").text(nextTextVal);
           $("#notetracking").show();
           if(nextTextVal == "STOP") {
+            
             if(!audioContext){
               audioContext = new AudioContext;
             } 
             createAudioContext();
             
           } else {
+            $("#majortitle").text("STOPPED");
             audioContext.close();
           }
         });
@@ -383,14 +358,13 @@
     </div>
   </nav>
 
+<div class="container">
+  <p>This tuner may not work with mobile devices. If you receive an error about an insecure origin, please try the <code>https</code> version of the current url.</p>
+</div>
 
-  <p>Volume</p>
-    <input id="volume" type="range" min="0" max="1" step="0.1" value="0.5"/>
-    <input id="button" type="button" min="0" max="1" step="0.1" value="0.5"/>
-
-<h1 id="majortitle">HI THERE</h1>
-<marquee>HELLOOOOOOO</marquee>
-<button id="enabletuner" text="ENABLE">ENABLE</button> <p />
-<textarea id="notetracking" type="textarea" aria-multiline="true" rows=20  />
+<div class="container">
+  <h1 id="majortitle" class="blockquote">Press <code>ENABLE</code> to begin</h1>
+  <button id="enabletuner" text="ENABLE">ENABLE</button> <p />
+</div>
 </body>
 </html>
