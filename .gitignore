@@ -105,3 +105,6 @@ venv.bak/
 
 
 .vscode/
+tessitura/Scripts/python.exe
+tessitura/Scripts/python3.dll
+tessitura/Scripts/python36.dll
