@@ -8,6 +8,8 @@
   src="https://code.jquery.com/jquery-3.4.0.min.js"
   integrity="sha256-BJeo0qm959uMBGb65z40ejJYGSgR7REI4+CW1fNKwOg="
   crossorigin="anonymous"></script>
+      <script src="https://apis.google.com/js/platform.js" async defer></script>
+      <meta name="google-signin-client_id" content="607098690195-kca8k788uhe60cobq7dobc0e19rtorv4.apps.googleusercontent.com">
       <script type="text/javascript">
       
         var audioContext = null;
@@ -306,6 +308,13 @@
         };
       }
 
+      function onSignIn(googleUser) {
+        var profile = googleUser.getBasicProfile();
+        console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+        console.log('Name: ' + profile.getName());
+        console.log('Image URL: ' + profile.getImageUrl());
+        console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+      }
 
       $(document).ready(function () {
         $("#enabletuner").on('click', function() {
@@ -336,6 +345,8 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   
   {% include 'common/navbar.html' %}
+
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
 <div class="container">
   <p>This tuner may not work with mobile devices. If you receive an error about an insecure origin, please try the <code>https</code> version of the current url.</p>
 </div>
