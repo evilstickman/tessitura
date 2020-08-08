@@ -22,7 +22,6 @@ urlpatterns = [
     path('direct/', include('direct.urls')),
     path('publish/', include('publish.urls')),
     path('perform/', include('perform.urls')),
-    path('admin/', admin.site.urls),
     path('', views.index),
 
 ]
