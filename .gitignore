@@ -26,9 +26,7 @@ wheels/
 MANIFEST
 env/
 Lib/
-tessitura/Scripts
-tessitura/tcl
-tessitura/Include
+tessitura/settings.py
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
