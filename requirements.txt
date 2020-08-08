@@ -1,5 +1,7 @@
-Django
+django
 pytz
 sqlparse
 django_heroku
 gunicorn
+django-cors-headers
+djangorestframework

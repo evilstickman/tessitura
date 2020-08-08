@@ -14,14 +14,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include,path
-from tessitura import views
+from django.urls import include,path, re_path
+from . import views
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('coordinate/', include('coordinate.urls')),
     path('direct/', include('direct.urls')),
     path('publish/', include('publish.urls')),
     path('perform/', include('perform.urls')),
-    path('', views.index),
-
+    
 ]
