@@ -1,5 +1,13 @@
 import React, { Component } from "react";
 import { render } from "react-dom";
+import {
+  Switch,
+  Route,
+  Link,
+  withRouter,
+  BrowserRouter as Router
+} from "react-router-dom"
+import EnsembleItem from './EnsembleItem'
 
 
 class EnsembleList extends Component {
@@ -13,7 +21,7 @@ class EnsembleList extends Component {
   }
 
   componentDidMount() {
-    fetch("coordinate/user")
+    fetch("coordinate/ensemble")
       .then(response => {
         if (response.status > 400) {
           return this.setState(() => {
@@ -33,28 +41,36 @@ class EnsembleList extends Component {
   }
 
   render() {
+    const { match } = this.props;
     return (
-      <div className="container">
-        <div className="row">
-          <h1>Manage ensembles</h1>
+      <Router>
+        <div className="container">
+          <div className="row">
+            <h1>Manage ensembles</h1>
+          </div>
+          <div className="row">
+            <Switch>
+              <Route path='/ensemble/create'>
+                <EnsembleItem createMode={true} />
+              </Route>
+              <Route path="/">
+                {this.state.data.map(ensemble => {
+                  return (
+                      <EnsembleItem ensemble={ensemble} createMode={false} />
+                  );
+                })}
+                <Link to="/ensemble/create" className="nav-link">Create a new Ensemble</Link>
+                <Link to="/home" className="nav-link">Home</Link>
+              </Route>
+            </Switch>
+          </div>
         </div>
-        <div className="row">
-          <ul className="list-group">
-            {this.state.data.map(user => {
-              return (
-                <li key={user.id} className="list-group-item">
-                  {user.first_name} {user.last_name} - {user.email}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </div>
+      </Router>
     );
   }
 }
 
-export default EnsembleList;
+export default withRouter(EnsembleList);
 
 const container = document.getElementById("app");
 render(<EnsembleList />, container);

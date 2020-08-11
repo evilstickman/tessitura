@@ -7,7 +7,7 @@ class User(models.Model):
 
 class Ensemble(models.Model):
     name = models.CharField(max_length=256)
-    Address = models.CharField(max_length=1024)
+    address = models.CharField(max_length=1024)
     administrator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="administrator")
     users = models.ManyToManyField(User)
     conductor = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="conductor")

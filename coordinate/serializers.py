@@ -9,17 +9,17 @@ class UserSerializer(serializers.ModelSerializer):
     model = User
     fields = ('first_name', 'last_name', 'email')
 
-class Ensemble(serializers.ModelSerializer):
+class EnsembleSerializer(serializers.ModelSerializer):
   class Meta:
     model = Ensemble
-    fields = ('name', 'Address', 'administrator', 'users', 'conductor')
+    fields = ('name', 'address', 'administrator', 'users', 'conductor')
 
-class Library(serializers.ModelSerializer):
+class LibrarySerializer(serializers.ModelSerializer):
   class Meta:
     model = Library
     fields = ('name', 'description', 'ensemble')
 
-class Music(serializers.ModelSerializer):
+class MusicSerializer(serializers.ModelSerializer):
   class Meta:
     model = Music
     fields = ('name', 'composer', 'uploaded_by', 'library')
