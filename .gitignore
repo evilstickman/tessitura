@@ -26,7 +26,6 @@ wheels/
 MANIFEST
 env/
 Lib/
-tessitura/settings.py
 node_modules/
 # PyInstaller
 #  Usually these files are written by a python script from a template
