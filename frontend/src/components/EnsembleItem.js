@@ -6,9 +6,7 @@ class EnsembleItem extends Component {
 
   render() {
     const {ensemble, createMode} = this.props;
-    if(ensemble == null) {
-      return null;
-    }
+    console.log("Rendering EnsembleItem");
     if(createMode) {
       console.log("Create mode engaged");
       return (
@@ -35,6 +33,10 @@ class EnsembleItem extends Component {
       );
     }
     else {
+      if(!ensemble)
+      {
+        return null;
+      }
       return (
           <div key={ensemble.id} className="list-group-item">
             {ensemble.name} - {ensemble.address} - {ensemble.conductor}

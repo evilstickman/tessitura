@@ -16,11 +16,13 @@ class EnsembleList extends Component {
     this.state = {
       data: [],
       loaded: false,
-      placeholder: "Loading"
+      placeholder: "Loading",
+      path: ''
     };
   }
 
   componentDidMount() {
+    let {match} = this.props;
     fetch("coordinate/ensemble")
       .then(response => {
         if (response.status > 400) {
@@ -31,17 +33,33 @@ class EnsembleList extends Component {
         return response.json();
       })
       .then(data => {
-        this.setState(() => {
-          return {
-            data,
-            loaded: true
-          };
-        });
+        if(match)
+        {
+          this.setState(() => {
+            return {
+              data,
+              loaded: true,
+              path: match.path
+            };
+          });
+        }
+        else
+        {
+          
+          this.setState(() => {
+            return {
+              data,
+              loaded: true,
+              path: ''
+            };
+          });
+        }
       });
   }
 
   render() {
-    const { match } = this.props;
+    const { path } = this.state;
+    console.log(this.props.match);
     return (
       <Router>
         <div className="container">
@@ -50,16 +68,16 @@ class EnsembleList extends Component {
           </div>
           <div className="row">
             <Switch>
-              <Route path='/ensemble/create'>
+              <Route path={`${path}/create`}>
                 <EnsembleItem createMode={true} />
               </Route>
-              <Route path="/">
+              <Route path={path}>
                 {this.state.data.map(ensemble => {
                   return (
                       <EnsembleItem ensemble={ensemble} createMode={false} />
                   );
                 })}
-                <Link to="/ensemble/create" className="nav-link">Create a new Ensemble</Link>
+                <Link to={`${path}/create`} className="nav-link">Create a new Ensemble</Link>
                 <Link to="/home" className="nav-link">Home</Link>
               </Route>
             </Switch>
