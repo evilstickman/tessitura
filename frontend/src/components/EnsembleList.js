@@ -72,12 +72,12 @@ class EnsembleList extends Component {
                 <EnsembleItem createMode={true} />
               </Route>
               <Route path={path}>
-                {this.state.data.map(ensemble => {
+                {this.state.data && this.state.data.map(ensemble => {
                   return (
-                      <EnsembleItem ensemble={ensemble} createMode={false} />
+                      <EnsembleItem ensemble={ensemble} createMode={false}  id="ensembleListContainer" />
                   );
                 })}
-                <Link to={`${path}/create`} className="nav-link">Create a new Ensemble</Link>
+                <Link to={`${path}/create`} className="nav-link" id="createEnsembleLink">Create a new Ensemble</Link>
                 <Link to="/home" className="nav-link">Home</Link>
               </Route>
             </Switch>
