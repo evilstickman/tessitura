@@ -5,6 +5,9 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'practice_grid', views.PracticeGridViewSet)
+router.register(r'practice_row', views.PracticeGridViewSet)
+router.register(r'practice_cell', views.PracticeGridViewSet)
+router.register(r'practice_cell_completion', views.PracticeGridViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -1,6 +1,8 @@
 from django.views.generic import TemplateView
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from .models import PracticeGrid, PracticeGridSerializer
+
 
 # Create your views here.
 def index(request):
