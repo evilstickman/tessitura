@@ -8,4 +8,5 @@ urlpatterns = [
     path('musicians', views.index ),
     path('ensembles/create', views.index ),
     path('ensembles', views.index ),
+    path('perform', views.index ),
 ]

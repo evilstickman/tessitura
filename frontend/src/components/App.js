@@ -9,6 +9,7 @@ import {
 import { Nav, Navbar, NavItem, NavDropdown, Form,FormControl,Button } from "react-bootstrap";
 import EnsembleList from "./EnsembleList"
 import MusicianList from "./MusicianList"
+import Perform from "./perform"
 
 
 class App extends Component {
@@ -31,6 +32,9 @@ class App extends Component {
                 <NavItem eventkey={3} href="/musicians">
                   <Link to="/musicians" className="nav-link">Musicians</Link>
                 </NavItem>
+                <NavItem eventKey={4} href="/perform">
+                  <Link to='/perform' className='nav-link'>Performance Support Tools</Link>
+                </NavItem>
               </Nav>
             </Navbar.Collapse>
           </Navbar>
@@ -44,6 +48,9 @@ class App extends Component {
           </Route>
           <Route path="/musicians">
             <MusicianList />
+          </Route>
+          <Route path="/perform">
+            <Perform />
           </Route>
         </Switch>
       </Router>
