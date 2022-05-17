@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'coordinate',
     'direct',
     'frontend',
+    'scripts',
+    'tessitura'
 ]
 
 MIDDLEWARE = [
@@ -142,6 +144,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static")),
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Configure Django App for Heroku.
 django_heroku.settings(locals())
