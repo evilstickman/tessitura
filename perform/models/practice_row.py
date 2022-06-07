@@ -5,7 +5,7 @@ from .song import Song
 class PracticeRow(models.Model):
     from .practice_grid import PracticeGrid
     song = models.ForeignKey(Song, on_delete=models.CASCADE, null=True, blank=True)
-    practice_grid = models.ForeignKey(PracticeGrid, on_delete=models.CASCADE)
+    practice_grid = models.ForeignKey(PracticeGrid, on_delete=models.CASCADE, related_name='practice_rows')
     target_tempo = models.IntegerField()
     start_measure = models.CharField(max_length=25)
     end_measure = models.CharField(max_length=25)
