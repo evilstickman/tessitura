@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
 import {Form, Button} from "react-bootstrap"
+import { createRoot } from 'react-dom/client'
 
 class EnsembleItem extends Component {
 
@@ -75,5 +75,3 @@ class EnsembleItem extends Component {
 
 export default EnsembleItem;
 
-const container = document.getElementById("app");
-render(<EnsembleItem />, container);

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { createRoot } from 'react-dom/client'
 
 
 class MusicianList extends Component {
@@ -55,6 +55,3 @@ class MusicianList extends Component {
 }
 
 export default MusicianList;
-
-const container = document.getElementById("app");
-render(<MusicianList />, container);

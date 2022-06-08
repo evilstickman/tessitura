@@ -1,72 +1,40 @@
-import React, { Component } from "react";
-import { render } from "react-dom";
+import React, { Component, useEffect, useState, useMatch } from "react";
+import { createRoot } from 'react-dom/client'
+import { useParams } from 'react-router-dom'
 
-
-class PracticeGrid extends Component {
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: [],
-      loaded: false,
-      placeholder: "Loading",
-      path: ''
-    };
-  }
-
-  componentDidMount() {
-    let {match, practiceGridId} = this.props;
-    fetch("perform/practice_grid/"+practiceGridId+"/practice_rows")
+export default function PracticeGrid() {
+  const [data, setData] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [placeholder, setPlaceholder] = useState("Loading");
+  const [path, setPath] = useState("");
+  let params=useParams();
+  let gridId = params.gridId;
+  
+  useEffect(() => {
+    if(gridId && !loaded) {
+      fetch("/perform/practice_grid/"+gridId+"/practice_rows")
       .then(response => {
         if (response.status > 400) {
-          return this.setState(() => {
-            return { placeholder: "Something went wrong!" };
-          });
+          return setPlaceholder("Something went wrong!");
         }
         return response.json();
       })
       .then(data => {
-        if(match)
-        {
-          this.setState(() => {
-            return {
-              data,
-              loaded: true,
-              path: match.path
-            };
-          });
-        }
-        else
-        {
-          
-          this.setState(() => {
-            return {
-              data,
-              loaded: true,
-              path: ''
-            };
-          });
-        }
+        setData(data);
+        setLoaded(true);
       });
-  }
-  render() {
-    
-    //-- fetch practice grids for user here and list 'em! -->
-    return (
-      <div className="container">
-        <h1>Performer's Practice Tools</h1>
-        <div id='practice-grids'>
-            <h2>Your Practice Grids</h2>
-            <div id="practice-grid-list">
-              <PracticeGridList />
-            </div>
-        </div>
+    }
+  });
+  //-- fetch practice grids for user here and list 'em! -->
+  return (
+    <div className="container">
+      <div id='practice-grid-detail'>
+        <h1>Practice grid detail</h1>
+        { data && (
+          <div>{data.toString()}</div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+  
 }
-
-export default PracticeGrid;
-
-const container = document.getElementById("app");
-render(<PracticeGrid />, container);

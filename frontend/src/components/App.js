@@ -1,22 +1,27 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
 import { 
-  BrowserRouter as Router, 
-  Switch, 
+  BrowserRouter, 
+  Routes, 
   Route,
-  Link
+  Link,
 } from 'react-router-dom'
-import { Nav, Navbar, NavItem, NavDropdown, Form,FormControl,Button } from "react-bootstrap";
+import { createRoot } from 'react-dom/client'
+import { Nav, Navbar, NavItem } from "react-bootstrap";
 import EnsembleList from "./EnsembleList"
 import MusicianList from "./MusicianList"
 import Perform from "./perform"
 
+function Home() {
+  return (
 
+    <h1>Home</h1>
+  )
+}
 class App extends Component {
   render() {
     return (
       
-      <Router>
+      <BrowserRouter>
         <div>
           <Navbar bg="light" expand="lg">
             <Navbar.Brand href="/home">Tessitura</Navbar.Brand>
@@ -39,21 +44,13 @@ class App extends Component {
             </Navbar.Collapse>
           </Navbar>
         </div>  
-        <Switch>
-          <Route path="/home">
-            <h1>Home</h1>
-          </Route>
-          <Route path="/ensembles">
-            <EnsembleList />
-          </Route>
-          <Route path="/musicians">
-            <MusicianList />
-          </Route>
-          <Route path="/perform">
-            <Perform />
-          </Route>
-        </Switch>
-      </Router>
+        <Routes>
+          <Route path="/home" element={<Home />} />
+          <Route path="/ensembles/*" element={<EnsembleList />} />
+          <Route path="/musicians/*" element={<MusicianList />} />
+          <Route path="/perform/*" element={<Perform />} />
+        </Routes>
+      </BrowserRouter>
     );
   }
 }
@@ -61,4 +58,5 @@ class App extends Component {
 export default App;
 
 const container = document.getElementById("app");
-render(<App />, container);
+const root = createRoot(container);
+root.render(<App />);

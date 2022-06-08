@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { createRoot } from 'react-dom/client'
 import PracticeGridListItem from './PracticeGridListItem'
 
 class PracticeGridList extends Component {
@@ -69,6 +69,3 @@ class PracticeGridList extends Component {
 }
 
 export default PracticeGridList;
-
-const container = document.getElementById("app");
-render(<PracticeGridList />, container);

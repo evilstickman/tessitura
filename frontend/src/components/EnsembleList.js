@@ -1,12 +1,11 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
 import {
-  Switch,
+  Routes,
   Route,
   Link,
-  withRouter,
-  BrowserRouter as Router
+  BrowserRouter
 } from "react-router-dom"
+import { createRoot } from 'react-dom/client'
 import EnsembleItem from './EnsembleItem'
 
 
@@ -61,16 +60,14 @@ class EnsembleList extends Component {
     const { path } = this.state;
     console.log(this.props.match);
     return (
-      <Router>
         <div className="container">
           <div className="row">
             <h1>Manage ensembles</h1>
           </div>
           <div className="row">
-            <Switch>
-              <Route path={`${path}/create`}>
-                <EnsembleItem createMode={true} />
-              </Route>
+            <Routes>
+              <Route path={`${path}/create`} component={<EnsembleItem createMode={true} />} />
+                
               <Route path={path}>
                 {this.state.data && this.state.data.map(ensemble => {
                   return (
@@ -80,15 +77,11 @@ class EnsembleList extends Component {
                 <Link to={`${path}/create`} className="nav-link" id="createEnsembleLink">Create a new Ensemble</Link>
                 <Link to="/home" className="nav-link">Home</Link>
               </Route>
-            </Switch>
+            </Routes>
           </div>
         </div>
-      </Router>
     );
   }
 }
 
-export default withRouter(EnsembleList);
-
-const container = document.getElementById("app");
-render(<EnsembleList />, container);
+export default EnsembleList;

@@ -1,7 +1,20 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { Routes, Route, useParams } from "react-router-dom";
+import { createRoot } from 'react-dom/client'
 import PracticeGridList from "./PracticeGridList";
+import PracticeGrid from "./practice_grid";
 
+function PracticeGridListDetail() {
+  return (
+
+    <div id='practice-grids'>
+      <h2>Your Practice Grids</h2>
+      <div id="practice-grid-list">
+        <PracticeGridList />
+      </div>
+    </div>
+  )
+}
 
 class Perform extends Component {
   render() {
@@ -9,18 +22,13 @@ class Perform extends Component {
     return (
       <div className="container">
         <h1>Performer's Practice Tools</h1>
-        <div id='practice-grids'>
-            <h2>Your Practice Grids</h2>
-            <div id="practice-grid-list">
-              <PracticeGridList />
-            </div>
-        </div>
+        <Routes>
+          <Route path="practice_grid_display/:gridId" element = {<PracticeGrid />} />
+          <Route path="" element = {<PracticeGridListDetail />} />
+        </Routes>
       </div>
     );
   }
 }
 
 export default Perform;
-
-const container = document.getElementById("app");
-render(<Perform />, container);

@@ -26,8 +26,9 @@ class PracticeGridAPIView(viewsets.ModelViewSet):
   @action(detail=True)
   def practice_rows(self, request, *args, **kwargs):
     practice_grid = self.get_object()
-    
-    return Response(practice_grid)
+    practice_rows = PracticeRow.objects.filter(practice_grid_id=practice_grid.id).all()
+    serializer = PracticeRowSerializer(practice_rows, many=True)
+    return Response(serializer.data)
 
 class PracticeRowAPIView(viewsets.ModelViewSet):
   """

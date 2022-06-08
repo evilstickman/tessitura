@@ -1,5 +1,8 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { 
+  Link
+} from 'react-router-dom'
+import { createRoot } from 'react-dom/client'
 
 class PracticeGridListItem extends Component {
   loadPracticeGrid(event) {
@@ -14,7 +17,9 @@ class PracticeGridListItem extends Component {
         { practiceGrid &&
           <li key={"grid-"+practiceGrid['id']}>
             <div><strong>{practiceGrid['name']}</strong></div>
-            <div><button onClick={this.loadPracticeGrid} gridid={practiceGrid['id']}>Open</button></div>
+            <div>
+              <Link to={'/perform/practice_grid_display/' + practiceGrid['id']} className='nav-link'>Open</Link>  
+            </div>
           </li>
         }
       </div>
@@ -23,6 +28,3 @@ class PracticeGridListItem extends Component {
 }
 
 export default PracticeGridListItem;
-
-const container = document.getElementById("app");
-render(<PracticeGridListItem />, container);
