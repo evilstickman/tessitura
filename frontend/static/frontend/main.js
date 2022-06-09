@@ -3020,15 +3020,20 @@ function PracticeCell(props) {
       cellCompletionData = _useState2[0],
       setCellCompletionData = _useState2[1];
 
-  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(),
       _useState4 = _slicedToArray(_useState3, 2),
-      loaded = _useState4[0],
-      setLoaded = _useState4[1];
+      completedAt = _useState4[0],
+      setCompletedAt = _useState4[1];
+
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
+      _useState6 = _slicedToArray(_useState5, 2),
+      loaded = _useState6[0],
+      setLoaded = _useState6[1];
 
   var cellData = props.cellData;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
-    if (!cellData && !loaded) {
-      fetch("/perform/practice_cell/" + cellData.id + "/practice_cell_completions").then(function (response) {
+    if (cellData && !loaded) {
+      fetch("/perform/practice_cell/" + cellData.id + "/practice_cell_completions/").then(function (response) {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
         }
@@ -3036,13 +3041,34 @@ function PracticeCell(props) {
         return response.json();
       }).then(function (data) {
         setCellCompletionData(data);
+        var completion_date = undefined;
+
+        if (Array.isArray(data)) {
+          data.forEach(function (row) {
+            var row_date = undefined;
+
+            if (row.completion_date) {
+              row_date = new Date(row.completion_date);
+            }
+
+            if (!completion_date || row_date > completion_date) {
+              completion_date = row_date;
+            }
+          });
+
+          if (completion_date != null) {
+            var datestring = completion_date.getMonth() + 1 + "-" + (completion_date.getDate() + 1);
+            setCompletedAt(datestring);
+          }
+        }
+
         setLoaded(true);
       });
     }
   });
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-    className: cellCompletionData ? 'background-green' : 'background-white'
-  }, cellCompletionData.toString());
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
+    className: completedAt ? 'background-green' : 'background-white'
+  }, completedAt);
 }
 
 /***/ }),
@@ -3102,7 +3128,7 @@ function PracticeGrid() {
   var gridId = params.gridId;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (gridId && !loaded) {
-      fetch("/perform/practice_grid/" + gridId + "/practice_rows").then(function (response) {
+      fetch("/perform/practice_grid/" + gridId + "/practice_rows/").then(function (response) {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
         }
@@ -3172,7 +3198,7 @@ function PracticeRow(props) {
   var rowData = props.rowData;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (rowData && !loaded) {
-      fetch("/perform/practice_row/" + rowData.id + "/practice_cells").then(function (response) {
+      fetch("/perform/practice_row/" + rowData.id + "/practice_cells/").then(function (response) {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
         }
@@ -3189,10 +3215,10 @@ function PracticeRow(props) {
   //-- fetch practice grids for user here and list 'em! -->
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.target_tempo), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.start_measure), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.end_measure), cellData && cellData.map(function (cell) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'cell' + cell.id,
       cellData: cell
-    }), " ");
+    });
   }));
 }
 
@@ -3347,7 +3373,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;EACE,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;EACvB;AACF","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: green;\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;EACE,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;EACvB;AACF;;;AAGA;EACE,uBAAuB;AACzB;;AAEA;EACE,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: green;\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

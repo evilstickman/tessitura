@@ -3,12 +3,13 @@ import { useParams } from 'react-router-dom'
 
 export default function PracticeCell(props) {
   const [cellCompletionData, setCellCompletionData] = useState([]);
+  const [completedAt, setCompletedAt] = useState();
   const [loaded, setLoaded] = useState(false);
   let cellData = props.cellData;
   
   useEffect(() => {
-    if(!cellData && !loaded) {
-      fetch("/perform/practice_cell/"+cellData.id+"/practice_cell_completions")
+    if(cellData && !loaded) {
+      fetch("/perform/practice_cell/"+cellData.id+"/practice_cell_completions/")
       .then(response => {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
@@ -17,14 +18,30 @@ export default function PracticeCell(props) {
       })
       .then(data => {
         setCellCompletionData(data);
+        let completion_date = undefined
+        if(Array.isArray(data)) {
+          data.forEach(row =>  {
+            let row_date = undefined
+            if(row.completion_date){
+              row_date = new Date(row.completion_date)
+            }
+            if (!completion_date || (row_date > completion_date)) {
+              completion_date = row_date
+            }
+          })
+          if(completion_date != null) {
+            let datestring = (completion_date.getMonth()+1) + "-" + (completion_date.getDate()+1);
+            setCompletedAt(datestring);
+          }
+        }
         setLoaded(true);
       });
     }
   });
   return (
-    <span className={cellCompletionData ? 'background-green' : 'background-white'}>
-      {cellCompletionData.toString()}
-    </span>
+      <td className={(completedAt) ? 'background-green' : 'background-white'}>
+        {completedAt}
+      </td>
   );
 }
 

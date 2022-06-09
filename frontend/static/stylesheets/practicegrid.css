@@ -5,3 +5,12 @@ thead, tbody, tfoot, tr, td, th {
   border: 1px solid black;
   width: 5%
 }
+
+
+.background-green {
+  background-color: green;
+}
+
+.background-white {
+  background-color: white;
+}

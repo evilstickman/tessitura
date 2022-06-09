@@ -10,7 +10,7 @@ export default function PracticeRow(props) {
   
   useEffect(() => {
     if(rowData && !loaded) {
-      fetch("/perform/practice_row/"+rowData.id+"/practice_cells")
+      fetch("/perform/practice_row/"+rowData.id+"/practice_cells/")
       .then(response => {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
@@ -33,7 +33,7 @@ export default function PracticeRow(props) {
         <td>{rowData && rowData.start_measure}</td>
         <td>{rowData && rowData.end_measure}</td>
         { cellData && cellData.map( 
-          (cell) =><td> <PracticeCell key={'cell' + cell.id} cellData={cell} /> </td>
+          (cell) => <PracticeCell key={'cell' + cell.id} cellData={cell} />
         )}
       </tr>
   );

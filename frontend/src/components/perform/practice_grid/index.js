@@ -12,7 +12,7 @@ export default function PracticeGrid() {
   
   useEffect(() => {
     if(gridId && !loaded) {
-      fetch("/perform/practice_grid/"+gridId+"/practice_rows")
+      fetch("/perform/practice_grid/"+gridId+"/practice_rows/")
       .then(response => {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
