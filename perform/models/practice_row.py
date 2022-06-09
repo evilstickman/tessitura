@@ -17,9 +17,10 @@ class PracticeRowSerializer(serializers.ModelSerializer):
   from .practice_grid import PracticeGrid
   class Meta:
     model = PracticeRow
-    fields = ('practice_grid_id', 'target_tempo', 'start_measure', 'end_measure', 'steps', 'created_at', 'updated_at')
+    fields = ('practice_grid_id', 'id', 'target_tempo', 'start_measure', 'end_measure', 'steps', 'created_at', 'updated_at')
 
-  practice_grid_id = serializers.IntegerField(required=False)  
+  practice_grid_id = serializers.IntegerField(required=True)
+  id = serializers.IntegerField(required=True)  
   target_tempo = serializers.IntegerField(required=False)
   start_measure = serializers.CharField(max_length=25, required=False)
   end_measure = serializers.CharField(max_length=25, required=False)

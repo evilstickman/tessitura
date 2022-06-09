@@ -1,6 +1,6 @@
-import React, { Component, useEffect, useState, useMatch } from "react";
-import { createRoot } from 'react-dom/client'
+import React, { useEffect, useState } from "react";
 import { useParams } from 'react-router-dom'
+import PracticeRow  from "../practice_row";
 
 export default function PracticeGrid() {
   const [data, setData] = useState([]);
@@ -27,13 +27,16 @@ export default function PracticeGrid() {
   });
   //-- fetch practice grids for user here and list 'em! -->
   return (
-    <div className="container">
-      <div id='practice-grid-detail'>
-        <h1>Practice grid detail</h1>
-        { data && (
-          <div>{data.toString()}</div>
-        )}
-      </div>
+    <div id='practice-grid-detail'>
+      <h1>Practice grid detail</h1>
+      <table>
+        <tr><th>
+          <td>Target Tempo</td>
+          <td>Start measure</td>
+          <td>End Measure</td>
+        </th></tr>
+        { data.map ( (row) => <PracticeRow rowData={row} /> )}
+      </table>
     </div>
   );
   

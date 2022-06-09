@@ -1,16 +1,12 @@
 import React, { Component } from "react";
 import { 
-  Link
+  Link,
+  useParams
 } from 'react-router-dom'
-import { createRoot } from 'react-dom/client'
 
-class PracticeGridListItem extends Component {
-  loadPracticeGrid(event) {
-    alert(event.target.getAttribute('gridid'))
-  }
 
-  render() {
-    const { practiceGrid } = this.props;
+export default function PracticeGridListItem(props) {
+    let practiceGrid = props.practiceGrid;
     return (
       <div className="practiceGridDetail">
         
@@ -24,7 +20,5 @@ class PracticeGridListItem extends Component {
         }
       </div>
     );
-  }
 }
 
-export default PracticeGridListItem;
