@@ -54,3 +54,19 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+.background-green {
+  background-color: green;
+}
+
+.background-white {
+  background-color: white;
+}
+
+thead, tbody, tfoot, tr, td, th {
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+  border: 1px solid black;
+  width:5%;
+}

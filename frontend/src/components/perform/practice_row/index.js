@@ -1,20 +1,40 @@
 import React, { Component, useEffect, useState, useMatch } from "react";
 import { useParams } from 'react-router-dom'
 
+import PracticeCell from "../practice_cell";
+
 export default function PracticeRow(props) {
+  const [cellData, setCellData] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  let rowData = props.rowData;
   
+  useEffect(() => {
+    if(rowData && !loaded) {
+      fetch("/perform/practice_row/"+rowData.id+"/practice_cells")
+      .then(response => {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+        return response.json();
+      })
+      .then(data => {
+        setCellData(data);
+        setLoaded(true);
+      });
+    }
+  });
   //let params=useParams();
   //let rowData = params.rowData;
-  
-  let rowData = props.rowData;
+  //localhost:8000/perform/practice_row/530/practice_cells
   //-- fetch practice grids for user here and list 'em! -->
   return (
-    <div>
       <tr>
-        <td>{rowData.target_tempo}</td>
-        <td>{rowData.start_measure}</td>
-        <td>{rowData.end_measure}</td>
+        <td>{rowData && rowData.target_tempo}</td>
+        <td>{rowData && rowData.start_measure}</td>
+        <td>{rowData && rowData.end_measure}</td>
+        { cellData && cellData.map( 
+          (cell) =><td> <PracticeCell key={'cell' + cell.id} cellData={cell} /> </td>
+        )}
       </tr>
-    </div>
   );
 }

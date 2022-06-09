@@ -29,13 +29,17 @@ export default function PracticeGrid() {
   return (
     <div id='practice-grid-detail'>
       <h1>Practice grid detail</h1>
-      <table>
-        <tr><th>
-          <td>Target Tempo</td>
-          <td>Start measure</td>
-          <td>End Measure</td>
-        </th></tr>
-        { data.map ( (row) => <PracticeRow rowData={row} /> )}
+      <table className="practiceGridField">
+        <thead>
+          <tr>
+            <th>Target Tempo</th>
+            <th>Start measure</th>
+            <th>End Measure</th>
+          </tr>
+        </thead>
+        <tbody>
+          { data.map ( (row) => <PracticeRow key={'row' + row.id} rowData={row} /> )}
+        </tbody>
       </table>
     </div>
   );

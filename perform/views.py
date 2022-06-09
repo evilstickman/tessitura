@@ -37,6 +37,13 @@ class PracticeRowAPIView(viewsets.ModelViewSet):
   queryset = PracticeRow.objects.all()
   serializer_class = PracticeRowSerializer
 
+  @action(detail=True)
+  def practice_cells(self, request, *args, **kwargs):
+    practice_row = self.get_object()
+    practice_cells = PracticeCell.objects.filter(practice_row_id=practice_row.id).all()
+    serializer = PracticeCellSerializer(practice_cells, many=True)
+    return Response(serializer.data)
+
 class PracticeCellAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids
@@ -44,6 +51,13 @@ class PracticeCellAPIView(viewsets.ModelViewSet):
   queryset = PracticeCell.objects.all()
   serializer_class = PracticeCellSerializer
 
+  @action(detail=True)
+  def practice_cell_completions(self, request, *args, **kwargs):
+    practice_cell = self.get_object()
+    practice_cell_completions = PracticeCellCompletion.objects.filter(practice_cell_id=practice_cell.id).all()
+    serializer = PracticeCellCompletionSerializer(practice_cell_completions, many=True)
+    return Response(serializer.data)
+  
 class PracticeCellCompletionAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids

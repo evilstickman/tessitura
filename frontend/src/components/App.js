@@ -37,7 +37,7 @@ class App extends Component {
                 <NavItem eventkey={3} href="/musicians">
                   <Link to="/musicians" className="nav-link">Musicians</Link>
                 </NavItem>
-                <NavItem eventKey={4} href="/perform">
+                <NavItem eventkey={4} href="/perform">
                   <Link to='/perform' className='nav-link'>Performance Support Tools</Link>
                 </NavItem>
               </Nav>

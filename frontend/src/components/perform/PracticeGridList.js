@@ -51,14 +51,13 @@ class PracticeGridList extends Component {
 
   render() {
     const { path } = this.state;
-    console.log(this.props.match);
     return (
         <div className="container">
           <div className="row">
             <ul>
               {this.state.data && this.state.data.map(practiceGrid => {
                 return (
-                    <PracticeGridListItem practiceGrid={practiceGrid}  id={practiceGrid['id']} />
+                    <PracticeGridListItem key={"liparent+"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
                 );
               })}
             </ul>

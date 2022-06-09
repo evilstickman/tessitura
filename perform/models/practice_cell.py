@@ -20,9 +20,10 @@ class PracticeCellSerializer(serializers.ModelSerializer):
   from .practice_row import PracticeRow
   class Meta:
     model = PracticeCell
-    fields = ('practice_cell_completions', 'target_tempo_percentage', 'created_at', 'updated_at')
+    fields = ('id', 'practice_row_id', 'target_tempo_percentage', 'created_at', 'updated_at')
 
-  practice_row = serializers.ModelField(PracticeRow)
+  id = serializers.IntegerField(required=False)
+  practice_row_id = serializers.IntegerField(required=True)
   target_tempo_percentage = serializers.FloatField(required=False)
   created_at = serializers.DateTimeField(required=False)
   updated_at = serializers.DateTimeField(required=False)
@@ -35,9 +36,10 @@ class PracticeCellSerializer(serializers.ModelSerializer):
 class PracticeCellCompletionSerializer(serializers.ModelSerializer):
   class Meta:
     model = PracticeCellCompletion
-    fields = ('completion_date', 'created_at', 'updated_at')
+    fields = ('id','practice_cell_id','completion_date', 'created_at', 'updated_at')
 
-  practice_cell = serializers.ModelField(PracticeCell)
+  id = serializers.IntegerField(required=False)
+  practice_cell_id = serializers.IntegerField(required=True)
   completion_date = serializers.DateField(required=False)
   created_at = serializers.DateTimeField(required=False)
   updated_at = serializers.DateTimeField(required=False)
