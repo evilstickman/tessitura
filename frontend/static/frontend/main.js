@@ -3210,29 +3210,39 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 function PracticeGrid() {
   var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
       _useState2 = _slicedToArray(_useState, 2),
-      data = _useState2[0],
-      setData = _useState2[1];
+      rowData = _useState2[0],
+      setRowData = _useState2[1];
 
-  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
       _useState4 = _slicedToArray(_useState3, 2),
-      loaded = _useState4[0],
-      setLoaded = _useState4[1];
+      gridData = _useState4[0],
+      setGridData = _useState4[1];
 
-  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("Loading"),
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
       _useState6 = _slicedToArray(_useState5, 2),
-      placeholder = _useState6[0],
-      setPlaceholder = _useState6[1];
+      loaded = _useState6[0],
+      setLoaded = _useState6[1];
 
-  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
+  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("Loading"),
       _useState8 = _slicedToArray(_useState7, 2),
-      path = _useState8[0],
-      setPath = _useState8[1];
+      placeholder = _useState8[0],
+      setPlaceholder = _useState8[1];
 
   var params = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_2__.useParams)();
   var gridId = params.gridId;
   var practiceGrid = params.practiceGrid;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (gridId && !loaded) {
+      fetch("/perform/practice_grid/" + gridId).then(function (response) {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+
+        return response.json();
+      }).then(function (data) {
+        setGridData(data);
+        setLoaded(true);
+      });
       fetch("/perform/practice_grid/" + gridId + "/practice_rows/").then(function (response) {
         if (response.status > 400) {
           return setPlaceholder("Something went wrong!");
@@ -3240,7 +3250,7 @@ function PracticeGrid() {
 
         return response.json();
       }).then(function (data) {
-        setData(data);
+        setRowData(data);
         setLoaded(true);
       });
     }
@@ -3248,14 +3258,14 @@ function PracticeGrid() {
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     id: "practice-grid-detail"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, practiceGrid && practiceGrid.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, practiceGrid && practiceGrid.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
     className: "practiceGridField"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "End Measure"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, data.map(function (row) {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "End Measure"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, rowData.map(function (row) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_row__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'row' + row.id,
       rowData: row
     });
-  }))));
+  })))));
 }
 
 /***/ }),
