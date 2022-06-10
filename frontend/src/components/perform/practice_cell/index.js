@@ -6,6 +6,33 @@ export default function PracticeCell(props) {
   const [completedAt, setCompletedAt] = useState();
   const [loaded, setLoaded] = useState(false);
   let cellData = props.cellData;
+
+  function onClick() {
+    console.log("You clicked " + cellData.id + ", creating completion");
+    let cellId = cellData.id;
+    let currentDate = new Date();
+    let datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth()+1) + "-" + (currentDate.getDate()+1);
+    let postBody = {
+      "practice_cell_id": cellId,
+      "completion_date": datestring
+    }
+    fetch("/perform/practice_cell_completion/", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postBody)
+
+    })      
+    .then(response => {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Trigger a refresh of the cell, ideally
+      setLoaded(false);
+    });
+  }
   
   useEffect(() => {
     if(cellData && !loaded) {
@@ -39,7 +66,7 @@ export default function PracticeCell(props) {
     }
   });
   return (
-      <td className={(completedAt) ? 'background-green' : 'background-white'}>
+      <td className={(completedAt) ? 'background-green' : 'background-white'} onClick={onClick}>
         {completedAt}
       </td>
   );

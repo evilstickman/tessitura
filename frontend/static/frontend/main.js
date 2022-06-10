@@ -3031,6 +3031,34 @@ function PracticeCell(props) {
       setLoaded = _useState6[1];
 
   var cellData = props.cellData;
+
+  function onClick() {
+    console.log("You clicked " + cellData.id + ", creating completion");
+    var cellId = cellData.id;
+    var currentDate = new Date();
+    var datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + (currentDate.getDate() + 1);
+    var postBody = {
+      "practice_cell_id": cellId,
+      "completion_date": datestring
+    };
+    fetch("/perform/practice_cell_completion/", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
+    }).then(function (response) {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+
+      return response.json();
+    }).then(function (data) {
+      // Trigger a refresh of the cell, ideally
+      setLoaded(false);
+    });
+  }
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (cellData && !loaded) {
       fetch("/perform/practice_cell/" + cellData.id + "/practice_cell_completions/").then(function (response) {
@@ -3067,7 +3095,8 @@ function PracticeCell(props) {
     }
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-    className: completedAt ? 'background-green' : 'background-white'
+    className: completedAt ? 'background-green' : 'background-white',
+    onClick: onClick
   }, completedAt);
 }
 
