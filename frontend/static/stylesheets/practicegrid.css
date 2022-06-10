@@ -1,9 +1,5 @@
 thead, tbody, tfoot, tr, td, th {
-  border-color: inherit;
-  border-style: solid;
-  border-width: 0;
-  border: 1px solid black;
-  width: 5%
+
 }
 
 
@@ -13,4 +9,15 @@ thead, tbody, tfoot, tr, td, th {
 
 .background-white {
   background-color: white;
+}
+
+.no-gutters {
+  margin-right: 0;
+  margin-left: 0;
+  padding-right: 0;
+  padding-left: 0;
+  border-color: inherit;
+  border-style: solid;
+  border-width: 0;
+  border: 1px solid black;
 }

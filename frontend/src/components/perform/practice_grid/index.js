@@ -10,6 +10,14 @@ export default function PracticeGrid() {
   let params=useParams();
   let gridId = params.gridId;
   let practiceGrid = params.practiceGrid;
+
+  function onAddRow() {
+
+  }
+
+  function onEditGrid() {
+
+  }
   
   useEffect(() => {
     if(gridId && !loaded) {
@@ -41,24 +49,27 @@ export default function PracticeGrid() {
   return (
     <div id='practice-grid-detail'>
       <div>
-      {!loaded && <h2>{placeholder}</h2>}
+        <button onClick={onAddRow}>Add Row</button>
+        <button onClick={onEditGrid}>Edit Grid</button>
+      </div>
+      <div>
+        {!loaded && <h2>{placeholder}</h2>}
       </div>
       {loaded && (
         <div>
         <h2>{gridData && gridData.name}</h2>
         <h3>{gridData && gridData.notes}</h3>
-        <table className="practiceGridField">
-          <thead>
-            <tr>
-              <th>Target Tempo</th>
-              <th>Start measure</th>
-              <th>End Measure</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div className="practiceGridField">
+          <div className="container">
+            <div className="row">
+              <div className="col-1">Target Tempo</div>
+              <div className="col-1">Start measure</div>
+              <div className="col-1">End Measure</div>
+            </div>
             { rowData.map ( (row) => <PracticeRow key={'row' + row.id} rowData={row} /> )}
-          </tbody>
-        </table>
+            
+          </div>
+        </div>
       </div>
       )}
     </div>

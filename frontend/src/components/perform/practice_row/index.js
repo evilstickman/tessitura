@@ -28,13 +28,13 @@ export default function PracticeRow(props) {
   //localhost:8000/perform/practice_row/530/practice_cells
   //-- fetch practice grids for user here and list 'em! -->
   return (
-      <tr>
-        <td>{rowData && rowData.target_tempo}</td>
-        <td>{rowData && rowData.start_measure}</td>
-        <td>{rowData && rowData.end_measure}</td>
+      <div className={['row', 'no-gutters'].join(' ')}>
+        <div className="col-1">{rowData && rowData.target_tempo}</div>
+        <div className="col-1">{rowData && rowData.start_measure}</div>
+        <div className="col-1">{rowData && rowData.end_measure}</div>
         { cellData && cellData.map( 
           (cell) => <PracticeCell key={'cell' + cell.id} cellData={cell} />
         )}
-      </tr>
+      </div>
   );
 }

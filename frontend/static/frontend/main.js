@@ -3169,8 +3169,8 @@ function PracticeCell(props) {
       });
     }
   });
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-    className: completedAt ? 'background-green' : 'background-white',
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: ["col", completedAt ? 'background-green' : 'background-white'].join(" "),
     onClick: onClick
   }, completedAt);
 }
@@ -3231,6 +3231,11 @@ function PracticeGrid() {
   var params = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_2__.useParams)();
   var gridId = params.gridId;
   var practiceGrid = params.practiceGrid;
+
+  function onAddRow() {}
+
+  function onEditGrid() {}
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (gridId && !loaded) {
       fetch("/perform/practice_grid/" + gridId).then(function (response) {
@@ -3258,9 +3263,23 @@ function PracticeGrid() {
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     id: "practice-grid-detail"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: onAddRow
+  }, "Add Row"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: onEditGrid
+  }, "Edit Grid")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "practiceGridField"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "End Measure"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, rowData.map(function (row) {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "row"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, "End Measure")), rowData.map(function (row) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_row__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'row' + row.id,
       rowData: row
@@ -3329,7 +3348,15 @@ function PracticeRow(props) {
   //localhost:8000/perform/practice_row/530/practice_cells
   //-- fetch practice grids for user here and list 'em! -->
 
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.target_tempo), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.start_measure), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", null, rowData && rowData.end_measure), cellData && cellData.map(function (cell) {
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: ['row', 'no-gutters'].join(' ')
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, rowData && rowData.target_tempo), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, rowData && rowData.start_measure), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col-1"
+  }, rowData && rowData.end_measure), cellData && cellData.map(function (cell) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'cell' + cell.id,
       cellData: cell
@@ -3488,7 +3515,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;EACE,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;EACvB;AACF;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;;AAEA;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB;;AAEA;EACE,eAAe;EACf,cAAc;EACd,gBAAgB;EAChB,eAAe;EACf,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

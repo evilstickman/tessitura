@@ -66,9 +66,9 @@ export default function PracticeCell(props) {
     }
   });
   return (
-      <td className={(completedAt) ? 'background-green' : 'background-white'} onClick={onClick}>
+    <div className={["col",((completedAt) ? 'background-green' : 'background-white')].join(" ")} onClick={onClick}>
         {completedAt}
-      </td>
+    </div>
   );
 }
 
