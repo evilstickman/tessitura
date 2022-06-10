@@ -11,7 +11,7 @@ export default function PracticeCell(props) {
     console.log("You clicked " + cellData.id + ", creating completion");
     let cellId = cellData.id;
     let currentDate = new Date();
-    let datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth()+1) + "-" + (currentDate.getDate()+1);
+    let datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth()+1) + "-" + currentDate.getDate();
     let postBody = {
       "practice_cell_id": cellId,
       "completion_date": datestring

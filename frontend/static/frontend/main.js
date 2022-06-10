@@ -3036,7 +3036,7 @@ function PracticeCell(props) {
     console.log("You clicked " + cellData.id + ", creating completion");
     var cellId = cellData.id;
     var currentDate = new Date();
-    var datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + (currentDate.getDate() + 1);
+    var datestring = currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate();
     var postBody = {
       "practice_cell_id": cellId,
       "completion_date": datestring
