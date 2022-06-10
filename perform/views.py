@@ -30,6 +30,15 @@ class PracticeGridAPIView(viewsets.ModelViewSet):
     serializer = PracticeRowSerializer(practice_rows, many=True)
     return Response(serializer.data)
 
+  @action(detail=False)
+  def create_empty_grid(self, request, *args, **kwargs):
+    #name = 
+    # get name
+    # get notes
+    # create new grid for user
+    return Response()
+
+
 class PracticeRowAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids

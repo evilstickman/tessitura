@@ -9,13 +9,20 @@ class PracticeGridList extends Component {
       data: [],
       loaded: false,
       placeholder: "Loading",
-      path: ''
+      path: '',
+      name: '',
+      notes: '',
     };
+
+    this.changeName = this.changeName.bind(this);
+    this.changeNotes = this.changeNotes.bind(this);
+    this.createNewGrid = this.createNewGrid.bind(this);
+    this.fetchGridList = this.fetchGridList.bind(this);
   }
 
-  componentDidMount() {
+  fetchGridList() {
     let {match} = this.props;
-    fetch("perform/practice_grid")
+    fetch("/perform/practice_grid")
       .then(response => {
         if (response.status > 400) {
           return this.setState(() => {
@@ -49,6 +56,56 @@ class PracticeGridList extends Component {
       });
   }
 
+  componentDidMount() {
+    this.fetchGridList()
+  }
+
+  createNewGrid(event) {
+    event.preventDefault();
+    console.log("Creating a new grid");
+    let postBody = {
+      "name": this.state.name,
+      "notes": this.state.notes
+    }
+    fetch("/perform/practice_grid/", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postBody)
+
+    })      
+    .then(response => {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+      return response.json();
+    })
+    .then(data => {
+      
+      this.setState(() => {
+        return {
+          data: [],
+          loaded: false,
+          name: '',
+          notes: ''
+        };
+      });
+      // Trigger a refresh of the cell, ideally
+      this.fetchGridList();
+    });
+  }
+
+  changeName(event) {
+    this.setState({
+      name: event.target.value
+    });
+  }
+
+  changeNotes(event) {
+    this.setState({
+      notes: event.target.value
+    });
+  }
+
   render() {
     const { path } = this.state;
     return (
@@ -61,6 +118,20 @@ class PracticeGridList extends Component {
                 );
               })}
             </ul>
+          </div>
+          <div>
+            <h3>Create a new Grid:</h3>
+            <form onSubmit={this.createNewGrid}>
+              <label>
+                Name:
+                <input type='text' defaultValue={this.state.name} onChange={this.changeName}/>
+              </label>
+              <label>
+                Notes:
+                <input type='text' defaultValue={this.state.notes} onChange={this.changeNotes}/>
+              </label>
+              <input type="submit" value="Submit" />
+            </form>
           </div>
         </div>
     );

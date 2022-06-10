@@ -9,6 +9,7 @@ export default function PracticeGrid() {
   const [path, setPath] = useState("");
   let params=useParams();
   let gridId = params.gridId;
+  let practiceGrid = params.practiceGrid;
   
   useEffect(() => {
     if(gridId && !loaded) {
@@ -28,7 +29,8 @@ export default function PracticeGrid() {
   //-- fetch practice grids for user here and list 'em! -->
   return (
     <div id='practice-grid-detail'>
-      <h1>Practice grid detail</h1>
+      <h1>{practiceGrid && practiceGrid.name}</h1>
+      <h1>{practiceGrid && practiceGrid.notes}</h1>
       <table className="practiceGridField">
         <thead>
           <tr>

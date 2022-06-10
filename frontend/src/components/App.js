@@ -37,8 +37,8 @@ class App extends Component {
                 <NavItem eventkey={3} href="/musicians">
                   <Link to="/musicians" className="nav-link">Musicians</Link>
                 </NavItem>
-                <NavItem eventkey={4} href="/perform">
-                  <Link to='/perform' className='nav-link'>Performance Support Tools</Link>
+                <NavItem eventkey={4} href="/performance_support">
+                  <Link to='/performance_support' className='nav-link'>Performance Support Tools</Link>
                 </NavItem>
               </Nav>
             </Navbar.Collapse>
@@ -48,7 +48,7 @@ class App extends Component {
           <Route path="/home" element={<Home />} />
           <Route path="/ensembles/*" element={<EnsembleList />} />
           <Route path="/musicians/*" element={<MusicianList />} />
-          <Route path="/perform/*" element={<Perform />} />
+          <Route path="/performance_support/*" element={<Perform />} />
         </Routes>
       </BrowserRouter>
     );

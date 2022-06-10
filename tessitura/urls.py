@@ -23,5 +23,6 @@ urlpatterns = [
     path('direct/', include('direct.urls')),
     path('publish/', include('publish.urls')),
     path('perform/', include('perform.urls')),
+    path('performance_support/', include('frontend.urls')),
     path('', include('frontend.urls'))
 ]

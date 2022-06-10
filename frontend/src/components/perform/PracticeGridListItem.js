@@ -14,7 +14,7 @@ export default function PracticeGridListItem(props) {
           <li key={"grid-"+practiceGrid['id']}>
             <div><strong>{practiceGrid['name']}</strong></div>
             <div>
-              <Link to={'/perform/practice_grid_display/' + practiceGrid['id']} className='nav-link'>Open</Link>  
+              <Link to={'/performance_support/practice_grid_display/' + practiceGrid['id']} className='nav-link'>Open</Link>  
             </div>
           </li>
         }

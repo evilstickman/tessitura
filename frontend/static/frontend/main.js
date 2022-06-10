@@ -2334,9 +2334,9 @@ var App = /*#__PURE__*/function (_Component) {
         className: "nav-link"
       }, "Musicians")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_8__["default"], {
         eventkey: 4,
-        href: "/perform"
+        href: "/performance_support"
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Link, {
-        to: "/perform",
+        to: "/performance_support",
         className: "nav-link"
       }, "Performance Support Tools")))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Route, {
         path: "/home",
@@ -2348,7 +2348,7 @@ var App = /*#__PURE__*/function (_Component) {
         path: "/musicians/*",
         element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MusicianList__WEBPACK_IMPORTED_MODULE_3__["default"], null)
       }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_9__.Route, {
-        path: "/perform/*",
+        path: "/performance_support/*",
         element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_perform__WEBPACK_IMPORTED_MODULE_4__["default"], null)
       })));
     }
@@ -2804,18 +2804,24 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       data: [],
       loaded: false,
       placeholder: "Loading",
-      path: ''
+      path: '',
+      name: '',
+      notes: ''
     };
+    _this.changeName = _this.changeName.bind(_assertThisInitialized(_this));
+    _this.changeNotes = _this.changeNotes.bind(_assertThisInitialized(_this));
+    _this.createNewGrid = _this.createNewGrid.bind(_assertThisInitialized(_this));
+    _this.fetchGridList = _this.fetchGridList.bind(_assertThisInitialized(_this));
     return _this;
   }
 
   _createClass(PracticeGridList, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
+    key: "fetchGridList",
+    value: function fetchGridList() {
       var _this2 = this;
 
       var match = this.props.match;
-      fetch("perform/practice_grid").then(function (response) {
+      fetch("/perform/practice_grid").then(function (response) {
         if (response.status > 400) {
           return _this2.setState(function () {
             return {
@@ -2846,6 +2852,62 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       });
     }
   }, {
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      this.fetchGridList();
+    }
+  }, {
+    key: "createNewGrid",
+    value: function createNewGrid(event) {
+      var _this3 = this;
+
+      event.preventDefault();
+      console.log("Creating a new grid");
+      var postBody = {
+        "name": this.state.name,
+        "notes": this.state.notes
+      };
+      fetch("/perform/practice_grid/", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postBody)
+      }).then(function (response) {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+
+        return response.json();
+      }).then(function (data) {
+        _this3.setState(function () {
+          return {
+            data: [],
+            loaded: false,
+            name: '',
+            notes: ''
+          };
+        }); // Trigger a refresh of the cell, ideally
+
+
+        _this3.fetchGridList();
+      });
+    }
+  }, {
+    key: "changeName",
+    value: function changeName(event) {
+      this.setState({
+        name: event.target.value
+      });
+    }
+  }, {
+    key: "changeNotes",
+    value: function changeNotes(event) {
+      this.setState({
+        notes: event.target.value
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
       var path = this.state.path;
@@ -2859,6 +2921,19 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
           practiceGrid: practiceGrid,
           id: practiceGrid['id']
         });
+      }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, "Create a new Grid:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
+        onSubmit: this.createNewGrid
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Name:", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+        type: "text",
+        defaultValue: this.state.name,
+        onChange: this.changeName
+      })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Notes:", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+        type: "text",
+        defaultValue: this.state.notes,
+        onChange: this.changeNotes
+      })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+        type: "submit",
+        value: "Submit"
       }))));
     }
   }]);
@@ -2893,7 +2968,7 @@ function PracticeGridListItem(props) {
   }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
     key: "grid-" + practiceGrid['id']
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", null, practiceGrid['name'])), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Link, {
-    to: '/perform/practice_grid_display/' + practiceGrid['id'],
+    to: '/performance_support/practice_grid_display/' + practiceGrid['id'],
     className: "nav-link"
   }, "Open"))));
 }
@@ -3155,6 +3230,7 @@ function PracticeGrid() {
 
   var params = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_2__.useParams)();
   var gridId = params.gridId;
+  var practiceGrid = params.practiceGrid;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (gridId && !loaded) {
       fetch("/perform/practice_grid/" + gridId + "/practice_rows/").then(function (response) {
@@ -3172,7 +3248,7 @@ function PracticeGrid() {
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     id: "practice-grid-detail"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Practice grid detail"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, practiceGrid && practiceGrid.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, practiceGrid && practiceGrid.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
     className: "practiceGridField"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", null, "End Measure"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, data.map(function (row) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_row__WEBPACK_IMPORTED_MODULE_1__["default"], {
@@ -3402,7 +3478,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: green;\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;EACE,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;EACvB;AACF;;;AAGA;EACE,uBAAuB;AACzB;;AAEA;EACE,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: green;\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;EACE,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;EACvB;AACF;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n  width: 5%\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
