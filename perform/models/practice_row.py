@@ -19,16 +19,28 @@ class PracticeRowSerializer(serializers.ModelSerializer):
     model = PracticeRow
     fields = ('practice_grid_id', 'id', 'target_tempo', 'start_measure', 'end_measure', 'steps', 'created_at', 'updated_at')
 
+  id = serializers.IntegerField(required=False)  
   practice_grid_id = serializers.IntegerField(required=True)
-  id = serializers.IntegerField(required=True)  
-  target_tempo = serializers.IntegerField(required=False)
-  start_measure = serializers.CharField(max_length=25, required=False)
-  end_measure = serializers.CharField(max_length=25, required=False)
-  steps = serializers.IntegerField(required=False)
+  target_tempo = serializers.IntegerField(required=True)
+  start_measure = serializers.CharField(max_length=25, required=True)
+  end_measure = serializers.CharField(max_length=25, required=True)
+  steps = serializers.IntegerField(required=True)
   created_at = serializers.DateTimeField(required=False)
   updated_at = serializers.DateTimeField(required=False)
   
   def create(self, validated_data):
+    from . import PracticeCell
     practice_row = PracticeRow.objects.create(**validated_data)
     practice_row.save()
+    steps = practice_row.steps
+    i = 0;
+    while i < steps:
+      cell_data = {
+          'practice_row': practice_row,
+          'target_tempo_percentage': ((float)(steps - i)/steps)
+      }
+      practice_cell = PracticeCell.objects.create(**cell_data)
+      practice_cell.save()
+      i+= 1
+      
     return practice_row
