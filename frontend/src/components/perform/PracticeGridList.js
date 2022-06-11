@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Col, Row } from "react-bootstrap";
 import { createRoot } from 'react-dom/client'
 import PracticeGridListItem from './PracticeGridListItem'
 
@@ -19,6 +20,7 @@ class PracticeGridList extends Component {
     this.createNewGrid = this.createNewGrid.bind(this);
     this.fetchGridList = this.fetchGridList.bind(this);
     this.onDeleteGrid = this.onDeleteGrid.bind(this);
+    this.refreshList = this.refreshList.bind(this);
   }
 
   fetchGridList() {
@@ -131,6 +133,10 @@ class PracticeGridList extends Component {
     });
   }
 
+  refreshList() {
+    this.fetchGridList();
+  }
+
   render() {
     const { path } = this.state;
     return (
@@ -138,29 +144,30 @@ class PracticeGridList extends Component {
           <div>
             <h3>Create a new Grid:</h3>
             <form onSubmit={this.createNewGrid}>
+              <div className="form-group">
               <label>
                 Name:
-                <input type='text' defaultValue={this.state.name} onChange={this.changeName}/>
+                <input className="form-control" type='text' defaultValue={this.state.name} onChange={this.changeName}/>
               </label>
               <label>
                 Notes:
-                <input type='area' defaultValue={this.state.notes} onChange={this.changeNotes}/>
+                <input className="form-control" type='area' defaultValue={this.state.notes} onChange={this.changeNotes}/>
               </label>
               <input type="submit" value="Submit" />
+              </div>
             </form>
           </div>
-          <div className="row">
-            <ul className="list-group">
-              {this.state.data && this.state.data.map(practiceGrid => {
-                return (
-                  <div className={["list-group-item", 'inline-flex'].join(" ")} key={"practice-grid-list-item-" + practiceGrid.id}>
-                    <PracticeGridListItem key={"practice-grid-list-"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
-                    <input type="button" onClick={this.onDeleteGrid} data-grid-id={practiceGrid.id} value="X" className={["col-1", 'align-self-end'].join(" ")} />
-                  </div>
-                );
-              })}
-            </ul>
-          </div>
+          
+          <br />
+          <Row xs={1} md={2} className="g-4">
+            {this.state.data && this.state.data.map(practiceGrid => {
+              return (
+                <Col>                  
+                  <PracticeGridListItem key={"practice-grid-list-"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} callback={this.refreshList} />
+                </Col>
+              );
+            })}
+          </Row>
         </div>
     );
   }
