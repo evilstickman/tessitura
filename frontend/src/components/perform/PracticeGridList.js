@@ -135,18 +135,6 @@ class PracticeGridList extends Component {
     const { path } = this.state;
     return (
         <div className="container">
-          <div className="row">
-            <ul className="list-group">
-              {this.state.data && this.state.data.map(practiceGrid => {
-                return (
-                  <div className="list-group-item">
-                    <PracticeGridListItem key={"liparent+"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
-                    <input type="button" onClick={this.onDeleteGrid} data-grid-id={practiceGrid.id} value="Delete" />
-                  </div>
-                );
-              })}
-            </ul>
-          </div>
           <div>
             <h3>Create a new Grid:</h3>
             <form onSubmit={this.createNewGrid}>
@@ -160,6 +148,18 @@ class PracticeGridList extends Component {
               </label>
               <input type="submit" value="Submit" />
             </form>
+          </div>
+          <div className="row">
+            <ul className="list-group">
+              {this.state.data && this.state.data.map(practiceGrid => {
+                return (
+                  <div className={["list-group-item", 'inline-flex'].join(" ")}>
+                    <PracticeGridListItem key={"practice-grid-list-"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
+                    <input type="button" onClick={this.onDeleteGrid} data-grid-id={practiceGrid.id} value="X" className={["col-1", 'align-self-end'].join(" ")} />
+                  </div>
+                );
+              })}
+            </ul>
           </div>
         </div>
     );

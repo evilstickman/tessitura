@@ -160,9 +160,8 @@ export default function PracticeGrid() {
         <div className="practiceGridField">
           <div className="container-fluid">
             <div className="row">
-              <div className="col-1">Target Tempo</div>
-              <div className="col-1">Start measure</div>
-              <div className="col-1">End Measure</div>
+              <div className="col-1">Start</div>
+              <div className="col-1">End</div>
             </div>
             { rowData.map ( (row) => <PracticeRow key={'row' + row.id} rowData={row} /> )}
             

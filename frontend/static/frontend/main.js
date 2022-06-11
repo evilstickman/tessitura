@@ -2945,24 +2945,7 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       var path = this.state.path;
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         className: "container"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        className: "row"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
-        className: "list-group"
-      }, this.state.data && this.state.data.map(function (practiceGrid) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-          className: "list-group-item"
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
-          key: "liparent+" + practiceGrid.id,
-          practiceGrid: practiceGrid,
-          id: practiceGrid['id']
-        }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-          type: "button",
-          onClick: _this5.onDeleteGrid,
-          "data-grid-id": practiceGrid.id,
-          value: "Delete"
-        }));
-      }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, "Create a new Grid:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, "Create a new Grid:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
         onSubmit: this.createNewGrid
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Name:", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
         type: "text",
@@ -2975,6 +2958,24 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
         type: "submit",
         value: "Submit"
+      }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+        className: "row"
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
+        className: "list-group"
+      }, this.state.data && this.state.data.map(function (practiceGrid) {
+        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+          className: ["list-group-item", 'inline-flex'].join(" ")
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
+          key: "practice-grid-list-" + practiceGrid.id,
+          practiceGrid: practiceGrid,
+          id: practiceGrid['id']
+        }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+          type: "button",
+          onClick: _this5.onDeleteGrid,
+          "data-grid-id": practiceGrid.id,
+          value: "X",
+          className: ["col-1", 'align-self-end'].join(" ")
+        }));
       }))));
     }
   }]);
@@ -3008,10 +3009,14 @@ function PracticeGridListItem(props) {
     className: "practiceGridDetail"
   }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "list-group-item"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", null, practiceGrid['name'])), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Link, {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "row"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Link, {
     to: '/performance_support/practice_grid_display/' + practiceGrid['id'],
     className: "nav-link"
-  }, "Open"))));
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", {
+    className: "col-8"
+  }, practiceGrid['name'])))));
 }
 
 /***/ }),
@@ -3444,11 +3449,9 @@ function PracticeGrid() {
     className: "row"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col-1"
-  }, "Target Tempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+  }, "Start"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col-1"
-  }, "Start measure"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "col-1"
-  }, "End Measure")), rowData.map(function (row) {
+  }, "End")), rowData.map(function (row) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_row__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'row' + row.id,
       rowData: row
@@ -3518,10 +3521,8 @@ function PracticeRow(props) {
   //-- fetch practice grids for user here and list 'em! -->
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: ['row', 'no-gutters'].join(' ')
+    className: ['row', 'no-gutters', "border", "border-dark"].join(' ')
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "col-1"
-  }, rowData && rowData.target_tempo), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col-1"
   }, rowData && rowData.start_measure), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col-1"
@@ -3685,7 +3686,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;;AAEA;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB;;AAEA;EACE,2BAA2B;AAC7B;;AAEA;EACE,eAAe;EACf,cAAc;EACd,gBAAgB;EAChB,eAAe;EACf,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}\r\n\r\n.inline-flex {\r\n  display: inline-flex;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;;AAEA;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB;;AAEA;EACE,2BAA2B;AAC7B;;AAEA;EACE,eAAe;EACf,cAAc;EACd,gBAAgB;EAChB,eAAe;EACf,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;AACzB;;AAEA;EACE,oBAAoB;AACtB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}\r\n\r\n.inline-flex {\r\n  display: inline-flex;\r\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

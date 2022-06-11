@@ -12,9 +12,8 @@ export default function PracticeGridListItem(props) {
         
         { practiceGrid &&
           <div className="list-group-item">
-            <div><strong>{practiceGrid['name']}</strong></div>
-            <div>
-              <Link to={'/performance_support/practice_grid_display/' + practiceGrid['id']} className='nav-link'>Open</Link>  
+            <div className="row">
+            <Link to={'/performance_support/practice_grid_display/' + practiceGrid['id']} className='nav-link'><strong className="col-8">{practiceGrid['name']}</strong></Link>
             </div>
           </div>
         }

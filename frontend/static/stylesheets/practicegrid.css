@@ -25,3 +25,7 @@ thead, tbody, tfoot, tr, td, th {
   border-width: 0;
   border: 1px solid black;
 }
+
+.inline-flex {
+  display: inline-flex;
+}
