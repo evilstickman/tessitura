@@ -36,7 +36,7 @@ export default function PracticeGridListItem(props) {
               <Card.Text>
                 {practiceGrid.notes}
               </Card.Text>
-              <ProgressBar now={practiceGrid.percentage_complete*100} />
+              <ProgressBar now={practiceGrid.percentage_complete*100} label={(practiceGrid.percentage_complete*100).toFixed(2)+'%'} />
               
             </Card.Body>
             <Card.Footer>
