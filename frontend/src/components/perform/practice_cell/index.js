@@ -5,6 +5,7 @@ export default function PracticeCell(props) {
   const [cellCompletionData, setCellCompletionData] = useState([]);
   const [completedAt, setCompletedAt] = useState();
   const [loaded, setLoaded] = useState(false);
+  const [placeholder, setPlaceholder] = useState('loading');
   let cellData = props.cellData;
   let rowData = props.rowData;
 
@@ -33,6 +34,27 @@ export default function PracticeCell(props) {
       // Trigger a refresh of the cell, ideally
       setLoaded(false);
     });
+  }
+
+  function onRightClick(event) {
+    console.log("You right-clicked " + cellData.id + ", clearing completion");
+    event.preventDefault();
+    for(let i = 0; i < cellCompletionData.length; ++i) {
+      fetch("/perform/practice_cell_completion/" + cellCompletionData[i].id + "/", {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+        return response;
+      })
+      .then(data => {
+      })
+    }
+    setCellCompletionData([]);
+    setCompletedAt();
+    setLoaded(false);
   }
   
   useEffect(() => {
@@ -67,8 +89,8 @@ export default function PracticeCell(props) {
     }
   });
   return (
-    <div className={["col",((completedAt) ? 'bg-success' : 'bg-light')].join(" ")} onClick={onClick}>
-        {completedAt || (parseFloat((cellData.target_tempo_percentage + 0.5)*rowData.target_tempo).toFixed(0))}
+    <div className={["col",((completedAt) ? 'bg-success' : 'bg-light')].join(" ")} onClick={onClick} onContextMenu={onRightClick}>
+        {completedAt || (parseFloat((cellData.target_tempo_percentage)*rowData.target_tempo).toFixed(0))}
     </div>
   );
 }

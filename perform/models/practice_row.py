@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.db import models
 from .song import Song
 
+BASE_PERCENTAGE = 0.5
+
 class PracticeRow(models.Model):
     from .practice_grid import PracticeGrid
     song = models.ForeignKey(Song, on_delete=models.CASCADE, null=True, blank=True)
@@ -37,7 +39,7 @@ class PracticeRowSerializer(serializers.ModelSerializer):
     while i < steps:
       cell_data = {
           'practice_row': practice_row,
-          'target_tempo_percentage': ((float)(steps - i)/(steps*2))
+          'target_tempo_percentage': ((float)(steps - i)/(steps*2) +  BASE_PERCENTAGE)
       }
       practice_cell = PracticeCell.objects.create(**cell_data)
       practice_cell.save()

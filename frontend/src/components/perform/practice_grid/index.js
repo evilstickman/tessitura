@@ -155,8 +155,10 @@ export default function PracticeGrid() {
       </div>
       {loaded && (
         <div>
-        <h2>{gridData && gridData.name}</h2>
-        <h3>{gridData && gridData.notes}</h3>
+        <h2>Grid Name: {gridData && gridData.name}</h2>
+        <p><strong>Description:</strong> {gridData && gridData.notes}</p>
+        <p><em><small>Instructions: left-click a cell to mark a cell complete. Right click to clear completion data. click on the measure numbers to update or delete row data. Use the new row form to add additional rows. Steps are the number of steps between 55% of tempo and target tempo, inclusive, and provided as metronome markings.</small></em></p>
+        <p><em><small>Note - this is alpha software, and buggy. If a right click doesn't register, just try again. If you try to refresh the page, it's going to fail (conflict between django and react I haven't fixed yet). The format is also likely to change at the drop of a hat. Please send me your feedback! I would love to make this more useful!</small></em></p>
         <div className="practiceGridField">
           <div className="container-fluid">
             <div className="row">

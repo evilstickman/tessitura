@@ -144,7 +144,7 @@ class PracticeGridList extends Component {
               </label>
               <label>
                 Notes:
-                <input type='text' defaultValue={this.state.notes} onChange={this.changeNotes}/>
+                <input type='area' defaultValue={this.state.notes} onChange={this.changeNotes}/>
               </label>
               <input type="submit" value="Submit" />
             </form>
@@ -153,7 +153,7 @@ class PracticeGridList extends Component {
             <ul className="list-group">
               {this.state.data && this.state.data.map(practiceGrid => {
                 return (
-                  <div className={["list-group-item", 'inline-flex'].join(" ")}>
+                  <div className={["list-group-item", 'inline-flex'].join(" ")} key={"practice-grid-list-item-" + practiceGrid.id}>
                     <PracticeGridListItem key={"practice-grid-list-"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
                     <input type="button" onClick={this.onDeleteGrid} data-grid-id={practiceGrid.id} value="X" className={["col-1", 'align-self-end'].join(" ")} />
                   </div>

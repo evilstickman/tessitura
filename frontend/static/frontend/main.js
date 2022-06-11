@@ -2952,7 +2952,7 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
         defaultValue: this.state.name,
         onChange: this.changeName
       })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Notes:", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
-        type: "text",
+        type: "area",
         defaultValue: this.state.notes,
         onChange: this.changeNotes
       })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
@@ -2964,7 +2964,8 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
         className: "list-group"
       }, this.state.data && this.state.data.map(function (practiceGrid) {
         return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-          className: ["list-group-item", 'inline-flex'].join(" ")
+          className: ["list-group-item", 'inline-flex'].join(" "),
+          key: "practice-grid-list-item-" + practiceGrid.id
         }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
           key: "practice-grid-list-" + practiceGrid.id,
           practiceGrid: practiceGrid,
@@ -3151,6 +3152,11 @@ function PracticeCell(props) {
       loaded = _useState6[0],
       setLoaded = _useState6[1];
 
+  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)('loading'),
+      _useState8 = _slicedToArray(_useState7, 2),
+      placeholder = _useState8[0],
+      setPlaceholder = _useState8[1];
+
   var cellData = props.cellData;
   var rowData = props.rowData;
 
@@ -3179,6 +3185,27 @@ function PracticeCell(props) {
       // Trigger a refresh of the cell, ideally
       setLoaded(false);
     });
+  }
+
+  function onRightClick(event) {
+    console.log("You right-clicked " + cellData.id + ", clearing completion");
+    event.preventDefault();
+
+    for (var i = 0; i < cellCompletionData.length; ++i) {
+      fetch("/perform/practice_cell_completion/" + cellCompletionData[i].id + "/", {
+        method: 'DELETE'
+      }).then(function (response) {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+
+        return response;
+      }).then(function (data) {});
+    }
+
+    setCellCompletionData([]);
+    setCompletedAt();
+    setLoaded(false);
   }
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
@@ -3218,8 +3245,9 @@ function PracticeCell(props) {
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: ["col", completedAt ? 'bg-success' : 'bg-light'].join(" "),
-    onClick: onClick
-  }, completedAt || parseFloat((cellData.target_tempo_percentage + 0.5) * rowData.target_tempo).toFixed(0));
+    onClick: onClick,
+    onContextMenu: onRightClick
+  }, completedAt || parseFloat(cellData.target_tempo_percentage * rowData.target_tempo).toFixed(0));
 }
 
 /***/ }),
@@ -3441,7 +3469,7 @@ function PracticeGrid() {
     type: "text",
     className: "form-control",
     placeholder: gridData.notes
-  }))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+  }))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, "Grid Name: ", gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", null, "Description:"), " ", gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("em", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("small", null, "Instructions: left-click a cell to mark a cell complete. Right click to clear completion data. click on the measure numbers to update or delete row data. Use the new row form to add additional rows. Steps are the number of steps between 55% of tempo and target tempo, inclusive, and provided as metronome markings."))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("em", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("small", null, "Note - this is alpha software, and buggy. If a right click doesn't register, just try again. If you try to refresh the page, it's going to fail (conflict between django and react I haven't fixed yet). The format is also likely to change at the drop of a hat. Please send me your feedback! I would love to make this more useful!"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "practiceGridField"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "container-fluid"
@@ -3501,7 +3529,91 @@ function PracticeRow(props) {
       loaded = _useState4[0],
       setLoaded = _useState4[1];
 
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
+      _useState6 = _slicedToArray(_useState5, 2),
+      editing = _useState6[0],
+      setEditing = _useState6[1];
+
+  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("loading"),
+      _useState8 = _slicedToArray(_useState7, 2),
+      placeholder = _useState8[0],
+      setPlaceholder = _useState8[1];
+
   var rowData = props.rowData;
+
+  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(rowData.start_measure),
+      _useState10 = _slicedToArray(_useState9, 2),
+      startMeasure = _useState10[0],
+      setStartMeasure = _useState10[1];
+
+  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(rowData.end_measure),
+      _useState12 = _slicedToArray(_useState11, 2),
+      endMeasure = _useState12[0],
+      setEndMeasure = _useState12[1];
+
+  function triggerEditMode(event) {
+    setEditing(!editing);
+  }
+
+  function updateRowStartData(event) {
+    setStartMeasure(event.target.value);
+  }
+
+  function updateRowEndData(event) {
+    setEndMeasure(event.target.value);
+  }
+
+  function commitRowDataSave(event) {
+    event.preventDefault();
+    setEditing(false);
+    console.log("Updating row");
+    var postBody = {
+      "start_measure": startMeasure,
+      "end_measure": endMeasure,
+      "steps": rowData.steps,
+      'target_tempo': rowData.target_tempo,
+      'practice_grid_id': rowData.practice_grid_id
+    };
+    fetch("/perform/practice_row/" + rowData.id + "/", {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
+    }).then(function (response) {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+
+      return response.json();
+    }).then(function (data) {
+      setEditing(false);
+      setLoaded(false);
+    })["catch"](function (err) {
+      setPlaceholder(err.toString());
+    });
+  }
+
+  function handleDeleteRow(event) {
+    event.preventDefault();
+    setEditing(false);
+    console.log("Updating row");
+    fetch("/perform/practice_row/" + rowData.id + "/", {
+      method: 'DELETE'
+    }).then(function (response) {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+
+      return response;
+    }).then(function (data) {
+      setEditing(false);
+      setLoaded(false);
+    })["catch"](function (err) {
+      console.error(err);
+    });
+  }
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (rowData && !loaded) {
       fetch("/perform/practice_row/" + rowData.id + "/practice_cells/").then(function (response) {
@@ -3522,11 +3634,36 @@ function PracticeRow(props) {
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: ['row', 'no-gutters', "border", "border-dark"].join(' ')
+  }, editing && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
+    onSubmit: commitRowDataSave,
+    className: ["form-inline"].join(" ")
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "col-1"
-  }, rowData && rowData.start_measure), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "col-1"
-  }, rowData && rowData.end_measure), cellData && cellData.map(function (cell) {
+    className: ["form-group", "mb-2"].join(" ")
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "text",
+    value: startMeasure,
+    onChange: updateRowStartData
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "text",
+    value: endMeasure,
+    onChange: updateRowEndData
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "submit",
+    value: "Save"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "button",
+    value: "Cancel",
+    onClick: triggerEditMode
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "button",
+    value: "Delete",
+    onClick: handleDeleteRow
+  }))), !editing && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: ["col"].join(" ")
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "col",
+    onClick: triggerEditMode
+  }, "MM ", startMeasure, "-", endMeasure)), cellData && cellData.map(function (cell) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'cell' + cell.id,
       cellData: cell,
