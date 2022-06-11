@@ -33,7 +33,7 @@ export default function PracticeRow(props) {
         <div className="col-1">{rowData && rowData.start_measure}</div>
         <div className="col-1">{rowData && rowData.end_measure}</div>
         { cellData && cellData.map( 
-          (cell) => <PracticeCell key={'cell' + cell.id} cellData={cell} />
+          (cell) => <PracticeCell key={'cell' + cell.id} cellData={cell} rowData={rowData}/>
         )}
       </div>
   );

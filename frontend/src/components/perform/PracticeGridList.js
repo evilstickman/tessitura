@@ -18,6 +18,7 @@ class PracticeGridList extends Component {
     this.changeNotes = this.changeNotes.bind(this);
     this.createNewGrid = this.createNewGrid.bind(this);
     this.fetchGridList = this.fetchGridList.bind(this);
+    this.onDeleteGrid = this.onDeleteGrid.bind(this);
   }
 
   fetchGridList() {
@@ -106,15 +107,42 @@ class PracticeGridList extends Component {
     });
   }
 
+  onDeleteGrid(event) {
+    event.preventDefault();
+    console.log("Deleting a grid");
+    fetch("/perform/practice_grid/" + event.target.getAttribute('data-grid-id') + "/", {method: 'DELETE'})      
+    .then(response => {
+      if (response.status > 400) {
+        return setPlaceholder("Something went wrong!");
+      }
+      return response;
+    })
+    .then(data => {
+      this.setState(() => {
+        return {
+          data: [],
+          loaded: false,
+          name: '',
+          notes: ''
+        };
+      });
+      // Trigger a refresh of the cell, ideally
+      this.fetchGridList();
+    });
+  }
+
   render() {
     const { path } = this.state;
     return (
         <div className="container">
           <div className="row">
-            <ul>
+            <ul className="list-group">
               {this.state.data && this.state.data.map(practiceGrid => {
                 return (
+                  <div className="list-group-item">
                     <PracticeGridListItem key={"liparent+"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} />
+                    <input type="button" onClick={this.onDeleteGrid} data-grid-id={practiceGrid.id} value="Delete" />
+                  </div>
                 );
               })}
             </ul>

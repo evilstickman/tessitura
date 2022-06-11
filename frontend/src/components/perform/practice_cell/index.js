@@ -6,6 +6,7 @@ export default function PracticeCell(props) {
   const [completedAt, setCompletedAt] = useState();
   const [loaded, setLoaded] = useState(false);
   let cellData = props.cellData;
+  let rowData = props.rowData;
 
   function onClick() {
     console.log("You clicked " + cellData.id + ", creating completion");
@@ -66,8 +67,8 @@ export default function PracticeCell(props) {
     }
   });
   return (
-    <div className={["col",((completedAt) ? 'background-green' : 'background-white')].join(" ")} onClick={onClick}>
-        {completedAt}
+    <div className={["col-1",((completedAt) ? 'background-green' : 'background-white')].join(" ")} onClick={onClick}>
+        {completedAt || (parseFloat(cellData.target_tempo_percentage*rowData.target_tempo).toFixed(0))}
     </div>
   );
 }

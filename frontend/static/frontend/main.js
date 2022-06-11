@@ -2812,6 +2812,7 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
     _this.changeNotes = _this.changeNotes.bind(_assertThisInitialized(_this));
     _this.createNewGrid = _this.createNewGrid.bind(_assertThisInitialized(_this));
     _this.fetchGridList = _this.fetchGridList.bind(_assertThisInitialized(_this));
+    _this.onDeleteGrid = _this.onDeleteGrid.bind(_assertThisInitialized(_this));
     return _this;
   }
 
@@ -2908,19 +2909,59 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       });
     }
   }, {
+    key: "onDeleteGrid",
+    value: function onDeleteGrid(event) {
+      var _this4 = this;
+
+      event.preventDefault();
+      console.log("Deleting a grid");
+      fetch("/perform/practice_grid/" + event.target.getAttribute('data-grid-id') + "/", {
+        method: 'DELETE'
+      }).then(function (response) {
+        if (response.status > 400) {
+          return setPlaceholder("Something went wrong!");
+        }
+
+        return response;
+      }).then(function (data) {
+        _this4.setState(function () {
+          return {
+            data: [],
+            loaded: false,
+            name: '',
+            notes: ''
+          };
+        }); // Trigger a refresh of the cell, ideally
+
+
+        _this4.fetchGridList();
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
+      var _this5 = this;
+
       var path = this.state.path;
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         className: "container"
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         className: "row"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", null, this.state.data && this.state.data.map(function (practiceGrid) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", {
+        className: "list-group"
+      }, this.state.data && this.state.data.map(function (practiceGrid) {
+        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+          className: "list-group-item"
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
           key: "liparent+" + practiceGrid.id,
           practiceGrid: practiceGrid,
           id: practiceGrid['id']
-        });
+        }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+          type: "button",
+          onClick: _this5.onDeleteGrid,
+          "data-grid-id": practiceGrid.id,
+          value: "Delete"
+        }));
       }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, "Create a new Grid:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("form", {
         onSubmit: this.createNewGrid
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Name:", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
@@ -2965,8 +3006,8 @@ function PracticeGridListItem(props) {
   var practiceGrid = props.practiceGrid;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "practiceGridDetail"
-  }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
-    key: "grid-" + practiceGrid['id']
+  }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "list-group-item"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("strong", null, practiceGrid['name'])), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Link, {
     to: '/performance_support/practice_grid_display/' + practiceGrid['id'],
     className: "nav-link"
@@ -3106,6 +3147,7 @@ function PracticeCell(props) {
       setLoaded = _useState6[1];
 
   var cellData = props.cellData;
+  var rowData = props.rowData;
 
   function onClick() {
     console.log("You clicked " + cellData.id + ", creating completion");
@@ -3170,9 +3212,9 @@ function PracticeCell(props) {
     }
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: ["col", completedAt ? 'background-green' : 'background-white'].join(" "),
+    className: ["col-1", completedAt ? 'background-green' : 'background-white'].join(" "),
     onClick: onClick
-  }, completedAt);
+  }, completedAt || parseFloat(cellData.target_tempo_percentage * rowData.target_tempo).toFixed(0));
 }
 
 /***/ }),
@@ -3397,7 +3439,7 @@ function PracticeGrid() {
   }))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, !loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, placeholder)), loaded && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h2", null, gridData && gridData.name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null, gridData && gridData.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "practiceGridField"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "container"
+    className: "container-fluid"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "row"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
@@ -3486,7 +3528,8 @@ function PracticeRow(props) {
   }, rowData && rowData.end_measure), cellData && cellData.map(function (cell) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'cell' + cell.id,
-      cellData: cell
+      cellData: cell,
+      rowData: rowData
     });
   }));
 }

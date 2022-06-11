@@ -11,12 +11,12 @@ export default function PracticeGridListItem(props) {
       <div className="practiceGridDetail">
         
         { practiceGrid &&
-          <li key={"grid-"+practiceGrid['id']}>
+          <div className="list-group-item">
             <div><strong>{practiceGrid['name']}</strong></div>
             <div>
               <Link to={'/performance_support/practice_grid_display/' + practiceGrid['id']} className='nav-link'>Open</Link>  
             </div>
-          </li>
+          </div>
         }
       </div>
     );

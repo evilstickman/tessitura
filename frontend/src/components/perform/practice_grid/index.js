@@ -158,7 +158,7 @@ export default function PracticeGrid() {
         <h2>{gridData && gridData.name}</h2>
         <h3>{gridData && gridData.notes}</h3>
         <div className="practiceGridField">
-          <div className="container">
+          <div className="container-fluid">
             <div className="row">
               <div className="col-1">Target Tempo</div>
               <div className="col-1">Start measure</div>
