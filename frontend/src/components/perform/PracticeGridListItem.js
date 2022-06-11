@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, Card, ListGroup, ListGroupItem } from "react-bootstrap";
+import { Button, Card, ListGroup, ListGroupItem, ProgressBar } from "react-bootstrap";
 import { 
   Link,
   useParams
@@ -36,6 +36,7 @@ export default function PracticeGridListItem(props) {
               <Card.Text>
                 {practiceGrid.notes}
               </Card.Text>
+              <ProgressBar now={practiceGrid.percentage_complete*100} />
               
             </Card.Body>
             <Card.Footer>
