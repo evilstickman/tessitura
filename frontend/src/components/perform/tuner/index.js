@@ -1,0 +1,339 @@
+import React, { Component, useEffect, useState, useMatch } from "react";
+
+export default function Tuner() {
+  var FREQ_TO_NOTE = {
+      "16.35": "C0",
+      "17.32":"C#0/Db0",
+      "18.35": "D0",
+      "19.45": "D#0/Eb0",
+      "20.60": "E0",
+      "21.83": "F0",
+      "23.12": "F#0/Gb0",
+      "24.50": "G0",
+      "25.96": "G#0/Ab0",
+      "27.50": "A0",
+      "29.14": "A#0/Bb0",
+      "30.87": "B0",
+      "32.70": "C1",
+      "20.60": "E0",
+      "34.65": "C#1/Db1",
+      "36.71": "D1",
+      "38.89": "D#1/Eb1",
+      "41.20": "E1",
+      "43.65": "F1",
+      "46.25": "F#1/Gb1",
+      "49.00": "G1",
+      "51.91": "G#1/Ab1",
+      "55.00": "A1",
+      "58.27": "A#1/Bb1",
+      "61.74": "B1",
+      "65.41": "C2",
+      "69.30": "C#2/Db2",
+      "73.42": "D2",
+      "77.78": "D#2/Eb2",
+      "82.41": "E2",
+      "87.31": "F2",
+      "92.50": "F#2/Gb2",
+      "98.00": "G2",
+      "103.83": "G#2/Ab2",
+      "110.00": "A2",
+      "116.54": "A#2/Bb2 	",
+      "123.47":"B2",
+      "130.81":"C3",
+      "138.59": "C#3/Db3",
+      "146.83": "D3",
+      "155.56":"D#3/Eb3",
+      "164.81":"E3",
+      "174.61":"F3",
+      "185.00":"F#3/Gb3",
+      "196.00":"G3",
+      "207.65":"G#3/Ab3",
+      "220.00":"A3",
+      "233.08":"A#3/Bb3",
+      "246.94":"B3",
+      "261.63":"C4",
+      "277.18":"C#4/Db4",
+      "293.66":"D4",
+      "311.13":"D#4/Eb4",
+      "329.63": "E4",
+      "349.23":"F4",
+      "369.99": "F#4/Gb4",
+      "392.00": "G4",
+      "415.30":"G#4/Ab4",
+      "440.00":"A4",
+      "466.16": "A#4/Bb4",
+      "493.88":"B4",
+      "523.25":"C5",
+      "554.37": "C#5/Db5",
+      "587.33":"D5",
+      "622.25":"D#5/Eb5",
+      "659.25":"E5",
+      "698.46":"F5",
+      "739.99":"F#5/Gb5",
+      "783.99":"G5",
+      "830.61":"G#5/Ab5",
+      "880.00":"A5",
+      "932.33":"A#5/Bb5",
+      "987.77": "B5",
+      "1046.50": "C6",
+      "1108.73":"C#6/Db6",
+      "1174.66": "D6",
+      "1244.51": "D#6/Eb6",
+      "1318.51":"E6",
+      "1396.91":"F6",
+      "1479.98":"F#6/Gb6",
+      "1567.98":"G6",
+      "1661.22":"G#6/Ab6",
+      "1760.00":"A6",
+      "1864.66":"A#6/Bb6",
+      "1975.53":"B6",
+      "2093.00":"C7",
+      "2217.46":"C#7/Db7",
+      "2349.32":"D7",
+      "2489.02":"D#7/Eb7",
+      "2637.02":"E7",
+      "2793.83":"F7",
+      "2959.96":"F#7/Gb7",
+      "3135.96":"G7",
+      "3322.44":"G#7/Ab7",
+      "3520.00":"A7",
+      "3729.31":"A#7/Bb7",
+      "3951.07":"B7",
+      "4186.01": "C8",
+      "4434.92": "C#8/Db8",
+      "4698.63":"D8",
+      "4978.03":"D#8/Eb8",
+      "5274.04":"E8",
+      "5587.65": "F8",
+      "5919.91":"F#8/Gb8",
+      "6271.93":"G8",
+      "6644.88":"G#8/Ab8",
+      "7040.00":"A8",
+      "7458.62": "A#8/Bb8",
+      "7902.13": "B8" 
+    };
+  var frequency_table = [];
+  var BUFF_SIZE = 16384;      
+  var audioInput = null;
+  var microphone_stream = null;
+  var gain_node = null;
+  var script_processor_node = null;
+  var script_processor_fft_node = null;
+  var analyserNode = null;
+  var audioContext = null;
+
+  const [notetracking, setNotetracking] = useState("-");
+  const [tunerEnableText, setTunerEnableText] = useState("ENABLE")
+  const [hideNoteTracking, setHideNoteTracking] = useState(true);
+  const [titleText, setTitleText] = useState("Press the button");
+  function createAudioContext() {
+
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;;
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({  audio: true })
+            .then(function (stream) {
+              start_microphone(stream);
+            })
+            .catch(function (e) { alert(e.name + ": " + e.message); });
+        }
+        else {
+        navigator.getUserMedia({ audio: true }, 
+            function (stream) {
+              start_microphone(stream);
+            }, 
+            function () { alert("The current browser does not support getUserMedia"); });
+        }
+        audioContext = new AudioContext();
+      }
+      function show_some_data(given_typed_array, num_row_to_display, label) {
+      
+        var size_buffer = given_typed_array.length;
+        var index = 0;
+        var max_index = num_row_to_display;
+        var myoutput = notetracking+"\n";
+
+        var floatmax = -99999999;
+        for (; index < max_index && index < size_buffer; index += 1) {
+            myoutput += given_typed_array[index]['freq'].toFixed(2) + ",";
+            if(given_typed_array[index]['db'] > floatmax)
+              floatmax = given_typed_array[index]['freq'];              
+        }
+        setNotetracking(myoutput);//"NOW PLAYING"given_typed_array.join(",");
+        var note_info_block = getNoteNames(floatmax);
+        setTitleText(note_info_block["note"]);
+        //$("#notetracking").text =myoutput;// given_typed_array.join(",");
+
+        if(floatmax > -99)
+              var x = 0;
+    }
+    function process_microphone_buffer(event) { // invoked by event loop
+    
+        var i, N, inp, microphone_output_buffer;
+
+        microphone_output_buffer = event.inputBuffer.getChannelData(0); // just mono - 1 channel for now
+
+        // microphone_output_buffer  <-- this buffer contains current gulp of data size BUFF_SIZE
+
+        show_some_data(microphone_output_buffer, 5, "from getChannelData");
+    }
+
+    function buildFrequencyTable() {
+      var base = "16.35";
+      var max = "7902.13";
+      var float_array = []
+      for (var key in FREQ_TO_NOTE) {
+        float_array.push(parseFloat(key));
+      }
+      // now sort the array in case of out of order key access
+      // this gives us a range of frequencyes
+      // Now for each key, define: center, 50% below, 50% above, next note lower, next note upper, note name
+      // finally loop through each item above to find which note is played.
+        for (var key in FREQ_TO_NOTE) {
+          var float_key = parseFloat(key);
+
+          var prev_key = 0;
+          var next_key = 0;
+          // get base case
+          if(key == base) {
+            prev_key = float_array.indexOf(float_key)
+            next_key = (float_array.indexOf(float_key) + 1) % float_array.length
+          }
+          else {
+            prev_key = float_array.indexOf(float_key) -1
+            next_key = (float_array.indexOf(float_key) + 1) % float_array.length
+          }
+          var prev_freq = float_array[prev_key]
+          var next_freq = float_array[next_key]
+          var curr_note = FREQ_TO_NOTE[float_key.toString()]
+          var next_note = FREQ_TO_NOTE[next_freq.toString()]
+          var prev_note = FREQ_TO_NOTE[prev_freq.toString()]
+          frequency_table.push({
+            "center": float_key,
+            "50_below": float_key - ((float_key - prev_freq)/2.0 ),
+            "50_above": float_key + ((next_freq - float_key)/2.0),
+            "note_below":prev_note,
+            "note_above":next_note,
+            "note": curr_note
+          });
+        }
+
+    }
+
+    function getNoteNames(frequency) {
+      var retval = "-"
+      for(var i = 0; i < frequency_table.length; ++i) {
+        if(frequency > frequency_table[i]['50_below'] && frequency < frequency_table[i]['50_above'])
+          retval = frequency_table[i];
+      }
+      return retval;
+    }
+
+    function start_microphone(stream){
+      buildFrequencyTable();
+      audioContext.resume().then(() => {
+        console.log('Playback resumed successfully');
+      });
+
+      gain_node = audioContext.createGain();
+      gain_node.connect( audioContext.destination );
+
+      microphone_stream = audioContext.createMediaStreamSource(stream);
+      //microphone_stream.connect(gain_node); 
+
+      script_processor_node = audioContext.createScriptProcessor(BUFF_SIZE, 1, 1);
+      script_processor_node.onaudioprocess = process_microphone_buffer;
+
+      microphone_stream.connect(script_processor_node);
+
+
+
+      // --- setup FFT
+
+      script_processor_fft_node = audioContext.createScriptProcessor(2048, 1, 1);
+      script_processor_fft_node.connect(gain_node);
+
+      analyserNode = audioContext.createAnalyser();
+      analyserNode.smoothingTimeConstant = 0;
+      analyserNode.fftSize = 8192;
+
+      microphone_stream.connect(analyserNode);
+
+      analyserNode.connect(script_processor_fft_node);
+
+      script_processor_fft_node.onaudioprocess = function() {
+
+        // get the average for the first channel
+        var array = new Float32Array(analyserNode.frequencyBinCount);
+        analyserNode.getFloatFrequencyData(array);
+
+        analyserNode.maxDecibels = 0;
+        analyserNode.minDecibels = -10;
+
+        var loudest_five_frequencies = [{"index": -1, "rank": 5, "freq":0, "db":-999},
+                                        {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                        {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                        {"index": -1, "rank": 5, "freq":0, "db":-999},
+                                        {"index": -1, "rank": 5, "freq":0, "db":-999}]
+        // draw the spectrogram
+        var frequency_step = 22050.0/(1.0 * array.length);
+        var curr_freq = 0;
+        if (microphone_stream.playbackState == microphone_stream.PLAYING_STATE) {
+            for(var i = 0;  i < array.length; ++i) {
+
+              curr_freq += frequency_step
+              for(var j=0; j < 5; ++j) {
+                if(array[i] > loudest_five_frequencies[j]["db"])
+                {
+                  loudest_five_frequencies[j] = {"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+                  // loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+                  //loudest_five_frequencies[j]=curr_freq;
+                  //loudest_five_frequencies.sort((a,b) => { return (a && b) && a['db'] > b['db'];});
+                  //loudest_five_frequencies.pop();
+                  //bubbleSort(loudest_five_frequencies)
+                  continue;
+                }
+              }
+              
+            }
+            show_some_data(loudest_five_frequencies, 5, "from fft");
+        }
+      };
+    }
+
+  
+
+    function enableTuner() {
+
+      let nextTextVal = (tunerEnableText =="STOP") ? "ENABLE" : "STOP";
+      setTunerEnableText(nextTextVal);
+      setHideNoteTracking(false);
+      if(nextTextVal == "STOP") {
+        
+        if(!audioContext){
+          audioContext = new AudioContext;
+        } 
+        createAudioContext();
+        
+      } else {
+        setTitleText("STOPPED");
+        audioContext.close();
+      }
+    }
+    useEffect(() => {
+    });
+
+    return (
+      <div id="tuner">
+        <div className="container">
+          <p>This tuner may not work with mobile devices. If you receive an error about an insecure origin, please try the <code>https</code> version of the current url.</p>
+        </div>
+        <div className="container">
+          <h1 id="majortitle" className="col-1">{titleText}</h1>
+          
+          <button id="enabletuner" text={tunerEnableText} onClick={enableTuner}>{tunerEnableText}</button> <p />
+        </div>
+      </div>
+    )
+
+}
+
