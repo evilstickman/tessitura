@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Col, Row } from "react-bootstrap";
+import { Col, Row, Card } from "react-bootstrap";
 import { createRoot } from 'react-dom/client'
 import PracticeGridListItem from './PracticeGridListItem'
 
@@ -141,8 +141,13 @@ class PracticeGridList extends Component {
     const { path } = this.state;
     return (
         <div className="container">
-          <div>
-            <h3>Create a new Grid:</h3>
+          <Card
+          bg='light'
+          key='light'
+          text='dark'
+          border='dark'>
+            <Card.Header><strong>Create a new Grid:</strong></Card.Header>
+            <Card.Body>
             <form onSubmit={this.createNewGrid}>
               <div className="form-group">
               <label>
@@ -156,7 +161,8 @@ class PracticeGridList extends Component {
               <input type="submit" value="Submit" />
               </div>
             </form>
-          </div>
+            </Card.Body>
+          </Card>
           
           <br />
           <Row xs={1} md={2} className="g-4">
