@@ -3212,7 +3212,7 @@ function PracticeCell(props) {
     }
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: ["col-1", completedAt ? 'background-green' : 'background-gray'].join(" "),
+    className: ["col", completedAt ? 'background-green' : 'background-gray'].join(" "),
     onClick: onClick
   }, completedAt || parseFloat((cellData.target_tempo_percentage + 0.5) * rowData.target_tempo).toFixed(0));
 }

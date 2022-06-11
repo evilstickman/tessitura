@@ -67,7 +67,7 @@ export default function PracticeCell(props) {
     }
   });
   return (
-    <div className={["col-1",((completedAt) ? 'background-green' : 'background-gray')].join(" ")} onClick={onClick}>
+    <div className={["col",((completedAt) ? 'background-green' : 'background-gray')].join(" ")} onClick={onClick}>
         {completedAt || (parseFloat((cellData.target_tempo_percentage + 0.5)*rowData.target_tempo).toFixed(0))}
     </div>
   );
