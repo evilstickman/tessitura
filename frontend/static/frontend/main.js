@@ -3035,10 +3035,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/index.js");
 /* harmony import */ var react_dom_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom/client */ "./node_modules/react-dom/client.js");
 /* harmony import */ var _PracticeGridList__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./PracticeGridList */ "./src/components/perform/PracticeGridList.js");
 /* harmony import */ var _practice_grid__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./practice_grid */ "./src/components/perform/practice_grid/index.js");
+/* harmony import */ var _tuner__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./tuner */ "./src/components/perform/tuner/index.js");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -3060,6 +3061,7 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 
 
 
@@ -3092,10 +3094,10 @@ var Perform = /*#__PURE__*/function (_Component) {
       //-- fetch practice grids for user here and list 'em! -->
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         className: "container"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Performer's Practice Tools"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_4__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_4__.Route, {
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "Practice Grids"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, {
         path: "practice_grid_display/:gridId",
         element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_grid__WEBPACK_IMPORTED_MODULE_3__["default"], null)
-      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_4__.Route, {
+      }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, {
         path: "",
         element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PracticeGridListDetail, null)
       })));
@@ -3670,6 +3672,308 @@ function PracticeRow(props) {
       rowData: rowData
     });
   }));
+}
+
+/***/ }),
+
+/***/ "./src/components/perform/tuner/index.js":
+/*!***********************************************!*\
+  !*** ./src/components/perform/tuner/index.js ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Tuner)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+function Tuner() {
+  var _FREQ_TO_NOTE;
+
+  var FREQ_TO_NOTE = (_FREQ_TO_NOTE = {
+    "16.35": "C0",
+    "17.32": "C#0/Db0",
+    "18.35": "D0",
+    "19.45": "D#0/Eb0",
+    "20.60": "E0",
+    "21.83": "F0",
+    "23.12": "F#0/Gb0",
+    "24.50": "G0",
+    "25.96": "G#0/Ab0",
+    "27.50": "A0",
+    "29.14": "A#0/Bb0",
+    "30.87": "B0",
+    "32.70": "C1"
+  }, _defineProperty(_FREQ_TO_NOTE, "20.60", "E0"), _defineProperty(_FREQ_TO_NOTE, "34.65", "C#1/Db1"), _defineProperty(_FREQ_TO_NOTE, "36.71", "D1"), _defineProperty(_FREQ_TO_NOTE, "38.89", "D#1/Eb1"), _defineProperty(_FREQ_TO_NOTE, "41.20", "E1"), _defineProperty(_FREQ_TO_NOTE, "43.65", "F1"), _defineProperty(_FREQ_TO_NOTE, "46.25", "F#1/Gb1"), _defineProperty(_FREQ_TO_NOTE, "49.00", "G1"), _defineProperty(_FREQ_TO_NOTE, "51.91", "G#1/Ab1"), _defineProperty(_FREQ_TO_NOTE, "55.00", "A1"), _defineProperty(_FREQ_TO_NOTE, "58.27", "A#1/Bb1"), _defineProperty(_FREQ_TO_NOTE, "61.74", "B1"), _defineProperty(_FREQ_TO_NOTE, "65.41", "C2"), _defineProperty(_FREQ_TO_NOTE, "69.30", "C#2/Db2"), _defineProperty(_FREQ_TO_NOTE, "73.42", "D2"), _defineProperty(_FREQ_TO_NOTE, "77.78", "D#2/Eb2"), _defineProperty(_FREQ_TO_NOTE, "82.41", "E2"), _defineProperty(_FREQ_TO_NOTE, "87.31", "F2"), _defineProperty(_FREQ_TO_NOTE, "92.50", "F#2/Gb2"), _defineProperty(_FREQ_TO_NOTE, "98.00", "G2"), _defineProperty(_FREQ_TO_NOTE, "103.83", "G#2/Ab2"), _defineProperty(_FREQ_TO_NOTE, "110.00", "A2"), _defineProperty(_FREQ_TO_NOTE, "116.54", "A#2/Bb2 	"), _defineProperty(_FREQ_TO_NOTE, "123.47", "B2"), _defineProperty(_FREQ_TO_NOTE, "130.81", "C3"), _defineProperty(_FREQ_TO_NOTE, "138.59", "C#3/Db3"), _defineProperty(_FREQ_TO_NOTE, "146.83", "D3"), _defineProperty(_FREQ_TO_NOTE, "155.56", "D#3/Eb3"), _defineProperty(_FREQ_TO_NOTE, "164.81", "E3"), _defineProperty(_FREQ_TO_NOTE, "174.61", "F3"), _defineProperty(_FREQ_TO_NOTE, "185.00", "F#3/Gb3"), _defineProperty(_FREQ_TO_NOTE, "196.00", "G3"), _defineProperty(_FREQ_TO_NOTE, "207.65", "G#3/Ab3"), _defineProperty(_FREQ_TO_NOTE, "220.00", "A3"), _defineProperty(_FREQ_TO_NOTE, "233.08", "A#3/Bb3"), _defineProperty(_FREQ_TO_NOTE, "246.94", "B3"), _defineProperty(_FREQ_TO_NOTE, "261.63", "C4"), _defineProperty(_FREQ_TO_NOTE, "277.18", "C#4/Db4"), _defineProperty(_FREQ_TO_NOTE, "293.66", "D4"), _defineProperty(_FREQ_TO_NOTE, "311.13", "D#4/Eb4"), _defineProperty(_FREQ_TO_NOTE, "329.63", "E4"), _defineProperty(_FREQ_TO_NOTE, "349.23", "F4"), _defineProperty(_FREQ_TO_NOTE, "369.99", "F#4/Gb4"), _defineProperty(_FREQ_TO_NOTE, "392.00", "G4"), _defineProperty(_FREQ_TO_NOTE, "415.30", "G#4/Ab4"), _defineProperty(_FREQ_TO_NOTE, "440.00", "A4"), _defineProperty(_FREQ_TO_NOTE, "466.16", "A#4/Bb4"), _defineProperty(_FREQ_TO_NOTE, "493.88", "B4"), _defineProperty(_FREQ_TO_NOTE, "523.25", "C5"), _defineProperty(_FREQ_TO_NOTE, "554.37", "C#5/Db5"), _defineProperty(_FREQ_TO_NOTE, "587.33", "D5"), _defineProperty(_FREQ_TO_NOTE, "622.25", "D#5/Eb5"), _defineProperty(_FREQ_TO_NOTE, "659.25", "E5"), _defineProperty(_FREQ_TO_NOTE, "698.46", "F5"), _defineProperty(_FREQ_TO_NOTE, "739.99", "F#5/Gb5"), _defineProperty(_FREQ_TO_NOTE, "783.99", "G5"), _defineProperty(_FREQ_TO_NOTE, "830.61", "G#5/Ab5"), _defineProperty(_FREQ_TO_NOTE, "880.00", "A5"), _defineProperty(_FREQ_TO_NOTE, "932.33", "A#5/Bb5"), _defineProperty(_FREQ_TO_NOTE, "987.77", "B5"), _defineProperty(_FREQ_TO_NOTE, "1046.50", "C6"), _defineProperty(_FREQ_TO_NOTE, "1108.73", "C#6/Db6"), _defineProperty(_FREQ_TO_NOTE, "1174.66", "D6"), _defineProperty(_FREQ_TO_NOTE, "1244.51", "D#6/Eb6"), _defineProperty(_FREQ_TO_NOTE, "1318.51", "E6"), _defineProperty(_FREQ_TO_NOTE, "1396.91", "F6"), _defineProperty(_FREQ_TO_NOTE, "1479.98", "F#6/Gb6"), _defineProperty(_FREQ_TO_NOTE, "1567.98", "G6"), _defineProperty(_FREQ_TO_NOTE, "1661.22", "G#6/Ab6"), _defineProperty(_FREQ_TO_NOTE, "1760.00", "A6"), _defineProperty(_FREQ_TO_NOTE, "1864.66", "A#6/Bb6"), _defineProperty(_FREQ_TO_NOTE, "1975.53", "B6"), _defineProperty(_FREQ_TO_NOTE, "2093.00", "C7"), _defineProperty(_FREQ_TO_NOTE, "2217.46", "C#7/Db7"), _defineProperty(_FREQ_TO_NOTE, "2349.32", "D7"), _defineProperty(_FREQ_TO_NOTE, "2489.02", "D#7/Eb7"), _defineProperty(_FREQ_TO_NOTE, "2637.02", "E7"), _defineProperty(_FREQ_TO_NOTE, "2793.83", "F7"), _defineProperty(_FREQ_TO_NOTE, "2959.96", "F#7/Gb7"), _defineProperty(_FREQ_TO_NOTE, "3135.96", "G7"), _defineProperty(_FREQ_TO_NOTE, "3322.44", "G#7/Ab7"), _defineProperty(_FREQ_TO_NOTE, "3520.00", "A7"), _defineProperty(_FREQ_TO_NOTE, "3729.31", "A#7/Bb7"), _defineProperty(_FREQ_TO_NOTE, "3951.07", "B7"), _defineProperty(_FREQ_TO_NOTE, "4186.01", "C8"), _defineProperty(_FREQ_TO_NOTE, "4434.92", "C#8/Db8"), _defineProperty(_FREQ_TO_NOTE, "4698.63", "D8"), _defineProperty(_FREQ_TO_NOTE, "4978.03", "D#8/Eb8"), _defineProperty(_FREQ_TO_NOTE, "5274.04", "E8"), _defineProperty(_FREQ_TO_NOTE, "5587.65", "F8"), _defineProperty(_FREQ_TO_NOTE, "5919.91", "F#8/Gb8"), _defineProperty(_FREQ_TO_NOTE, "6271.93", "G8"), _defineProperty(_FREQ_TO_NOTE, "6644.88", "G#8/Ab8"), _defineProperty(_FREQ_TO_NOTE, "7040.00", "A8"), _defineProperty(_FREQ_TO_NOTE, "7458.62", "A#8/Bb8"), _defineProperty(_FREQ_TO_NOTE, "7902.13", "B8"), _FREQ_TO_NOTE);
+  var frequency_table = [];
+  var BUFF_SIZE = 16384;
+  var audioInput = null;
+  var microphone_stream = null;
+  var gain_node = null;
+  var script_processor_node = null;
+  var script_processor_fft_node = null;
+  var analyserNode = null;
+  var audioContext = null;
+
+  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("-"),
+      _useState2 = _slicedToArray(_useState, 2),
+      notetracking = _useState2[0],
+      setNotetracking = _useState2[1];
+
+  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("ENABLE"),
+      _useState4 = _slicedToArray(_useState3, 2),
+      tunerEnableText = _useState4[0],
+      setTunerEnableText = _useState4[1];
+
+  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true),
+      _useState6 = _slicedToArray(_useState5, 2),
+      hideNoteTracking = _useState6[0],
+      setHideNoteTracking = _useState6[1];
+
+  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("Press the button"),
+      _useState8 = _slicedToArray(_useState7, 2),
+      titleText = _useState8[0],
+      setTitleText = _useState8[1];
+
+  function createAudioContext() {
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    ;
+
+    if (navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({
+        audio: true
+      }).then(function (stream) {
+        start_microphone(stream);
+      })["catch"](function (e) {
+        alert(e.name + ": " + e.message);
+      });
+    } else {
+      navigator.getUserMedia({
+        audio: true
+      }, function (stream) {
+        start_microphone(stream);
+      }, function () {
+        alert("The current browser does not support getUserMedia");
+      });
+    }
+
+    audioContext = new AudioContext();
+  }
+
+  function show_some_data(given_typed_array, num_row_to_display, label) {
+    var size_buffer = given_typed_array.length;
+    var index = 0;
+    var max_index = num_row_to_display;
+    var myoutput = notetracking + "\n";
+    var floatmax = -99999999;
+
+    for (; index < max_index && index < size_buffer; index += 1) {
+      myoutput += given_typed_array[index]['freq'].toFixed(2) + ",";
+      if (given_typed_array[index]['db'] > floatmax) floatmax = given_typed_array[index]['freq'];
+    }
+
+    setNotetracking(myoutput); //"NOW PLAYING"given_typed_array.join(",");
+
+    var note_info_block = getNoteNames(floatmax);
+    setTitleText(note_info_block["note"]); //$("#notetracking").text =myoutput;// given_typed_array.join(",");
+
+    if (floatmax > -99) var x = 0;
+  }
+
+  function process_microphone_buffer(event) {
+    // invoked by event loop
+    var i, N, inp, microphone_output_buffer;
+    microphone_output_buffer = event.inputBuffer.getChannelData(0); // just mono - 1 channel for now
+    // microphone_output_buffer  <-- this buffer contains current gulp of data size BUFF_SIZE
+
+    show_some_data(microphone_output_buffer, 5, "from getChannelData");
+  }
+
+  function buildFrequencyTable() {
+    var base = "16.35";
+    var max = "7902.13";
+    var float_array = [];
+
+    for (var key in FREQ_TO_NOTE) {
+      float_array.push(parseFloat(key));
+    } // now sort the array in case of out of order key access
+    // this gives us a range of frequencyes
+    // Now for each key, define: center, 50% below, 50% above, next note lower, next note upper, note name
+    // finally loop through each item above to find which note is played.
+
+
+    for (var key in FREQ_TO_NOTE) {
+      var float_key = parseFloat(key);
+      var prev_key = 0;
+      var next_key = 0; // get base case
+
+      if (key == base) {
+        prev_key = float_array.indexOf(float_key);
+        next_key = (float_array.indexOf(float_key) + 1) % float_array.length;
+      } else {
+        prev_key = float_array.indexOf(float_key) - 1;
+        next_key = (float_array.indexOf(float_key) + 1) % float_array.length;
+      }
+
+      var prev_freq = float_array[prev_key];
+      var next_freq = float_array[next_key];
+      var curr_note = FREQ_TO_NOTE[float_key.toString()];
+      var next_note = FREQ_TO_NOTE[next_freq.toString()];
+      var prev_note = FREQ_TO_NOTE[prev_freq.toString()];
+      frequency_table.push({
+        "center": float_key,
+        "50_below": float_key - (float_key - prev_freq) / 2.0,
+        "50_above": float_key + (next_freq - float_key) / 2.0,
+        "note_below": prev_note,
+        "note_above": next_note,
+        "note": curr_note
+      });
+    }
+  }
+
+  function getNoteNames(frequency) {
+    var retval = "-";
+
+    for (var i = 0; i < frequency_table.length; ++i) {
+      if (frequency > frequency_table[i]['50_below'] && frequency < frequency_table[i]['50_above']) retval = frequency_table[i];
+    }
+
+    return retval;
+  }
+
+  function start_microphone(stream) {
+    buildFrequencyTable();
+    audioContext.resume().then(function () {
+      console.log('Playback resumed successfully');
+    });
+    gain_node = audioContext.createGain();
+    gain_node.connect(audioContext.destination);
+    microphone_stream = audioContext.createMediaStreamSource(stream); //microphone_stream.connect(gain_node); 
+
+    script_processor_node = audioContext.createScriptProcessor(BUFF_SIZE, 1, 1);
+    script_processor_node.onaudioprocess = process_microphone_buffer;
+    microphone_stream.connect(script_processor_node); // --- setup FFT
+
+    script_processor_fft_node = audioContext.createScriptProcessor(2048, 1, 1);
+    script_processor_fft_node.connect(gain_node);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.smoothingTimeConstant = 0;
+    analyserNode.fftSize = 8192;
+    microphone_stream.connect(analyserNode);
+    analyserNode.connect(script_processor_fft_node);
+
+    script_processor_fft_node.onaudioprocess = function () {
+      // get the average for the first channel
+      var array = new Float32Array(analyserNode.frequencyBinCount);
+      analyserNode.getFloatFrequencyData(array);
+      analyserNode.maxDecibels = 0;
+      analyserNode.minDecibels = -10;
+      var loudest_five_frequencies = [{
+        "index": -1,
+        "rank": 5,
+        "freq": 0,
+        "db": -999
+      }, {
+        "index": -1,
+        "rank": 5,
+        "freq": 0,
+        "db": -999
+      }, {
+        "index": -1,
+        "rank": 5,
+        "freq": 0,
+        "db": -999
+      }, {
+        "index": -1,
+        "rank": 5,
+        "freq": 0,
+        "db": -999
+      }, {
+        "index": -1,
+        "rank": 5,
+        "freq": 0,
+        "db": -999
+      }]; // draw the spectrogram
+
+      var frequency_step = 22050.0 / (1.0 * array.length);
+      var curr_freq = 0;
+
+      if (microphone_stream.playbackState == microphone_stream.PLAYING_STATE) {
+        for (var i = 0; i < array.length; ++i) {
+          curr_freq += frequency_step;
+
+          for (var j = 0; j < 5; ++j) {
+            if (array[i] > loudest_five_frequencies[j]["db"]) {
+              loudest_five_frequencies[j] = {
+                "index": i,
+                "rank": j,
+                "freq": curr_freq,
+                "db": array[i]
+              }; // loudest_five_frequencies[j]={"index": i, "rank": j, "freq":curr_freq, "db":array[i]};
+              //loudest_five_frequencies[j]=curr_freq;
+              //loudest_five_frequencies.sort((a,b) => { return (a && b) && a['db'] > b['db'];});
+              //loudest_five_frequencies.pop();
+              //bubbleSort(loudest_five_frequencies)
+
+              continue;
+            }
+          }
+        }
+
+        show_some_data(loudest_five_frequencies, 5, "from fft");
+      }
+    };
+  }
+
+  function enableTuner() {
+    var nextTextVal = tunerEnableText == "STOP" ? "ENABLE" : "STOP";
+    setTunerEnableText(nextTextVal);
+    setHideNoteTracking(false);
+
+    if (nextTextVal == "STOP") {
+      if (!audioContext) {
+        audioContext = new AudioContext();
+      }
+
+      createAudioContext();
+    } else {
+      setTitleText("STOPPED");
+      audioContext.close();
+    }
+  }
+
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {});
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    id: "tuner"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "This tuner may not work with mobile devices. If you receive an error about an insecure origin, please try the ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("code", null, "https"), " version of the current url.")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", {
+    id: "majortitle",
+    className: "col-1"
+  }, titleText), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    id: "enabletuner",
+    text: tunerEnableText,
+    onClick: enableTuner
+  }, tunerEnableText), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null)));
 }
 
 /***/ }),

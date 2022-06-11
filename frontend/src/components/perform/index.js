@@ -3,6 +3,7 @@ import { Routes, Route, useParams } from "react-router-dom";
 import { createRoot } from 'react-dom/client'
 import PracticeGridList from "./PracticeGridList";
 import PracticeGrid from "./practice_grid";
+import Tuner from "./tuner";
 
 function PracticeGridListDetail() {
   return (
@@ -21,11 +22,13 @@ class Perform extends Component {
     //-- fetch practice grids for user here and list 'em! -->
     return (
       <div className="container">
-        <h1>Performer's Practice Tools</h1>
+
+        <h1>Practice Grids</h1>
         <Routes>
           <Route path="practice_grid_display/:gridId" element = {<PracticeGrid />} />
           <Route path="" element = {<PracticeGridListDetail />} />
         </Routes>
+
       </div>
     );
   }
