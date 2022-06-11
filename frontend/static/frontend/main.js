@@ -3212,9 +3212,9 @@ function PracticeCell(props) {
     }
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: ["col-1", completedAt ? 'background-green' : 'background-white'].join(" "),
+    className: ["col-1", completedAt ? 'background-green' : 'background-gray'].join(" "),
     onClick: onClick
-  }, completedAt || parseFloat(cellData.target_tempo_percentage * rowData.target_tempo).toFixed(0));
+  }, completedAt || parseFloat((cellData.target_tempo_percentage + 0.5) * rowData.target_tempo).toFixed(0));
 }
 
 /***/ }),
@@ -3685,7 +3685,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_1___default()((_node_modules_css_loader_dist_runtime_sourceMaps_js__WEBPACK_IMPORTED_MODULE_0___default()));
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;;AAEA;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB;;AAEA;EACE,eAAe;EACf,cAAc;EACd,gBAAgB;EAChB,eAAe;EACf,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}"],"sourceRoot":""}]);
+___CSS_LOADER_EXPORT___.push([module.id, "thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}", "",{"version":3,"sources":["webpack://./static/stylesheets/practicegrid.css"],"names":[],"mappings":"AAAA;;AAEA;;;AAGA;EACE,oCAAoC;AACtC;;AAEA;EACE,uBAAuB;AACzB;;AAEA;EACE,2BAA2B;AAC7B;;AAEA;EACE,eAAe;EACf,cAAc;EACd,gBAAgB;EAChB,eAAe;EACf,qBAAqB;EACrB,mBAAmB;EACnB,eAAe;EACf,uBAAuB;AACzB","sourcesContent":["thead, tbody, tfoot, tr, td, th {\r\n\r\n}\r\n\r\n\r\n.background-green {\r\n  background-color: rgb(118, 217, 118);\r\n}\r\n\r\n.background-white {\r\n  background-color: white;\r\n}\r\n\r\n.background-gray {\r\n  background-color: lightgray;\r\n}\r\n\r\n.no-gutters {\r\n  margin-right: 0;\r\n  margin-left: 0;\r\n  padding-right: 0;\r\n  padding-left: 0;\r\n  border-color: inherit;\r\n  border-style: solid;\r\n  border-width: 0;\r\n  border: 1px solid black;\r\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

@@ -11,6 +11,10 @@ thead, tbody, tfoot, tr, td, th {
   background-color: white;
 }
 
+.background-gray {
+  background-color: lightgray;
+}
+
 .no-gutters {
   margin-right: 0;
   margin-left: 0;
