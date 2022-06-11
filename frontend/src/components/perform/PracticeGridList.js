@@ -168,7 +168,7 @@ class PracticeGridList extends Component {
           <Row xs={1} md={2} className="g-4">
             {this.state.data && this.state.data.map(practiceGrid => {
               return (
-                <Col>                  
+                <Col key={'col-'+practiceGrid.id}>                  
                   <PracticeGridListItem key={"practice-grid-list-"+practiceGrid.id } practiceGrid={practiceGrid}  id={practiceGrid['id']} callback={this.refreshList} />
                 </Col>
               );

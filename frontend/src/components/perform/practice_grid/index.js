@@ -13,6 +13,11 @@ export default function PracticeGrid() {
   let params=useParams();
   let gridId = params.gridId;
   let practiceGrid = params.practiceGrid;
+  let inputRowData = params.rowData;
+  let cellData=  params.cellData;
+  let cellCompletionData = params.cellCompletionData;
+  const [cellCompletionsByCellId, setCompletionsByCellId] = useState({})
+  const [cellsByRowId, setCellsByRowId] = useState({})
   const [name, setName] = useState(gridData.name);
   const [notes, setNotes] = useState(gridData.notes);
 
@@ -20,6 +25,24 @@ export default function PracticeGrid() {
   const [start, setStart] = useState("")
   const [end, setEnd] = useState("")
   const [steps, setSteps] = useState("")
+
+
+  function populateCellCompletions() {
+    completionsById = {}
+    for(let completion of gridData.cell_completions) {
+      if(!completionsById[completion.practice_cell_id]) {
+        completionsById[completion.practice_cell_id] = [completion]
+      }
+      else {
+        completionsById[completion.practice_cell_id].append(completion)
+      }
+    }
+    setCompletionsByCellId(completionsById)
+  }
+
+  function populateRowCells() {
+
+  }
 
   function onEditTargetTempo(event) {
     setTarget(event.target.value);
@@ -100,6 +123,9 @@ export default function PracticeGrid() {
       })
       .then(data => {
         setGridData(data);
+        
+        populateCellCompletions()
+        populateRowCells();
         setLoaded(true);
       });
       fetch("/perform/practice_grid/"+gridId+"/practice_rows/")
@@ -162,8 +188,7 @@ export default function PracticeGrid() {
         <div className="practiceGridField">
           <div className="container-fluid">
             <div className="row">
-              <div className="col-1">Start</div>
-              <div className="col-1">End</div>
+              <div className="col-1">Measures</div>
             </div>
             { rowData.map ( (row) => <PracticeRow key={'row' + row.id} rowData={row} /> )}
             

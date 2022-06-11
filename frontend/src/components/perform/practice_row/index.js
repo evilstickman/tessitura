@@ -112,7 +112,7 @@ export default function PracticeRow(props) {
             </form>}
           {!editing && 
         <div className={["col"].join(" ")}>
-          <div className="col" onClick={triggerEditMode}>MM {startMeasure}-{endMeasure}</div>
+          <div className="col" onClick={triggerEditMode}>{startMeasure}-{endMeasure}</div>
         </div>
           }
         { cellData && cellData.map( 

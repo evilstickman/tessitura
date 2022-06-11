@@ -36,7 +36,7 @@ SECRET_KEY = 'dd8byrq2$&eckw8=6ohi0&9l5$^2btmqi_f%wh(1=u87@a7(z^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True #os.environ.get('DJANGO_ENV') == 'development'
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost','practicegrids.com','herokuapp.com']
 
 
 

@@ -2982,7 +2982,9 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
         md: 2,
         className: "g-4"
       }, this.state.data && this.state.data.map(function (practiceGrid) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_5__["default"], null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
+        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_5__["default"], {
+          key: 'col-' + practiceGrid.id
+        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PracticeGridListItem__WEBPACK_IMPORTED_MODULE_2__["default"], {
           key: "practice-grid-list-" + practiceGrid.id,
           practiceGrid: practiceGrid,
           id: practiceGrid['id'],
@@ -3041,7 +3043,10 @@ function PracticeGridListItem(props) {
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "practiceGridDetail"
-  }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_1__["default"], {
+  }, practiceGrid && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    key: "practice-grid-detail" + practiceGrid.id
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    key: "practice-grid-detail-card" + practiceGrid.id,
     border: "dark"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_1__["default"].Header, null, practiceGrid['name']), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_1__["default"].Body, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_1__["default"].Text, null, practiceGrid.notes), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_bootstrap__WEBPACK_IMPORTED_MODULE_2__["default"], {
     now: practiceGrid.percentage_complete * 100,
@@ -3309,6 +3314,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_bootstrap__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-bootstrap */ "./node_modules/react-bootstrap/esm/Accordion.js");
 /* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/index.js");
 /* harmony import */ var _practice_row__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../practice_row */ "./src/components/perform/practice_row/index.js");
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -3350,36 +3357,76 @@ function PracticeGrid() {
   var params = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_2__.useParams)();
   var gridId = params.gridId;
   var practiceGrid = params.practiceGrid;
+  var inputRowData = params.rowData;
+  var cellData = params.cellData;
+  var cellCompletionData = params.cellCompletionData;
 
-  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(gridData.name),
+  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({}),
       _useState10 = _slicedToArray(_useState9, 2),
-      name = _useState10[0],
-      setName = _useState10[1];
+      cellCompletionsByCellId = _useState10[0],
+      setCompletionsByCellId = _useState10[1];
 
-  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(gridData.notes),
+  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({}),
       _useState12 = _slicedToArray(_useState11, 2),
-      notes = _useState12[0],
-      setNotes = _useState12[1];
+      cellsByRowId = _useState12[0],
+      setCellsByRowId = _useState12[1];
 
-  var _useState13 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
+  var _useState13 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(gridData.name),
       _useState14 = _slicedToArray(_useState13, 2),
-      target = _useState14[0],
-      setTarget = _useState14[1];
+      name = _useState14[0],
+      setName = _useState14[1];
 
-  var _useState15 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
+  var _useState15 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(gridData.notes),
       _useState16 = _slicedToArray(_useState15, 2),
-      start = _useState16[0],
-      setStart = _useState16[1];
+      notes = _useState16[0],
+      setNotes = _useState16[1];
 
   var _useState17 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
       _useState18 = _slicedToArray(_useState17, 2),
-      end = _useState18[0],
-      setEnd = _useState18[1];
+      target = _useState18[0],
+      setTarget = _useState18[1];
 
   var _useState19 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
       _useState20 = _slicedToArray(_useState19, 2),
-      steps = _useState20[0],
-      setSteps = _useState20[1];
+      start = _useState20[0],
+      setStart = _useState20[1];
+
+  var _useState21 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
+      _useState22 = _slicedToArray(_useState21, 2),
+      end = _useState22[0],
+      setEnd = _useState22[1];
+
+  var _useState23 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(""),
+      _useState24 = _slicedToArray(_useState23, 2),
+      steps = _useState24[0],
+      setSteps = _useState24[1];
+
+  function populateCellCompletions() {
+    completionsById = {};
+
+    var _iterator = _createForOfIteratorHelper(gridData.cell_completions),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var completion = _step.value;
+
+        if (!completionsById[completion.practice_cell_id]) {
+          completionsById[completion.practice_cell_id] = [completion];
+        } else {
+          completionsById[completion.practice_cell_id].append(completion);
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    setCompletionsByCellId(completionsById);
+  }
+
+  function populateRowCells() {}
 
   function onEditTargetTempo(event) {
     setTarget(event.target.value);
@@ -3444,6 +3491,8 @@ function PracticeGrid() {
         return response.json();
       }).then(function (data) {
         setGridData(data);
+        populateCellCompletions();
+        populateRowCells();
         setLoaded(true);
       });
       fetch("/perform/practice_grid/" + gridId + "/practice_rows/").then(function (response) {
@@ -3518,9 +3567,7 @@ function PracticeGrid() {
     className: "row"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col-1"
-  }, "Start"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "col-1"
-  }, "End")), rowData.map(function (row) {
+  }, "Measures")), rowData.map(function (row) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_row__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'row' + row.id,
       rowData: row
@@ -3704,7 +3751,7 @@ function PracticeRow(props) {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "col",
     onClick: triggerEditMode
-  }, "MM ", startMeasure, "-", endMeasure)), cellData && cellData.map(function (cell) {
+  }, startMeasure, "-", endMeasure)), cellData && cellData.map(function (cell) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_practice_cell__WEBPACK_IMPORTED_MODULE_1__["default"], {
       key: 'cell' + cell.id,
       cellData: cell,

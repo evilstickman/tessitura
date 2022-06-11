@@ -28,8 +28,8 @@ export default function PracticeGridListItem(props) {
       <div className="practiceGridDetail">
         
         { practiceGrid &&
-          <div>
-          <Card
+          <div key={"practice-grid-detail"+practiceGrid.id}>
+          <Card key={"practice-grid-detail-card"+practiceGrid.id}
             border="dark">
             <Card.Header>{practiceGrid['name']}</Card.Header>
             <Card.Body>
