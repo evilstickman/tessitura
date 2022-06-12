@@ -3461,6 +3461,9 @@ function PracticeGrid() {
 
         return response.json();
       }).then(function (data) {
+        data.sort(function (a, b) {
+          return a.start_measure - b.start_measure;
+        });
         setRowData(data);
         setLoaded(true);
       });
@@ -3670,6 +3673,9 @@ function PracticeRow(props) {
 
         return response.json();
       }).then(function (data) {
+        data.sort(function (a, b) {
+          return a.target_tempo_percentage - b.target_tempo_percentage;
+        });
         setCellData(data);
         setLoaded(true);
       });

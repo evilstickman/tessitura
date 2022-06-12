@@ -90,6 +90,7 @@ export default function PracticeRow(props) {
         return response.json();
       })
       .then(data => {
+        data.sort((a,b) => a.target_tempo_percentage - b.target_tempo_percentage);
         setCellData(data);
         setLoaded(true);
       });

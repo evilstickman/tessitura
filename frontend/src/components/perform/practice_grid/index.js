@@ -111,6 +111,7 @@ export default function PracticeGrid() {
         return response.json();
       })
       .then(data => {
+        data.sort((a,b) => a.start_measure - b.start_measure);
         setRowData(data);
         setLoaded(true);
       });
