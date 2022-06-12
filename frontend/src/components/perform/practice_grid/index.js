@@ -159,8 +159,9 @@ export default function PracticeGrid() {
         <div>
         <h2>Grid Name: {gridData && gridData.name}</h2>
         <p><strong>Description:</strong> {gridData && gridData.notes}</p>
-        <p><em><small>Instructions: left-click a cell to mark a cell complete. Right click to clear completion data. click on the measure numbers to update or delete row data. Use the new row form to add additional rows. Steps are the number of steps between 55% of tempo and target tempo, inclusive, and provided as metronome markings.</small></em></p>
+        <p><em><small>Instructions: left-click a cell to mark a cell complete. Right click to clear completion data. click on the measure numbers to update or delete row data. Use the new row form to add additional rows. Steps are the number of steps between ~40% of tempo and target tempo, and provided as metronome markings.</small></em></p>
         <p><em><small>Note - this is alpha software, and buggy. If a right click doesn't register, just try again. The format is also likely to change at the drop of a hat. Please send me your feedback! I would love to make this more useful!</small></em></p>
+        <p><em><small>There is no real limit to how many cells you add, but at the moment display gets wonky if you go beyond 12 steps in a row.</small></em></p>
         <div className="practiceGridField">
           <div className="container-fluid">
             <div className="row">

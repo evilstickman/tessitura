@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.db import models
 from .song import Song
 
-BASE_PERCENTAGE = 0.5
+BASE_PERCENTAGE = 0.4
 
 class PracticeRow(models.Model):
     from .practice_grid import PracticeGrid
