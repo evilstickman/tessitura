@@ -24,12 +24,12 @@ class App extends Component {
       <BrowserRouter>
         <div>
           <Navbar bg="light" expand="lg">
-            <Navbar.Brand href="/home">Tessitura</Navbar.Brand>
+            <Navbar.Brand href="/performance_support">Tessitura</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="mr-auto">
-                <NavItem eventkey={1} href="/">
-                  <Link to="/home" className="nav-link">Home</Link>
+                <NavItem eventkey={1} href="/performance_support">
+                  <Link to='/performance_support' className='nav-link'>Performance Support Tools</Link>
                 </NavItem>
                 <NavItem eventkey={2} href="/ensembles">
                   <Link to="/ensembles" className="nav-link">Ensembles</Link>
@@ -37,15 +37,12 @@ class App extends Component {
                 <NavItem eventkey={3} href="/musicians">
                   <Link to="/musicians" className="nav-link">Musicians</Link>
                 </NavItem>
-                <NavItem eventkey={4} href="/performance_support">
-                  <Link to='/performance_support' className='nav-link'>Performance Support Tools</Link>
-                </NavItem>
               </Nav>
             </Navbar.Collapse>
           </Navbar>
         </div>  
         <Routes>
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Perform />} />
           <Route path="/ensembles/*" element={<EnsembleList />} />
           <Route path="/musicians/*" element={<MusicianList />} />
           <Route path="/performance_support/*" element={<Perform />} />
