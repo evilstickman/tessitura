@@ -36,7 +36,7 @@ SECRET_KEY = 'dd8byrq2$&eckw8=6ohi0&9l5$^2btmqi_f%wh(1=u87@a7(z^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True #os.environ.get('DJANGO_ENV') == 'development'
-ALLOWED_HOSTS = ['localhost','practicegrids.com','herokuapp.com']
+ALLOWED_HOSTS = ['localhost','.practicegrids.com','.herokuapp.com', '159.223.198.58']
 
 
 
@@ -142,7 +142,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static")),
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"))
+STATIC_ROOT =  (os.path.join(BASE_DIR, "static/"))
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
