@@ -20,7 +20,7 @@ class PracticeGridAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids
   """
-  queryset = PracticeGrid.objects.all()
+  queryset = PracticeGrid.objects.order_by('name').all()
   serializer_class = PracticeGridSerializer
 
   @action(detail=True)
@@ -43,7 +43,7 @@ class PracticeRowAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids
   """
-  queryset = PracticeRow.objects.all()
+  queryset = PracticeRow.objects.order_by('start_measure').all()
   serializer_class = PracticeRowSerializer
 
   @action(detail=True)
@@ -57,7 +57,7 @@ class PracticeCellAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids
   """
-  queryset = PracticeCell.objects.all()
+  queryset = PracticeCell.objects.order_by('target_tempo_percentage').all()
   serializer_class = PracticeCellSerializer
 
   @action(detail=True)
@@ -71,5 +71,5 @@ class PracticeCellCompletionAPIView(viewsets.ModelViewSet):
   """
   # view/edit endpoint for practice grids
   """
-  queryset = PracticeCellCompletion.objects.all()
+  queryset = PracticeCellCompletion.objects.all().order_by('completion_date')
   serializer_class = PracticeCellCompletionSerializer
