@@ -89,7 +89,10 @@ class PracticeGridSerializer(serializers.ModelSerializer):
     distinct_count = obj.get_distinct_cell_completion_count()
     cell_count = obj.get_cell_count()
     logger.warning(f"{distinct_count}/{cell_count}")
-    return obj.get_distinct_cell_completion_count() / obj.get_cell_count()
+    
+    if(cell_count == 0):
+      return 0
+    return distinct_count / cell_count
 
   def create(self, validated_data):
     practice_grid = PracticeGrid.objects.create(**validated_data)
