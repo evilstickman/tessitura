@@ -25,7 +25,7 @@ class PracticeGridList extends Component {
 
   fetchGridList() {
     let {match} = this.props;
-    fetch("/perform/practice_grid")
+    fetch("/perform/practice_grid/")
       .then(response => {
         if (response.status > 400) {
           return this.setState(() => {

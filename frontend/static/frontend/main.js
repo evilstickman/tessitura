@@ -2821,7 +2821,7 @@ var PracticeGridList = /*#__PURE__*/function (_Component) {
       var _this2 = this;
 
       var match = this.props.match;
-      fetch("/perform/practice_grid").then(function (response) {
+      fetch("/perform/practice_grid/").then(function (response) {
         if (response.status > 400) {
           return _this2.setState(function () {
             return {
