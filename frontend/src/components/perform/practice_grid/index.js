@@ -61,6 +61,7 @@ export default function PracticeGrid() {
     })      
     .then(response => {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_grid/index.js");
         return setPlaceholder("Something went wrong!");
       }
       return response.json();
@@ -95,6 +96,7 @@ export default function PracticeGrid() {
       fetch("/perform/practice_grid/"+gridId)
       .then(response => {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_grid/index.js");
           return setPlaceholder("Something went wrong!");
         }
         return response.json();
@@ -106,6 +108,7 @@ export default function PracticeGrid() {
       fetch("/perform/practice_grid/"+gridId+"/practice_rows/")
       .then(response => {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_grid/index.js");
           return setPlaceholder("Something went wrong!");
         }
         return response.json();

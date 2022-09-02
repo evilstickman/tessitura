@@ -3197,6 +3197,11 @@ function PracticeCell(props) {
       placeholder = _useState8[0],
       setPlaceholder = _useState8[1];
 
+  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false),
+      _useState10 = _slicedToArray(_useState9, 2),
+      errored = _useState10[0],
+      setErrored = _useState10[1];
+
   var cellData = props.cellData;
   var rowData = props.rowData;
 
@@ -3217,12 +3222,14 @@ function PracticeCell(props) {
       body: JSON.stringify(postBody)
     }).then(function (response) {
       if (response.status > 400) {
+        setErrored(true);
         return setPlaceholder("Something went wrong!");
       }
 
       return response.json();
     }).then(function (data) {
-      // Trigger a refresh of the cell, ideally
+      setErrored(false); // Trigger a refresh of the cell, ideally
+
       setLoaded(false);
     });
   }
@@ -3236,9 +3243,11 @@ function PracticeCell(props) {
         method: 'DELETE'
       }).then(function (response) {
         if (response.status > 400) {
+          setErrored(true);
           return setPlaceholder("Something went wrong!");
         }
 
+        setErrored(false);
         return response;
       }).then(function (data) {});
     }
@@ -3252,9 +3261,11 @@ function PracticeCell(props) {
     if (cellData && !loaded) {
       fetch("/perform/practice_cell/" + cellData.id + "/practice_cell_completions/").then(function (response) {
         if (response.status > 400) {
+          setErrored(true);
           return setPlaceholder("Something went wrong!");
         }
 
+        setErrored(false);
         return response.json();
       }).then(function (data) {
         setCellCompletionData(data);
@@ -3284,7 +3295,7 @@ function PracticeCell(props) {
     }
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: ["col", completedAt ? 'bg-success' : 'bg-light'].join(" "),
+    className: ["col", completedAt ? 'bg-success' : 'bg-light', errored ? 'bg-error' : ''].join(" "),
     onClick: onClick,
     onContextMenu: onRightClick
   }, completedAt || parseFloat(cellData.target_tempo_percentage * rowData.target_tempo).toFixed(0));
@@ -3425,6 +3436,7 @@ function PracticeGrid() {
       body: JSON.stringify(postBody)
     }).then(function (response) {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_grid/index.js");
         return setPlaceholder("Something went wrong!");
       }
 
@@ -3446,6 +3458,7 @@ function PracticeGrid() {
     if (gridId && !loaded) {
       fetch("/perform/practice_grid/" + gridId).then(function (response) {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_grid/index.js");
           return setPlaceholder("Something went wrong!");
         }
 
@@ -3456,6 +3469,7 @@ function PracticeGrid() {
       });
       fetch("/perform/practice_grid/" + gridId + "/practice_rows/").then(function (response) {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_grid/index.js");
           return setPlaceholder("Something went wrong!");
         }
 
@@ -3632,6 +3646,7 @@ function PracticeRow(props) {
       body: JSON.stringify(postBody)
     }).then(function (response) {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_row/index.js");
         return setPlaceholder("Something went wrong!");
       }
 
@@ -3652,6 +3667,7 @@ function PracticeRow(props) {
       method: 'DELETE'
     }).then(function (response) {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_row/index.js");
         return setPlaceholder("Something went wrong!");
       }
 
@@ -3668,6 +3684,7 @@ function PracticeRow(props) {
     if (rowData && !loaded) {
       fetch("/perform/practice_row/" + rowData.id + "/practice_cells/").then(function (response) {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_row/index.js");
           return setPlaceholder("Something went wrong!");
         }
 

@@ -6,6 +6,7 @@ export default function PracticeCell(props) {
   const [completedAt, setCompletedAt] = useState();
   const [loaded, setLoaded] = useState(false);
   const [placeholder, setPlaceholder] = useState('loading');
+  const [errored, setErrored] = useState(false);
   let cellData = props.cellData;
   let rowData = props.rowData;
 
@@ -26,11 +27,13 @@ export default function PracticeCell(props) {
     })      
     .then(response => {
       if (response.status > 400) {
+        setErrored(true);
         return setPlaceholder("Something went wrong!");
       }
       return response.json();
     })
     .then(data => {
+      setErrored(false);
       // Trigger a refresh of the cell, ideally
       setLoaded(false);
     });
@@ -45,8 +48,10 @@ export default function PracticeCell(props) {
       })
       .then(response => {
         if (response.status > 400) {
+          setErrored(true);
           return setPlaceholder("Something went wrong!");
         }
+        setErrored(false);
         return response;
       })
       .then(data => {
@@ -62,8 +67,10 @@ export default function PracticeCell(props) {
       fetch("/perform/practice_cell/"+cellData.id+"/practice_cell_completions/")
       .then(response => {
         if (response.status > 400) {
+          setErrored(true);
           return setPlaceholder("Something went wrong!");
         }
+        setErrored(false);
         return response.json();
       })
       .then(data => {
@@ -89,7 +96,7 @@ export default function PracticeCell(props) {
     }
   });
   return (
-    <div className={["col",((completedAt) ? 'bg-success' : 'bg-light')].join(" ")} onClick={onClick} onContextMenu={onRightClick}>
+    <div className={["col",((completedAt) ? 'bg-success' : 'bg-light'), ((errored) ? 'bg-error' : '' )].join(" ")} onClick={onClick} onContextMenu={onRightClick}>
         {completedAt || (parseFloat((cellData.target_tempo_percentage)*rowData.target_tempo).toFixed(0))}
     </div>
   );

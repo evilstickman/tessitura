@@ -35,8 +35,8 @@ class PracticeRowSerializer(serializers.ModelSerializer):
     practice_row = PracticeRow.objects.create(**validated_data)
     practice_row.save()
     steps = practice_row.steps
-    i = 0;
-    while i < steps:
+    i = 1;
+    while i <= steps:
       cell_data = {
           'practice_row': practice_row,
           'target_tempo_percentage': ((float)(steps - i)/(steps*2) +  BASE_PERCENTAGE)

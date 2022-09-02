@@ -44,6 +44,7 @@ export default function PracticeRow(props) {
     })      
     .then(response => {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_row/index.js")
         return setPlaceholder("Something went wrong!");
       }
       return response.json();
@@ -67,6 +68,7 @@ export default function PracticeRow(props) {
     })      
     .then(response => {
       if (response.status > 400) {
+        alert("There was an error, please let me know! practice_row/index.js")
         return setPlaceholder("Something went wrong!");
       }
       return response;
@@ -85,6 +87,7 @@ export default function PracticeRow(props) {
       fetch("/perform/practice_row/"+rowData.id+"/practice_cells/")
       .then(response => {
         if (response.status > 400) {
+          alert("There was an error, please let me know! practice_row/index.js")
           return setPlaceholder("Something went wrong!");
         }
         return response.json();
