@@ -36,11 +36,12 @@ class PracticeRowSerializer(serializers.ModelSerializer):
     practice_row.save()
     steps = practice_row.steps
     i = 1;
-    
+    base = BASE_PERCENTAGE
+    remainder = 1.0-BASE_PERCENTAGE
     while i <= steps:
       cell_data = {
           'practice_row': practice_row,
-          'target_tempo_percentage': BASE_PERCENTAGE + ( 1.0 - (BASE_PERCENTAGE*( i/steps)))
+          'target_tempo_percentage': base + (remainder*( i/steps))
       }
       practice_cell = PracticeCell.objects.create(**cell_data)
       practice_cell.save()
