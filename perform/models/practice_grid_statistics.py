@@ -6,7 +6,7 @@ BASE_PERCENTAGE = 0.4
 
 class PracticeGridStatistics(models.Model):
     from .practice_grid import PracticeGrid
-    practice_grid = models.ForeignKey(PracticeGrid, on_delete=models.CASCADE, related_name='practice_rows')
+    practice_grid = models.ForeignKey(PracticeGrid, on_delete=models.CASCADE, related_name='practice_grid_statistics')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -93,7 +93,7 @@ export default function PracticeGrid() {
   
   useEffect(() => {
     if(gridId && !loaded) {
-      fetch("/perform/practice_grid/"+gridId)
+      fetch("/perform/practice_grid/"+gridId+"/")
       .then(response => {
         if (response.status > 400) {
           alert("There was an error, please let me know! practice_grid/index.js");

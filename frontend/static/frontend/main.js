@@ -3456,7 +3456,7 @@ function PracticeGrid() {
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     if (gridId && !loaded) {
-      fetch("/perform/practice_grid/" + gridId).then(function (response) {
+      fetch("/perform/practice_grid/" + gridId + "/").then(function (response) {
         if (response.status > 400) {
           alert("There was an error, please let me know! practice_grid/index.js");
           return setPlaceholder("Something went wrong!");
