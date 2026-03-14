@@ -92,6 +92,7 @@ The following rejection criteria apply to EVERY use case in this spec. A feature
 - No new unit test failures.
 - No new skipped tests.
 - Minimum 95% code coverage on ALL code (not just "business logic" — everything).
+- **No ghost tests.** Tests must be valid — no `assert(true)`, no `expect(1).toBe(1)`, no deleting a test because it got complex. If a test is hard to write, that's a signal the code needs refactoring, not the test needs removing.
 - Every UI feature must have an associated Playwright e2e test with screenshot verification.
 - Every API endpoint must have integration tests covering success, validation failure, and authorization failure cases.
 
@@ -116,9 +117,8 @@ The following rejection criteria apply to EVERY use case in this spec. A feature
 - Every new UI feature must have an associated screenshot in the test suite validating its appearance.
 
 ### Performance
-- No API endpoint may take longer than 500ms under normal load (single user, <10 grids).
-- No frontend render may block the main thread for more than 100ms.
 - Database queries must not use N+1 patterns.
+- Performance targets will be established per-phase as the system matures — not prematurely constrained.
 
 ---
 
@@ -134,10 +134,10 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
 ### Use Cases
 
 **UC-1.1: User Registration**
+- As a musician, I want to create an account with my email and password so that I can save my practice data and access it from any device.
 - Actor: Musician
-- User signs up with email + password
+- User signs up with email + password, sets display name and instrument(s)
 - Email verification required before account activation
-- User can set display name and instrument(s)
 - Acceptance Criteria:
   - Registration form validates email uniqueness, password strength (8+ chars, 1 uppercase, 1 number)
   - Verification email sent within 30 seconds
@@ -150,9 +150,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Verification token is guessable or does not expire
 
 **UC-1.2: User Login / Logout**
+- As a musician, I want to log in with my email and password so that I can access my practice grids, and log out when I'm done.
 - Actor: Musician
-- User logs in with email + password
-- Session persists across browser restarts (remember me)
 - Acceptance Criteria:
   - Login returns JWT or session token
   - Failed login after 5 attempts locks account for 15 minutes
@@ -165,12 +164,11 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Account lockout is bypassable by switching IP/client
 
 **UC-1.3: Create Practice Grid**
+- As a musician, I want to create a new practice grid by giving it a name and optional notes so that I can organize my practice for a piece of music.
 - Actor: Musician
-- User creates a named practice grid with optional notes
-- Grid is owned by the creating user
 - Acceptance Criteria:
   - Grid requires a name (1-200 chars)
-  - Notes are optional (max 2000 chars)
+  - Notes are optional (expandable text field, no character limit — stored as unbounded text)
   - Grid is immediately visible in user's grid list
   - Grid stores created_at timestamp
   - Only the owning user can see/edit the grid
@@ -181,9 +179,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - HTML/script tags in name or notes rendered unescaped
 
 **UC-1.4: Add Practice Row to Grid**
+- As a musician, I want to add a row to my grid by specifying a passage (piece name, measures), target tempo, and number of steps so that the system generates graduated tempo cells for me to practice through.
 - Actor: Musician
-- User adds a row specifying piece name, measure range, target tempo (BPM), and number of steps
-- System auto-generates practice cells from 40% to 100% of target tempo
 - Acceptance Criteria:
   - Target tempo: any positive integer BPM (no artificial bounds)
   - Steps: user-defined positive integer, no fixed cap — UI adapts layout to step count (wrapping, scrolling, or condensed cells as needed)
@@ -197,49 +194,83 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Row created without parent grid association
   - Row visible on a grid the user does not own
 
-**UC-1.5: Musician Dashboard**
+**UC-1.5: Dashboard Layout**
+- As a musician, I want to see a clear, organized dashboard when I log in so that I can immediately understand my practice status and decide what to do next.
 - Actor: Musician
-- After login, the musician lands on a 4-quadrant dashboard that provides at-a-glance status and quick access to all primary actions
 - **Core UX principle:** This is the first thing non-technical, skeptical users see. It must be immediately useful, uncluttered, and self-explanatory. No jargon, no empty states without guidance.
 - Acceptance Criteria:
-  - **Upper-left: Intro & Alerts**
-    - Personalized greeting ("Welcome back, [name]")
-    - Actionable alerts, prioritized:
-      - Resume prompts ("Resume [grid name] — 3 stale cells need attention")
-      - Task counts ("You have 5 rows approaching decay")
-      - Social notifications ("New comments on your achievements!", "Director posted an assignment") (V5+)
-    - Alerts are clickable — each navigates directly to the relevant context
-    - Empty state (new user): onboarding prompt ("Create your first practice grid →")
-  - **Upper-right: My Grids**
-    - List of user's active practice grids with completion % and freshness summary
-    - Each grid is clickable — navigates directly into the grid view
-    - "New Grid" button prominently visible
-    - Grid cards show: name, completion %, last practiced date, freshness indicator (how many cells are stale/decayed)
-    - Sort: last modified (default), or alphabetical
-    - V1: single grid displayed; V2+: scrollable list with archive toggle
-  - **Lower-left: Statistics**
-    - V1: basic stats — current streak, total cells completed, grid completion %
-    - V2+: expanded with practice time trends, charts, goal progress
-    - Always shows something meaningful even for brand-new users ("Complete your first cell to start tracking!")
-  - **Lower-right: Achievements & Practice Focus**
-    - V1-V2: practice focus suggestions (rows with highest priority + most decay urgency)
-    - V3+: achievement showcase with recent unlocks and next-closest achievements
-    - Practice focus shows top 3-5 suggested rows to work on, each clickable to jump into that grid/row
-    - Empty state: "Start practicing to see personalized suggestions here"
-  - **Layout:**
-    - Responsive: 4-quadrant on desktop (2x2 grid), stacks vertically on mobile (alerts → grids → stats → achievements)
-    - Each quadrant has a clear header and bounded content area
-    - No quadrant should require scrolling on initial load (content truncated with "See all →" links)
+  - 4-quadrant layout: upper-left (Alerts), upper-right (My Grids), lower-left (Statistics), lower-right (Practice Focus)
+  - Responsive: 2x2 grid on desktop, stacks vertically on mobile (alerts → grids → stats → focus)
+  - Each quadrant has a clear header and bounded content area
+  - No quadrant requires scrolling on initial load (content truncated with "See all →" links)
+  - Dashboard loads as a single page — no tab switching required for core info
 - Rejection Criteria:
   - Dashboard shows data belonging to another user
-  - Alerts link to a grid/row that doesn't exist or belongs to another user
-  - Dashboard renders blank or broken for a brand-new user with no data
   - Layout breaks or overlaps on any viewport between 320px and 2560px
-  - Any quadrant takes >500ms to load
+  - Dashboard renders blank or broken for a brand-new user with no data
+
+**UC-1.5a: Dashboard — Alerts Pane**
+- As a musician, I want to see personalized alerts and prompts so that I know what needs my attention right now.
+- Actor: Musician
+- Acceptance Criteria:
+  - Personalized greeting ("Welcome back, [name]")
+  - Actionable alerts, prioritized:
+    - Resume prompts ("Resume [grid name] — 3 stale cells need attention")
+    - Decay warnings ("You have 5 rows approaching decay")
+    - Social notifications ("New comments on your achievements!", "Director posted an assignment") (V5+)
+  - Alerts are clickable — each navigates directly to the relevant context
+  - Empty state (new user): onboarding prompt ("Create your first practice grid →")
+  - Maximum 5 alerts shown, with "See all →" link
+- Rejection Criteria:
+  - Alerts link to a grid/row that doesn't exist or belongs to another user
+  - Alert text exposes internal IDs or technical data
+  - New user sees an empty pane with no guidance
+
+**UC-1.5b: Dashboard — My Grids Pane**
+- As a musician, I want to see all my practice grids at a glance so that I can quickly jump into practicing.
+- Actor: Musician
+- Acceptance Criteria:
+  - List of user's active practice grids
+  - Each grid card shows: name, completion %, last practiced date, freshness indicator (stale/decayed cell count)
+  - Each grid is clickable — navigates directly into the grid view
+  - "New Grid" button prominently visible
+  - Sort: last modified (default)
+  - V1: single grid displayed; V2+: scrollable list with archive toggle
+- Rejection Criteria:
+  - Grid cards show internal IDs or database fields
+  - Grids from other users appear in the list
+  - "New Grid" button hidden or hard to find
+
+**UC-1.5c: Dashboard — Statistics Pane**
+- As a musician, I want to see my practice statistics so that I can track my progress over time.
+- Actor: Musician
+- Acceptance Criteria:
+  - V1: basic stats — current streak, total cells completed, grid completion %
+  - V2+: expanded with practice time trends, charts, goal progress
+  - Always shows something meaningful even for brand-new users ("Complete your first cell to start tracking!")
+  - Stats update in real-time as user completes cells
+- Rejection Criteria:
+  - Statistics show stale data from a previous session
+  - Pane shows nothing for a new user (must have empty state with guidance)
+  - Stats include data from soft-deleted grids
+
+**UC-1.5d: Dashboard — Practice Focus Pane**
+- As a musician, I want personalized suggestions for what to practice so that I can make the most of my practice time.
+- Actor: Musician
+- Acceptance Criteria:
+  - V1-V2: practice focus suggestions (rows with highest priority + most decay urgency)
+  - V3+: also shows achievement showcase with recent unlocks and next-closest achievements
+  - Shows top 3-5 suggested rows to work on
+  - Each suggestion is clickable — jumps directly into that grid/row
+  - Empty state: "Start practicing to see personalized suggestions here"
+- Rejection Criteria:
+  - Suggestions reference grids the user doesn't own
+  - Suggestions show internal priority enum values instead of human-readable labels
+  - Same suggestions shown after user acts on them (must refresh)
 
 **UC-1.6: Complete Practice Cell**
+- As a musician, I want to click on a practice cell to mark it as complete so that my progress is recorded and I can see the grid fill with green.
 - Actor: Musician
-- User marks a practice cell as complete
 - Acceptance Criteria:
   - Click/tap on an incomplete cell creates a PracticeCellCompletion with today's date
   - Cell immediately transitions to "completed" visual state (solid green)
@@ -252,8 +283,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Completion percentage exceeds 100% or goes negative
 
 **UC-1.7: Uncomplete Practice Cell**
+- As a musician, I want to right-click or long-press a completed cell to undo the completion so that I can correct mistakes.
 - Actor: Musician
-- User removes a completion from a previously completed cell
 - Acceptance Criteria:
   - Right-click or long-press on a completed cell removes its PracticeCellCompletion record
   - Cell immediately transitions back to incomplete visual state
@@ -265,8 +296,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Grid completion percentage does not update after uncomplete
 
 **UC-1.8: Freshness Decay (Spaced Repetition)**
+- As a musician, I expect my completed cells to gradually fade over time so that I'm reminded to maintain my skills, not just check boxes once and forget.
 - Actor: System
-- Completed cells are not permanently "done" — they decay over time, requiring maintenance practice
 - Acceptance Criteria:
   - Each cell tracks a freshness interval (initial: 1 day after first completion)
   - Re-practicing a cell before it goes stale doubles the interval (1→2→4→8→16→... days, capped at 30)
@@ -285,9 +316,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - A cell displays as "Fresh" when it should be "Stale" or vice versa (off-by-one in interval math)
 
 **UC-1.9: Cascading Fade Order**
+- As a musician, I expect my highest-tempo completions to fade first, because top-end speed is the hardest to maintain, while foundational tempos persist longer.
 - Actor: System
-- Within a row, decay begins at the highest completed tempo and works downward
-- This models real musicianship: top-end speed is hardest to maintain, foundational tempos persist longer
 - Acceptance Criteria:
   - If cells at 40%, 50%, 60% are all completed, 60% begins fading first
   - 50% only begins its fade timer once 60% has fully decayed
@@ -300,8 +330,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Fade calculations produce different results on page refresh vs initial render
 
 **UC-1.10: Configure Fade Per Grid**
+- As a musician, I want to toggle freshness decay on or off for each grid so that I can choose between maintenance mode and classic checkbox mode.
 - Actor: Musician
-- User can toggle freshness decay on or off for each practice grid
 - Acceptance Criteria:
   - Toggle control on the grid settings/header
   - **Fade ON (default):** cells decay per UC-1.7 and UC-1.8 rules
@@ -315,8 +345,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Fade setting changes on one device don't sync to another device/session
 
 **UC-1.11: Set Row Priority**
+- As a musician, I want to assign a priority level (Critical/High/Medium/Low) to each row so that important passages get more attention in practice suggestions.
 - Actor: Musician
-- User assigns a priority level to each practice row indicating its importance
 - Acceptance Criteria:
   - Priority levels: Critical / High / Medium / Low (default: Medium)
   - Priority displayed visually on the row (color accent or icon)
@@ -327,9 +357,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Priority change not persisted after page refresh
 
 **UC-1.12: View Practice Grid**
+- As a musician, I want to view my practice grid with all rows, cells, and their freshness state so that I can see my progress as a visual wall of green and know what needs maintenance.
 - Actor: Musician
-- User views their practice grid with all rows, cells, completion state, and freshness
-- Grid shows overall completion percentage (accounting for decay when fade is enabled)
 - **Core UX principle:** The visual grid filling with green is a primary motivator. The grid layout and color feedback must feel satisfying and rewarding. Design decisions should preserve and enhance the "wall of green" experience.
 - Acceptance Criteria:
   - Each cell displays its target tempo (BPM, calculated from percentage * row target)
@@ -348,8 +377,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Tempo display shows floating-point artifacts (e.g., "79.99999 BPM" instead of "80 BPM")
 
 **UC-1.13: Delete Practice Grid**
+- As a musician, I want to delete a practice grid I no longer need so that it doesn't clutter my dashboard.
 - Actor: Musician
-- User can delete a grid they own (soft delete — sets deleted_at)
 - Acceptance Criteria:
   - Confirmation dialog before deletion
   - Soft delete: sets deleted_at on grid AND cascades to all child rows, cells, and completions
@@ -362,8 +391,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Deletion proceeds without user confirmation
 
 **UC-1.14: Edit Practice Row**
+- As a musician, I want to edit a row's measure range, target tempo, or step count so that I can adjust my practice plan as I learn more about the piece.
 - Actor: Musician
-- User can edit measure range, target tempo, and step count on existing rows
 - Acceptance Criteria:
   - Changing step count regenerates cells (existing completions are lost — user warned with confirmation dialog)
   - Changing target tempo updates cell display values without losing completions
@@ -375,8 +404,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Edit applies to a row on a grid the user doesn't own
 
 **UC-1.15: Edit Row Priority**
+- As a musician, I want to change a row's priority level so that I can reprioritize as my practice needs evolve.
 - Actor: Musician
-- User can change the priority level of an existing row
 - Acceptance Criteria:
   - Priority change takes effect immediately in display
   - Updates future practice feed weighting (V2)
@@ -385,8 +414,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Priority change affects completion data or freshness intervals
 
 **UC-1.16: Delete Practice Row**
+- As a musician, I want to remove a row from my grid so that I can clean up passages I no longer need to practice.
 - Actor: Musician
-- User removes a row from their practice grid (soft delete)
 - Acceptance Criteria:
   - Delete button on each row (with confirmation)
   - Soft delete: sets deleted_at on row AND cascades to all child cells and completions
@@ -399,8 +428,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Deletion proceeds without user confirmation
 
 **UC-1.17: Delete User Account**
+- As a musician, I want to delete my account so that my personal data is removed from the platform if I choose to leave.
 - Actor: Musician
-- User can delete their account (soft delete — data retained for migration/compliance)
 - Acceptance Criteria:
   - Delete account option in user settings
   - Requires password confirmation before proceeding
@@ -1099,9 +1128,9 @@ Directors can assign specific practice work and track group progress against goa
 
 ---
 
-## Long-Term Vision: Intelligent Practice Partner
+## V8+: Performer Enhancement & Practice Intelligence
 
-The following features represent the evolution of Tessitura from a practice tracker into an intelligent practice companion. Each phase builds on the previous, creating a progressively deeper understanding of the musician's playing and the music they're working on.
+The following features continue the product evolution from practice tracker to intelligent practice companion. These are full milestones with use cases, integrated into the same delivery pipeline as V1-V7. They are organized into sub-phases for planning purposes but will be implemented as milestones within the continuous deployment flow — each merged PR deploys, same as everything else.
 
 ### Implementation Approach: Signal Processing First, AI Only When Necessary
 
@@ -1137,7 +1166,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 | Tone quality analysis | AI/ML (credits) | Spectral comparison requires learned reference models |
 | Note-to-score mapping | Hybrid | DTW (Dynamic Time Warping) for alignment — signal processing, but may need ML for robust real-world audio |
 
-### Phase A: Built-In Practice Tools
+### V8: Built-In Practice Tools
 *All features in this phase use signal processing or audio synthesis — no AI, no credits.*
 
 ### Use Cases
@@ -1231,7 +1260,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ---
 
-### Phase B: Score Analysis & Auto-Grid Generation
+### V9: Score Analysis & Auto-Grid Generation
 *Mixed approach: OMR requires AI (credits), analysis uses heuristics first.*
 
 ### Use Cases
@@ -1312,7 +1341,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ---
 
-### Phase C: Audio-Linked Practice Verification
+### V10: Audio-Linked Practice Verification
 *Primarily signal processing + DTW alignment. JI is pure math.*
 
 ### Use Cases
@@ -1389,7 +1418,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ---
 
-### Phase D: Ear Training & Tone Analysis
+### V11: Ear Training & Tone Analysis
 *Ear training is synthesis + comparison (no AI). Tone analysis requires ML (credits).*
 
 ### Use Cases
@@ -1495,21 +1524,21 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Feedback contains incorrect music pedagogy advice
   - Community reference model includes identifiable individual recordings
 
-### Phase Dependencies (Vision Features)
+### Version Dependencies
 
 ```
-Phase A (Tools) ─── standalone, no dependencies
+V8 (Tools) ─── standalone, no dependencies on V9+
      │
-Phase B (Score) ─── requires OMR/ML pipeline
+V9 (Score) ─── requires OMR/ML pipeline
      │
-Phase C (Verify) ── requires Phase B (note data) + Phase A (tuner/recording)
+V10 (Verify) ── requires V9 (note data) + V8 (tuner/recording)
      │
-Phase D (Ear/Tone) ─ Ear Training: standalone
-                     Tone Analysis: requires ML model training, large dataset
-                     JI Evaluation: requires Phase B + Phase C
+V11 (Ear/Tone) ─ Ear Training: standalone
+                  Tone Analysis: requires ML model training, large dataset
+                  JI Evaluation: requires V9 + V10
 ```
 
-### Vision Limits & Principles
+### V8-V11 Limits & Principles
 - No LLM/ML integration in V1-V6 — these features are explicitly post-foundation
 - Signal processing and heuristics are the default approach. AI/ML is introduced only when heuristics are proven insufficient, sufficient training data exists, and the accuracy improvement justifies the cost.
 - **AI features cost credits.** Signal processing features are included in subscriptions. This boundary is clear and must be communicated to users.
@@ -1588,7 +1617,7 @@ These are non-negotiable. They govern all implementation work across all phases.
   - Clear separation between presentation components (dumb), director/container components (smart), and state management
 - Layers do not leak — a controller never touches the database directly, a view never contains business logic.
 
-### 5. State Machines Everywhere
+### 5. State Machines Where They Make Sense
 - Wherever an entity has a lifecycle (subscriptions, assignments, ensemble membership, achievements), model it as an explicit state machine.
 - Each state machine has:
   - Enumerated states (no implicit states)
@@ -1674,7 +1703,17 @@ These are non-negotiable. They govern all implementation work across all phases.
 - Migration naming convention: timestamp-prefixed with descriptive name (e.g., `20260315_add_practice_session_table`).
 - Test environment gets fresh migrations on every suite run (migrate up from scratch).
 
-### 15. Extensible
+### 15. RESTful API Design
+- The API follows REST principles: resources are nouns, HTTP methods are verbs, responses represent resource state.
+- Standard HTTP methods: GET (read), POST (create), PUT/PATCH (update), DELETE (soft delete).
+- Resources map to domain entities: `/api/grids`, `/api/grids/:id/rows`, `/api/grids/:id/rows/:id/cells`.
+- Nested resources reflect ownership: a cell is always accessed through its row, which is accessed through its grid.
+- Consistent response format: JSON, with appropriate HTTP status codes (200, 201, 400, 401, 403, 404, 409, 422, 500).
+- Pagination on all list endpoints (cursor-based preferred over offset-based).
+- HATEOAS not required, but resource responses should include `id` and related resource IDs for client navigation.
+- API is the single interface — frontend and any future mobile app consume the same API.
+
+### 16. Extensible
 - This list of principles will grow as the project evolves.
 - New principles require discussion and mutual agreement.
 - Principles are never silently violated — if a principle can't be followed, it's discussed and either the approach changes or the principle is updated.
@@ -1737,11 +1776,13 @@ Types: `feat`, `fix`, `refactor`, `test`, `infra`, `docs`, `style`
 - Code review focuses on: architecture alignment, security, UX quality, acceptance/rejection criteria coverage
 - Tagged releases for each version milestone
 
-### Release Strategy
-- Semantic versioning: V1.0, V2.0, etc. for major phases
-- Minor versions (V1.1, V1.2) for bug fixes and polish within a phase
-- Tagged releases in git
-- DigitalOcean deployment from tagged releases
+### Release Strategy: Continuous Deployment
+- **Every merged PR deploys to production.** No manual releases, no release branches, no version tags for deploys.
+- CI/CD pipeline: PR merged → tests pass → build → deploy to DigitalOcean (automated)
+- Phase milestones (V1, V2, etc.) are conceptual markers, not release events. The product is always the latest `main`.
+- If a deploy breaks production, the fix is a new PR — not a rollback (unless critical, then rollback + hotfix PR).
+- Feature flags used when a feature spans multiple PRs and shouldn't be visible to users until complete.
+- Database migrations run automatically as part of the deploy pipeline.
 
 ---
 
