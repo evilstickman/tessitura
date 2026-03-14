@@ -334,7 +334,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
 - Actor: Musician
 - Acceptance Criteria:
   - Toggle control on the grid settings/header
-  - **Fade ON (default):** cells decay per UC-1.7 and UC-1.8 rules
+  - **Fade ON (default):** cells decay per UC-1.8 (Freshness Decay) and UC-1.9 (Cascading Fade) rules
   - **Fade OFF:** completions are permanent — classic checkbox behavior, solid green stays green forever
   - Default for new grids: fade ON (configurable in user preferences)
   - Toggling fade off does NOT delete freshness data — toggling back on restores the decay view with current state
@@ -1863,6 +1863,7 @@ This model is designed to support both the product AND long-term research into p
 
 ### Design Principles
 - **Single source of truth:** Every fact is stored exactly once. Derived values are computed, not cached (except explicit caches with refresh policies).
+- **Calculate once, store the result.** Derived values are calculated at creation time and stored. They are NOT recalculated on every read. Recalculation only happens when a data model change explicitly requires it. This protects historical data from retroactive changes to calculation formulas.
 - **Temporal completeness:** Every state change is timestamped. The system can reconstruct the state at any point in time.
 - **Soft delete everywhere:** All entities include a `deleted_at` (timestamptz, nullable) field. All queries filter `WHERE deleted_at IS NULL` by default. No hard deletes. Administrative purge of soft-deleted records is a separate, deliberate process.
 - **Research-ready:** The data model supports answering questions about practice patterns, skill acquisition curves, pedagogy effectiveness, gamification impact, and retention without schema changes.
@@ -1920,10 +1921,11 @@ The central identity. Every piece of data in the system is owned by or attribute
 | subscription_status | enum(none,active,past_due,cancelled,expired) | System-set via Stripe webhook (V4) | State machine — see Subscription States below |
 | subscription_period_end | timestamptz, nullable | System-set via Stripe webhook (V4) | When current billing period ends |
 | xp | integer | System-calculated (V3) | Sum of all XP awards. Monotonically increasing (never decreases) |
-| level | integer | **Derived** (V3) | Computed from xp: level where N^2 * 100 ≤ xp. Never stored — calculated on read |
+| level | integer | System-calculated (V3) | Calculated from xp using quadratic formula (N^2 * 100). Stored on write. Updated when XP changes |
 | current_streak | integer | System-calculated (V2) | Days of consecutive practice. Reset on miss. Stored because recalculation is expensive |
 | longest_streak | integer | System-calculated (V2) | Max of all historical current_streak values. Monotonically increasing |
 | last_practice_date | date, nullable | System-set on any practice activity (V2) | User's timezone-local date. Used for streak calculation |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **State Machine: Subscription**
 ```
@@ -1957,6 +1959,7 @@ A structured practice plan for a piece of music or collection of technical studi
 | assignment_id | FK→Assignment, nullable | System-set when created from assignment (V6) | Null for user-created grids. Immutable |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values (never stored):**
 - `completion_percentage`: count of fresh+aging cells / total cells (fade on) OR completed cells / total cells (fade off)
@@ -1987,6 +1990,7 @@ A segment of music within a grid — a specific passage, measure range, or techn
 | priority | enum(critical,high,medium,low) | User-set | Default: medium. Affects practice feed ordering |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values:**
 - `completion_percentage`: computed from child cells' freshness state
@@ -2005,18 +2009,17 @@ A single tempo step within a row. Represents "practice this passage at this perc
 | id | UUID | System-generated | Immutable PK |
 | practice_row_id | FK→PracticeRow | System-set at creation | Immutable. Cascading delete |
 | step_number | integer | System-set at creation | 0-indexed position. Used for tempo calculation |
-| target_tempo_percentage | float | **Derived but stored** | Formula: 0.4 + (0.6 * step_number / (total_steps - 1)). Stored for query performance, but must match formula exactly |
+| target_tempo_percentage | float | System-calculated at creation | Formula: 0.4 + (0.6 * step_number / (total_steps - 1)). Calculated at cell creation. Stored. Only recalculated if steps change (which regenerates all cells) |
 | freshness_interval_days | integer | System-managed | Default: 1. Doubles on re-practice (cap 30). Resets on uncomplete |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated (interval changes) |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values (never stored):**
 - `target_tempo_bpm`: target_tempo_percentage * parent_row.target_tempo (rounded to integer)
 - `freshness_state`: computed from last completion date + freshness_interval_days + cascading fade rules. One of: fresh, aging, stale, decayed, incomplete
 - `last_completion_date`: max(completion_date) from child completions
 - `is_shielded`: whether a higher-tempo cell in the same row prevents this cell from starting its fade timer
-
-**Invariant:** target_tempo_percentage MUST equal the formula result. If steps change, cells are regenerated.
 
 **Research value:** Cell-level data with spaced repetition intervals enables analysis of skill acquisition curves — how quickly intervals grow (learning speed), how often cells decay (retention patterns).
 
@@ -2031,6 +2034,7 @@ An immutable record that a musician practiced a cell on a specific date. The fun
 | practice_cell_id | FK→PracticeCell | System-set at creation | Immutable. Cascading delete |
 | completion_date | date | System-set (user's timezone-local date) | The date the cell was practiced |
 | created_at | timestamptz | System-generated | Immutable. Actual moment of completion (includes time) |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Constraint:** Unique on (practice_cell_id, completion_date) — at most one completion per cell per day.
 
@@ -2051,6 +2055,7 @@ A manually logged or system-inferred practice session with duration.
 | notes | text, nullable | User-provided | Optional session notes |
 | source | enum(manual, inferred) | System-set | Manual = user logged it. Inferred = system calculated from completion timestamps |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Research value:** Practice session duration data combined with completion data enables "time-to-mastery" analysis — how many hours does it take to complete a grid at different difficulty levels?
 
@@ -2068,6 +2073,7 @@ A user-set practice target that tracks progress.
 | active | boolean | User-set | Default true. User can deactivate without deleting |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values:** `current_progress` and `percentage_complete` computed from PracticeSession and PracticeCellCompletion data for the relevant time period.
 
@@ -2091,6 +2097,7 @@ An admin-curated practice grid template from public-domain music education liter
 | active | boolean | Admin-set | Default true. Deactivated templates hidden from library |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values (cached with daily refresh):**
 - `community_user_count`: count of PracticeGrids with source_template_id = this.id
@@ -2114,6 +2121,7 @@ A system-defined milestone that musicians can unlock.
 | xp_reward | integer | Admin-defined | XP granted on unlock |
 | criteria | JSON | Admin-defined | Machine-readable condition (e.g., { "type": "streak_days", "value": 7 }) |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Immutable after creation.** Changes require a new achievement (old one grandfathered).
 
@@ -2128,6 +2136,7 @@ Join table: records when a user unlocked an achievement. Immutable once created.
 | user_id | FK→User | System-set | Immutable |
 | achievement_id | FK→Achievement | System-set | Immutable |
 | unlocked_at | timestamptz | System-set | Immutable. Moment of unlock |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Constraint:** Unique on (user_id, achievement_id) — cannot unlock the same achievement twice.
 
@@ -2148,6 +2157,7 @@ A specific feature permission or usage limit for a user, derived from their subs
 | expires_at | timestamptz, nullable | Admin-set (for overrides) | Null = no expiry |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Constraint:** Unique on (user_id, grant_type) — one grant per type per user. Admin override replaces subscription-based grant.
 
@@ -2169,6 +2179,7 @@ A group of musicians managed by a director.
 | join_approval_required | boolean | Director-set | Default: false. If true, joins go to pending state |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 ---
 
@@ -2187,6 +2198,7 @@ Join table with role and section assignment. Has a state machine.
 | removed_at | timestamptz, nullable | System-set when status→removed | |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **State Machine: Membership**
 ```
@@ -2211,6 +2223,7 @@ A social activity event within an ensemble.
 | event_type | enum(grid_complete, row_complete, achievement, streak_milestone, challenge_win, assignment_complete) | System-set | |
 | event_data | JSON | System-set | Structured event payload (grid name, achievement name, streak count, etc.) |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **FeedItem is immutable.** No edits, no deletes (except by admin for moderation).
 
@@ -2226,6 +2239,7 @@ Emoji reactions on feed items. Separate table to avoid JSON array mutation.
 | user_id | FK→User | System-set | The reactor |
 | emoji | string | User-provided | Single emoji character. Constrained to allowed set |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Constraint:** Unique on (feed_item_id, user_id, emoji) — one reaction per emoji per user per item.
 
@@ -2248,6 +2262,7 @@ A director-created practice assignment for ensemble members.
 | status | enum(draft, active, completed, cancelled) | System-managed | State machine |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **State Machine: Assignment**
 ```
@@ -2269,6 +2284,7 @@ Who receives the assignment and their individual grid clone.
 | user_id | FK→User | System-set | Immutable |
 | practice_grid_id | FK→PracticeGrid | System-set | The cloned grid for this recipient. Immutable |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Constraint:** Unique on (assignment_id, user_id).
 
@@ -2290,6 +2306,7 @@ A competitive practice challenge within an ensemble.
 | status | enum(upcoming, active, completed) | System-managed | Based on current date vs start/end |
 | winner_user_id | FK→User, nullable | System-set | Set when challenge completes |
 | created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 ---
 
@@ -2302,6 +2319,7 @@ Tracks who is participating in a challenge.
 | challenge_id | FK→Challenge | System-set | Immutable |
 | user_id | FK→User | System-set | Immutable |
 | joined_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values:** Leaderboard position computed from PracticeSession/PracticeCellCompletion data within the challenge date range.
 
@@ -2319,6 +2337,7 @@ Comments on shared grid snapshots. Supports threading.
 | content | text | Author-provided | Sanitized. Max 5000 chars |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Updated if author edits |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 ---
 
@@ -2395,7 +2414,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: List grids endpoint (GET) — user-scoped, sorted by last modified
 - Task: Get grid detail endpoint (GET) — includes rows, cells, completion state
 - Task: Write integration tests for each endpoint (success, validation error, auth error)
-- Maps to: UC-1.3, UC-1.12
+- Maps to: UC-1.3, UC-1.12, UC-1.13
 
 **M1.4: Row & Cell Operations API**
 - Task: Add row endpoint (POST) — auto-generates cells with tempo percentages
@@ -2403,7 +2422,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Edit row endpoint (PUT) — handles step count change (regenerate cells with warning)
 - Task: Set/edit priority endpoint (PUT) — validates enum
 - Task: Integration tests for all row operations
-- Maps to: UC-1.4, UC-1.10, UC-1.13, UC-1.14
+- Maps to: UC-1.4, UC-1.11, UC-1.14, UC-1.15, UC-1.16
 
 **M1.5: Cell Completion & Freshness API**
 - Task: Complete cell endpoint (POST) — creates PracticeCellCompletion, updates freshness interval
@@ -2414,7 +2433,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Write grid completion percentage calculation (respects fade on/off)
 - Task: Unit tests for: interval doubling, interval cap (30 days), cascade ordering, completion % with/without fade
 - Task: Integration tests for completion lifecycle
-- Maps to: UC-1.6, UC-1.6, UC-1.7, UC-1.8, UC-1.9
+- Maps to: UC-1.6, UC-1.7, UC-1.8, UC-1.9, UC-1.10
 
 **M1.6: Grid View UI**
 - Task: Build grid view component — rows, cells, tempo display
@@ -2426,7 +2445,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Progress bar showing grid completion %
 - Task: Responsive layout (320px+ viewports, adapts to large step counts)
 - Task: Playwright e2e tests with screenshots for each visual state
-- Maps to: UC-1.11, UC-1.6, UC-1.6
+- Maps to: UC-1.6, UC-1.7, UC-1.11, UC-1.12
 
 **M1.7: Dashboard UI**
 - Task: Build 4-quadrant dashboard layout (responsive: 2x2 desktop, stacked mobile)
