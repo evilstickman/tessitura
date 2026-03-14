@@ -469,6 +469,7 @@ Expand practice capability and give musicians insight into their practice habits
 ### Use Cases
 
 **UC-2.1: Multiple Practice Grids**
+- As a musician, I want to create and manage multiple practice grids so that I can organize my practice across different pieces and projects simultaneously.
 - Actor: Musician
 - User can create and manage multiple practice grids
 - Acceptance Criteria:
@@ -482,6 +483,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Grid sort order is inconsistent between page loads
 
 **UC-2.2: Practice Time Tracking**
+- As a musician, I want to log my practice sessions and have the system track when I complete cells so that I can see how much time I'm investing in my practice.
 - Actor: Musician
 - User can log practice sessions with duration
 - System tracks when cells are completed for passive time inference
@@ -496,6 +498,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Automatic timestamps drift from actual completion time by more than 1 second
 
 **UC-2.3: Practice Time Trend Analytics**
+- As a musician, I want to view charts showing my practice frequency and duration over time so that I can identify patterns and stay motivated by seeing my consistency.
 - Actor: Musician
 - User views charts showing practice frequency and duration over time
 - Acceptance Criteria:
@@ -509,6 +512,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Charts crash or show errors when user has no practice data
 
 **UC-2.4: Piece-Level Analytics**
+- As a musician, I want to view per-piece progress showing which measures are mastered and my tempo progression so that I can focus my practice on the weakest passages.
 - Actor: Musician
 - User views per-piece progress showing which measures are mastered and tempo progress curves
 - Acceptance Criteria:
@@ -522,6 +526,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Progress curve data points are out of chronological order
 
 **UC-2.5: Practice Goal Setting**
+- As a musician, I want to set practice goals for daily minutes, weekly sessions, or grid completions so that I have clear targets to work toward and can measure my discipline.
 - Actor: Musician
 - User sets practice goals and tracks progress against them
 - Acceptance Criteria:
@@ -535,6 +540,7 @@ Expand practice capability and give musicians insight into their practice habits
   - User can create goals with zero or negative target values
 
 **UC-2.6: Practice Feed (Smart Suggestions)**
+- As a musician, I want the system to generate a prioritized daily practice feed so that I know exactly what to work on based on what's most urgent and important.
 - Actor: Musician, System
 - System generates a prioritized daily practice feed suggesting what to work on
 - Feed is driven by freshness decay state + row priority + time since last practice
@@ -553,6 +559,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Feed algorithm produces different results on repeated loads with same data (must be deterministic)
 
 **UC-2.7: Technique Grid Support**
+- As a musician, I want to create grids for technical studies with appropriate labels so that I can track my fundamentals work separately from my repertoire practice.
 - Actor: Musician
 - Users can create grids for technical studies (not just repertoire)
 - Grid type field distinguishes repertoire grids from technique grids
@@ -568,6 +575,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Repertoire-specific UI labels appear on technique grids or vice versa
 
 **UC-2.8: Browse Education Literature Library**
+- As a musician, I want to browse a curated library of technique grid templates from public-domain music education literature so that I can discover proven practice material without building grids from scratch.
 - Actor: Musician
 - User browses a curated library of technique grid templates from public-domain music education literature
 - Acceptance Criteria:
@@ -587,6 +595,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Search returns results from other users' private grids
 
 **UC-2.9: Clone Library Template to My Grids**
+- As a musician, I want to add a library template to my own grids as an independent copy so that I can practice a curated study with full tracking and the freedom to customize it.
 - Actor: Musician
 - User adds a library template to their own grids as an independent copy
 - Acceptance Criteria:
@@ -601,6 +610,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Cloned grid is missing any rows, cells, or configuration from the source template
 
 **UC-2.10: Library Community Stats**
+- As a musician, I want to see how many other musicians are practicing each library template so that I can discover popular studies and feel connected to a community of learners.
 - Actor: Musician, System
 - Library entries display aggregate community practice data
 - Acceptance Criteria:
@@ -614,6 +624,7 @@ Expand practice capability and give musicians insight into their practice habits
   - Cached stats are more than 24 hours stale
 
 **UC-2.11: Admin Manage Library Templates**
+- As an admin, I want to create, edit, and manage library template content so that musicians have access to high-quality, curated practice material.
 - Actor: Admin
 - Admin creates, edits, and manages library template content
 - Acceptance Criteria:
@@ -645,6 +656,7 @@ Add gamification to drive engagement and build the access control layer that wil
 ### Use Cases
 
 **UC-3.1: Achievement System**
+- As a musician, I want to earn achievements for reaching practice milestones so that I feel rewarded for my dedication and can showcase my progress.
 - Actor: Musician, System
 - System awards achievements based on practice milestones
 - Acceptance Criteria:
@@ -666,6 +678,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - Achievement system evaluates against stale data (must use current state)
 
 **UC-3.2: Streak System**
+- As a musician, I want the system to track my daily practice streaks so that I'm motivated to practice consistently and can see my longest runs of dedication.
 - Actor: Musician, System
 - System tracks daily practice streaks
 - Acceptance Criteria:
@@ -681,6 +694,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - Streak count disagrees between dashboard display and database value
 
 **UC-3.3: XP & Leveling**
+- As a musician, I want to earn XP for practice activities and level up so that I have a tangible sense of long-term progression beyond individual grids.
 - Actor: Musician, System
 - Musicians earn XP for practice activities and level up
 - Acceptance Criteria:
@@ -695,6 +709,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - XP from a single action is awarded multiple times (idempotency required)
 
 **UC-3.4: Grant Tier Mapping**
+- As a musician, I expect the system to map my subscription tier to the correct feature grants so that I have access to exactly the features my plan includes.
 - Actor: System
 - System maps subscription tiers to specific feature grants and usage limits
 - Acceptance Criteria:
@@ -719,6 +734,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - Adding a new grant type requires code changes to individual user records
 
 **UC-3.5: Grant Enforcement at API Level**
+- As a musician, I expect the system to enforce feature access at the API level so that gated features cannot be accessed by manipulating the client.
 - Actor: System
 - Every API endpoint checks the user's grants before allowing access to gated features
 - Acceptance Criteria:
@@ -733,6 +749,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - API returns a generic 403 instead of a structured grant-limit response with upgrade path
 
 **UC-3.6: Admin Grant Override**
+- As an admin, I want to override grants for individual users independent of their subscription tier so that I can provide complimentary access or handle special cases.
 - Actor: Admin
 - Admin can override grants for individual users independent of their subscription tier
 - Acceptance Criteria:
@@ -747,6 +764,7 @@ Add gamification to drive engagement and build the access control layer that wil
   - Removing an override leaves the user with no grants (must fall back to tier-based)
 
 **UC-3.7: Upgrade Prompts**
+- As a musician, I want to see a helpful upgrade prompt when I hit a feature boundary so that I understand what I'm missing and how to unlock it.
 - Actor: Musician
 - When a user hits a grant boundary, they see a contextual upgrade prompt
 - Acceptance Criteria:
@@ -775,6 +793,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
 ### Use Cases
 
 **UC-4.1: Subscribe to Plan**
+- As a musician, I want to select a subscription tier and pay via Stripe so that I can unlock Pro or Team features.
 - Actor: Musician
 - User selects a subscription tier and completes payment via Stripe Checkout
 - Acceptance Criteria:
@@ -790,6 +809,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Subscription created without valid Stripe customer ID
 
 **UC-4.2: View Current Subscription**
+- As a musician, I want to view my current subscription plan and billing status so that I know what I'm paying for and when my next charge is.
 - Actor: Musician
 - User views their current subscription plan and billing status
 - Acceptance Criteria:
@@ -803,6 +823,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Free user sees payment method fields or billing period information
 
 **UC-4.3: Upgrade Subscription**
+- As a musician, I want to upgrade my subscription to a higher tier so that I can immediately access additional features.
 - Actor: Musician
 - User upgrades from a lower tier to a higher tier
 - Acceptance Criteria:
@@ -816,6 +837,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Upgrade creates a duplicate Stripe subscription instead of modifying the existing one
 
 **UC-4.4: Downgrade Subscription**
+- As a musician, I want to downgrade my subscription to a lower tier so that I can reduce my costs while keeping my data intact.
 - Actor: Musician
 - User downgrades from a higher tier to a lower tier
 - Acceptance Criteria:
@@ -830,6 +852,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Downgrade proceeds without user seeing the impact summary
 
 **UC-4.5: Cancel Subscription**
+- As a musician, I want to cancel my paid subscription so that I stop being charged while retaining access until the end of my billing period.
 - Actor: Musician
 - User cancels their paid subscription
 - Acceptance Criteria:
@@ -844,6 +867,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Cancelled user cannot re-subscribe (must always be possible)
 
 **UC-4.6: Team Subscription Management**
+- As a director, I want to subscribe to the Team plan and manage seats so that my ensemble members receive Team-tier access under one billing account.
 - Actor: Director
 - Director subscribes to Team plan and manages seats
 - Acceptance Criteria:
@@ -858,6 +882,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Adding a member beyond seat count succeeds without billing adjustment
 
 **UC-4.7: Webhook Processing**
+- As a musician, I expect the system to process Stripe webhooks reliably so that my subscription status and feature access stay in sync with my payment state.
 - Actor: System
 - System processes Stripe webhooks for subscription lifecycle events
 - Acceptance Criteria:
@@ -873,6 +898,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Webhook processing creates inconsistency between Stripe state and local state
 
 **UC-4.8: Production Deployment**
+- As an admin, I want the application deployed to production with HTTPS, backups, and monitoring so that real customers can use the platform reliably.
 - Actor: Admin
 - Application deployed to production on DigitalOcean
 - Acceptance Criteria:
@@ -906,6 +932,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
 ### Use Cases
 
 **UC-5.1: Create Ensemble**
+- As a director, I want to create an ensemble with a name, description, and invite link so that I can organize my musicians into a managed group.
 - Actor: Director
 - Director creates an ensemble with name, description, and instrument focus
 - Acceptance Criteria:
@@ -920,6 +947,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Ensemble created without the creator being assigned as admin
 
 **UC-5.2: Join Ensemble**
+- As a musician, I want to join an ensemble via an invite link or code so that I can connect with my director and fellow musicians.
 - Actor: Musician
 - Musician joins an ensemble via invite link or code
 - Acceptance Criteria:
@@ -933,6 +961,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Expired or revoked invite codes still work
 
 **UC-5.3: Director Dashboard**
+- As a director, I want to view aggregate and individual practice data for my ensemble members so that I can monitor engagement and identify who needs support.
 - Actor: Director
 - Director views aggregate and individual practice data for ensemble members
 - Acceptance Criteria:
@@ -947,6 +976,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Dashboard shows data for removed/inactive members without clear labeling
 
 **UC-5.4: Practice Activity Feed**
+- As a musician, I want to see a social feed of practice activity within my ensemble so that I feel connected to my peers and motivated by their progress.
 - Actor: Musician, Director
 - Members see a social feed of practice activity within their ensemble
 - Acceptance Criteria:
@@ -961,6 +991,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Feed visibility setting change doesn't take effect immediately
 
 **UC-5.5: Ensemble Roles**
+- As a director, I want to assign roles like Section Leader to trusted members so that they can help monitor their section's progress.
 - Actor: Director
 - Director assigns roles within the ensemble
 - Acceptance Criteria:
@@ -974,6 +1005,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Removing the last admin leaves the ensemble with no admin
 
 **UC-5.6: Delete Ensemble**
+- As a director, I want to delete an ensemble I no longer need so that it's removed from everyone's view without affecting members' personal practice data.
 - Actor: Director (Admin role)
 - Director deletes an ensemble (soft delete)
 - Acceptance Criteria:
@@ -989,6 +1021,7 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Hard delete of any ensemble data
 
 **UC-5.7: Remove Feed Reaction**
+- As a musician, I want to remove my own emoji reaction from a feed item so that I can correct an accidental reaction.
 - Actor: Musician
 - User removes their own emoji reaction from a feed item
 - Acceptance Criteria:
@@ -1015,6 +1048,7 @@ Directors can assign specific practice work and track group progress against goa
 ### Use Cases
 
 **UC-6.1: Create Assignment**
+- As a director, I want to create a practice assignment with a grid template and due date so that my ensemble members have clear, trackable practice work.
 - Actor: Director
 - Director creates a practice assignment for the ensemble or specific sections
 - Acceptance Criteria:
@@ -1028,6 +1062,7 @@ Directors can assign specific practice work and track group progress against goa
   - Assignment created with a past due date accepted without warning
 
 **UC-6.2: Assignment Progress Tracking**
+- As a director, I want to view real-time progress on assignments so that I can see who is on track and who needs encouragement before the due date.
 - Actor: Director
 - Director views real-time progress on assignments
 - Acceptance Criteria:
@@ -1041,6 +1076,7 @@ Directors can assign specific practice work and track group progress against goa
   - Progress data is delayed by more than 5 minutes from actual practice
 
 **UC-6.3: Practice Challenges**
+- As a musician, I want to participate in practice challenges within my ensemble so that friendly competition motivates me to practice more.
 - Actor: Musician, Director
 - Musicians or directors create practice challenges within an ensemble
 - Acceptance Criteria:
@@ -1055,6 +1091,7 @@ Directors can assign specific practice work and track group progress against goa
   - Challenge with end date in the past can be created
 
 **UC-6.4: Export Reports**
+- As a director, I want to export ensemble analytics as PDF or CSV so that I can share progress reports with parents, administrators, or committee members.
 - Actor: Director
 - Director exports ensemble analytics as PDF or CSV
 - Acceptance Criteria:
@@ -1070,6 +1107,7 @@ Directors can assign specific practice work and track group progress against goa
   - Non-director user can access export functionality
 
 **UC-6.5: Mentorship / Feedback**
+- As a musician, I want to share my grid progress and receive feedback from my director or peers so that I can get guidance on what to improve.
 - Actor: Musician, Director
 - Musicians can share progress and receive feedback from directors or peers
 - Acceptance Criteria:
@@ -1085,6 +1123,7 @@ Directors can assign specific practice work and track group progress against goa
   - Notification sent for feedback on a grid the user no longer has access to
 
 **UC-6.6: Cancel Challenge**
+- As a director, I want to cancel an active or upcoming challenge so that I can remove it if circumstances change.
 - Actor: Director
 - Director cancels an active or upcoming challenge
 - Acceptance Criteria:
@@ -1097,6 +1136,7 @@ Directors can assign specific practice work and track group progress against goa
   - Completed challenge can be cancelled (only active/upcoming)
 
 **UC-6.7: Delete Feedback Comment**
+- As a musician, I want to delete my own feedback comment so that I can remove something I posted by mistake.
 - Actor: Musician, Director
 - Author deletes their own comment on a shared grid
 - Acceptance Criteria:
@@ -1172,6 +1212,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 ### Use Cases
 
 **UC-A.1: Activate Metronome**
+- As a musician, I want to use a built-in metronome that auto-sets to my practice cell's tempo so that I can stay in time without needing a separate app.
 - Actor: Musician
 - User enables the built-in metronome during practice
 - Implementation: audio synthesis
@@ -1192,6 +1233,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Audible latency or lag between visual and audio beat
 
 **UC-A.2: Use Chromatic Tuner**
+- As a musician, I want to use a built-in chromatic tuner with real-time pitch feedback so that I can monitor my intonation while practicing.
 - Actor: Musician
 - User activates the built-in tuner for real-time pitch feedback during practice
 - Implementation: signal processing (FFT/autocorrelation)
@@ -1210,6 +1252,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Microphone permission denied leaves UI in broken state (must show clear message)
 
 **UC-A.3: Track In-Tune Percentage**
+- As a musician, I want the system to track what percentage of time I'm playing in tune so that I can measure my intonation improvement over time.
 - Actor: Musician, System
 - System records what percentage of time the musician is in tune during a practice session
 - Implementation: signal processing
@@ -1227,6 +1270,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Tracking continues after user stops the tuner
 
 **UC-A.4: Record Practice Session Audio**
+- As a musician, I want to record audio during practice so that I can listen back and evaluate my own playing.
 - Actor: Musician
 - User records audio during practice for self-review
 - Implementation: Web Audio API
@@ -1245,6 +1289,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Recording fails silently (must show error if microphone unavailable)
 
 **UC-A.5: Playback and Compare Recordings**
+- As a musician, I want to listen to past recordings and compare them across sessions so that I can hear my improvement over time.
 - Actor: Musician
 - User listens to past recordings and compares across sessions
 - Acceptance Criteria:
@@ -1266,6 +1311,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 ### Use Cases
 
 **UC-B.1: Upload Sheet Music**
+- As a musician, I want to upload a PDF or image of my sheet music so that the system can extract the notes and structure for automated grid generation.
 - Actor: Musician
 - User uploads a PDF or image of their instrumental part
 - Implementation: file upload + AI/ML for OCR/OMR (costs credits)
@@ -1286,6 +1332,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - File stored indefinitely after processing (should offer cleanup)
 
 **UC-B.2: Analyze Part Difficulty**
+- As a musician, I expect the system to analyze the difficulty of each segment in my music so that I can see which passages need the most practice attention.
 - Actor: System
 - System analyzes extracted music data to score difficulty of each segment
 - Implementation: heuristics first (ML only if insufficient)
@@ -1306,6 +1353,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Algorithm produces different scores for identical input (must be deterministic)
 
 **UC-B.3: Identify Score Structure**
+- As a musician, I expect the system to identify structural segments, solos, and exposed passages in my music so that the generated practice grid reflects the musical context.
 - Actor: System
 - System identifies structural segments, voicing context, and exposed passages
 - Implementation: heuristics first
@@ -1321,6 +1369,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Voicing analysis asserts confidence it doesn't have (must indicate when context is insufficient)
 
 **UC-B.4: Auto-Generate Practice Grid from Score**
+- As a musician, I want the system to auto-generate a complete practice grid from my analyzed score so that I get a structured practice plan without manually creating every row.
 - Actor: Musician
 - System generates a complete practice grid from analyzed score data
 - Implementation: deterministic mapping
@@ -1347,6 +1396,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 ### Use Cases
 
 **UC-C.1: Import External Tuner Data**
+- As a musician, I want to import tuning data from external apps like Tonal Energy so that I can consolidate my intonation tracking in one place.
 - Actor: Musician
 - User imports tuning data from Tonal Energy Tuner or similar external apps
 - Implementation: data import/API
@@ -1363,6 +1413,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Import creates duplicate records for the same time period
 
 **UC-C.2: Map Played Notes to Written Music**
+- As a musician, I expect the system to align what I played against the written score so that I can see exactly which notes I got right and which I missed.
 - Actor: System
 - System aligns detected audio (played notes) against the written score (from Phase B)
 - Implementation: signal processing (DTW), hybrid with ML if needed for noisy environments
@@ -1380,6 +1431,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Processing time scales exponentially with passage length
 
 **UC-C.3: Score Practice Attempt**
+- As a musician, I want the system to score my practice attempts on pitch, rhythm, and note coverage so that I get objective feedback on my accuracy.
 - Actor: Musician, System
 - System scores a practice attempt based on note-to-score mapping
 - Acceptance Criteria:
@@ -1395,6 +1447,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Attempt scores are not reproducible (same audio input should produce same score)
 
 **UC-C.4: Just Intonation Tuning Targets**
+- As a musician, I want the system to calculate just intonation targets for each note based on its harmonic context so that I can practice tuning to pure intervals rather than equal temperament.
 - Actor: Musician, System
 - System calculates just intonation targets for each note based on harmonic context
 - Implementation: pure math (frequency ratios) + heuristic chord analysis
@@ -1424,6 +1477,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 ### Use Cases
 
 **UC-D.1: Pitch Identification Drill**
+- As a musician, I want to practice identifying pitches by ear so that I can develop my aural skills and recognize notes more quickly.
 - Actor: Musician
 - System plays a random tone and the user identifies the pitch
 - Implementation: audio synthesis + comparison
@@ -1447,6 +1501,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Spaced repetition data lost between sessions
 
 **UC-D.2: Interval Identification Drill**
+- As a musician, I want to practice identifying intervals by ear so that I can improve my ability to hear and sing melodic and harmonic distances.
 - Actor: Musician
 - System plays two notes and the user identifies the interval
 - Acceptance Criteria:
@@ -1462,6 +1517,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Audio plays over itself if user clicks too quickly (must queue or debounce)
 
 **UC-D.3: Chord Quality Identification**
+- As a musician, I want to practice identifying chord qualities by ear so that I can better understand harmonic context when playing in an ensemble.
 - Actor: Musician
 - System plays a chord and the user identifies its quality
 - Acceptance Criteria:
@@ -1476,6 +1532,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Chords generated with notes outside audible range
 
 **UC-D.4: Ear Training Progress Analytics**
+- As a musician, I want to view my ear training accuracy trends over time so that I can see which skills are improving and which need more work.
 - Actor: Musician
 - User views their ear training accuracy trends over time
 - Acceptance Criteria:
@@ -1489,6 +1546,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Historical data lost when user changes difficulty level
 
 **UC-D.5: Record Reference Tone**
+- As a musician, I want to record my best tone as a personal reference so that I can compare future playing against my own standard.
 - Actor: Musician
 - User records their own "best tone" as a personal reference for tone quality comparison
 - Implementation: Web Audio API + signal processing
@@ -1504,6 +1562,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - User's reference recordings accessible to other users
 
 **UC-D.6: Analyze Tone Quality**
+- As a musician, I want the system to analyze my tone quality and compare it against reference models so that I get objective feedback on my sound.
 - Actor: Musician
 - System analyzes the musician's tone and compares against reference models
 - Implementation: AI/ML (costs credits)
