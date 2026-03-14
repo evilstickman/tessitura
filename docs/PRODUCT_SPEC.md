@@ -2968,6 +2968,87 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 
 ---
 
+### V8 Milestones (Sketch)
+
+**M8.1: Domain Model — Recording, InTuneSession**
+- Maps to: UC-A.1, UC-A.2, UC-A.3, UC-A.4, UC-A.5
+
+**M8.2: Metronome**
+- Maps to: UC-A.1
+
+**M8.3: Chromatic Tuner & In-Tune Tracking**
+- Maps to: UC-A.2, UC-A.3
+
+**M8.4: Recording & Playback**
+- Maps to: UC-A.4, UC-A.5
+
+**M8.5: V8 Polish & Verification**
+
+---
+
+### V9 Milestones (Sketch)
+
+**M9.1: Domain Model — UploadedScore, ScoreSegment**
+- Maps to: UC-B.1, UC-B.2, UC-B.3, UC-B.4
+
+**M9.2: Sheet Music Upload & OMR**
+- Maps to: UC-B.1
+
+**M9.3: Difficulty Analysis & Structure Identification**
+- Maps to: UC-B.2, UC-B.3
+
+**M9.4: Auto-Grid Generation**
+- Maps to: UC-B.4
+
+**M9.5: V9 Polish & Verification**
+
+---
+
+### V10 Milestones (Sketch)
+
+**M10.1: Domain Model — PracticeAttempt, TunerDataImport**
+- Maps to: UC-C.1, UC-C.2, UC-C.3, UC-C.4
+
+**M10.2: External Tuner Data Import**
+- Maps to: UC-C.1
+
+**M10.3: Note-to-Score Mapping (DTW)**
+- Maps to: UC-C.2
+
+**M10.4: Practice Attempt Scoring**
+- Maps to: UC-C.3
+
+**M10.5: Just Intonation Targets**
+- Maps to: UC-C.4
+
+**M10.6: V10 Polish & Verification**
+
+---
+
+### V11 Milestones (Sketch)
+
+**M11.1: Domain Model — EarTrainingSession, ReferenceRecording, ToneAnalysisResult**
+- Maps to: UC-D.1, UC-D.2, UC-D.3, UC-D.4, UC-D.5, UC-D.6
+
+**M11.2: Pitch Identification Drill**
+- Maps to: UC-D.1
+
+**M11.3: Interval & Chord Drills**
+- Maps to: UC-D.2, UC-D.3
+
+**M11.4: Ear Training Analytics**
+- Maps to: UC-D.4
+
+**M11.5: Reference Tone Recording**
+- Maps to: UC-D.5
+
+**M11.6: Tone Quality Analysis (ML)**
+- Maps to: UC-D.6
+
+**M11.7: V11 Polish & Verification**
+
+---
+
 ## Verification Strategy
 
 Verification happens at three levels: automated (CI), manual (Playwright-driven), and phase-gate (milestone completion). Each level has specific tools and criteria.
