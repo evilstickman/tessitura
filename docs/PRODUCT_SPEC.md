@@ -1627,143 +1627,499 @@ Types: `feat`, `fix`, `refactor`, `test`, `infra`, `docs`, `style`
 
 ---
 
-## Data Model (V1-V6 Complete)
+## Domain Model
+
+This model is designed to support both the product AND long-term research into practice patterns, pedagogy effectiveness, and musician motivation/retention. Every field has defined provenance (who creates it, who updates it, when, and why). Derived values are explicitly marked and never stored redundantly.
+
+### Design Principles
+- **Single source of truth:** Every fact is stored exactly once. Derived values are computed, not cached (except explicit caches with refresh policies).
+- **Temporal completeness:** Every state change is timestamped. The system can reconstruct the state at any point in time.
+- **Research-ready:** The data model supports answering questions about practice patterns, skill acquisition curves, pedagogy effectiveness, gamification impact, and retention without schema changes.
+- **Normalization:** 3NF minimum. Denormalization only for explicit performance caches, always with documented refresh policy.
+
+### Entity Relationship Overview
 
 ```
-User
-├── id, email, password_hash, display_name
-├── instruments[] (text array)
-├── email_verified (boolean)
-├── created_at, updated_at
-├── stripe_customer_id (nullable, V4)
-├── subscription_tier (enum: free/pro/team)
-├── xp (integer, V3)
-├── level (integer, V3)
-├── current_streak (integer, V2)
-├── longest_streak (integer, V2)
-└── timezone (string)
+User ─┬─< PracticeGrid ─< PracticeRow ─< PracticeCell ─< PracticeCellCompletion
+      │         │
+      │         └── source_template_id ──> LibraryTemplate
+      │
+      ├─< PracticeSession
+      ├─< PracticeGoal
+      ├─< UserAchievement >── Achievement
+      ├─< Grant
+      ├─< EnsembleMembership >── Ensemble
+      │                              │
+      │                              ├─< FeedItem
+      │                              ├─< Assignment ─< AssignmentRecipient
+      │                              └─< Challenge ─< ChallengeParticipant
+      └─< Feedback (as author)
 
-PracticeGrid
-├── id, user_id (FK→User), name, notes
-├── grid_type (enum: repertoire, technique) (V2)
-├── fade_enabled (boolean, default: true)
-├── created_at, updated_at
-├── archived (boolean, V2)
-├── source_template_id (FK→LibraryTemplate, nullable, V2)
-└── assignment_id (FK→Assignment, nullable, V6)
-
-PracticeRow
-├── id, practice_grid_id (FK→PracticeGrid)
-├── song_title, composer, part (nullable)
-├── study_reference (nullable, for technique grids — e.g., "Clarke #3 in Eb")
-├── start_measure, end_measure
-├── target_tempo (integer BPM)
-├── steps (integer)
-├── priority (enum: critical, high, medium, low — default: medium)
-└── created_at, updated_at
-
-PracticeCell
-├── id, practice_row_id (FK→PracticeRow)
-├── target_tempo_percentage (float, 0.4-1.0)
-├── freshness_interval_days (integer, default: 1 — current spaced repetition interval)
-└── created_at, updated_at
-
-PracticeCellCompletion
-├── id, practice_cell_id (FK→PracticeCell)
-├── completion_date (date)
-└── created_at
-
-LibraryTemplate (V2)
-├── id, title, author (e.g., "Clarke", "Arban")
-├── collection (e.g., "Technical Studies for the Cornet")
-├── description
-├── instrument_tags (text array, e.g., ["trumpet", "cornet", "brass"])
-├── tier_required (enum: free, pro — which templates are available on free tier)
-├── grid_data (JSON — serialized grid structure: rows, tempos, steps)
-├── community_user_count (integer, cached)
-├── community_avg_completion (float, cached)
-└── created_at, updated_at
-
-PracticeSession (V2)
-├── id, user_id (FK→User)
-├── date, duration_minutes, notes
-└── created_at
-
-PracticeGoal (V2)
-├── id, user_id (FK→User)
-├── goal_type (enum: daily_minutes, weekly_minutes, weekly_sessions, monthly_grids)
-├── target_value (integer)
-├── active (boolean)
-└── created_at, updated_at
-
-Achievement (V3)
-├── id, key (unique string), name, description
-├── category (enum: streak, completion, time, exploration)
-├── icon (string)
-├── xp_reward (integer)
-└── criteria (JSON — machine-readable unlock condition)
-
-UserAchievement (V3)
-├── id, user_id (FK→User), achievement_id (FK→Achievement)
-└── unlocked_at (timestamp)
-
-Grant (V3)
-├── id, user_id (FK→User)
-├── grant_type (string, e.g., "max_active_grids")
-├── grant_value (string/integer)
-├── source (enum: subscription, admin_override)
-└── created_at, updated_at
-
-Ensemble (V5)
-├── id, name, description
-├── created_by (FK→User)
-├── invite_code (unique string)
-├── visibility (enum: public, private)
-├── social_feed_mode (enum: full, achievements_only, off)
-└── created_at, updated_at
-
-EnsembleMembership (V5)
-├── id, ensemble_id (FK→Ensemble), user_id (FK→User)
-├── role (enum: admin, section_leader, member)
-├── section (nullable string, e.g., "Cornets")
-├── joined_at
-└── status (enum: active, pending, removed)
-
-FeedItem (V5)
-├── id, ensemble_id (FK→Ensemble), user_id (FK→User)
-├── event_type (enum: grid_complete, achievement, streak_milestone, challenge_win)
-├── event_data (JSON)
-├── created_at
-└── reactions (JSON array)
-
-Assignment (V6)
-├── id, ensemble_id (FK→Ensemble)
-├── created_by (FK→User)
-├── grid_template_id (FK→PracticeGrid — the source grid to clone)
-├── title, description
-├── due_date
-├── target_completion_percentage (integer, 0-100)
-├── assigned_to (enum: ensemble, section, individuals)
-├── assigned_sections (text array, nullable)
-├── assigned_user_ids (integer array, nullable)
-├── required (boolean)
-└── created_at, updated_at
-
-Challenge (V6)
-├── id, ensemble_id (FK→Ensemble)
-├── created_by (FK→User)
-├── challenge_type (enum: most_minutes, first_complete, longest_streak)
-├── start_date, end_date
-├── title, description
-└── created_at
-
-Feedback (V6)
-├── id, grid_id (FK→PracticeGrid)
-├── author_id (FK→User)
-├── content (text)
-├── created_at
-└── parent_id (FK→Feedback, nullable — for threading)
+Cardinality: ─< means one-to-many, >── means many-to-one
 ```
+
+### Entities
+
+---
+
+#### User
+The central identity. Every piece of data in the system is owned by or attributed to a User.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated on registration | Immutable PK |
+| email | string, unique | User-provided at registration | Updatable by user. Uniqueness enforced at DB level |
+| password_hash | string | System-generated from user password | bcrypt/argon2. Never readable. Updated on password change |
+| display_name | string | User-provided at registration | Updatable by user |
+| instruments | text[] | User-provided at registration | Updatable by user. Free-text array (e.g., ["cornet", "trumpet"]) |
+| email_verified | boolean | System-set on verification | Default false. Set true when verification token consumed |
+| timezone | string | User-provided or detected | IANA timezone (e.g., "America/Chicago"). Used for streak/freshness calculations |
+| default_fade_enabled | boolean | User preference | Default true. Applied to new grids |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated on any field change |
+| stripe_customer_id | string, nullable | System-set on first Stripe interaction (V4) | Immutable once set |
+| subscription_tier | enum(free,pro,team) | System-set via grant system (V3) or Stripe webhook (V4) | Derived from active subscription state |
+| subscription_status | enum(none,active,past_due,cancelled,expired) | System-set via Stripe webhook (V4) | State machine — see Subscription States below |
+| subscription_period_end | timestamptz, nullable | System-set via Stripe webhook (V4) | When current billing period ends |
+| xp | integer | System-calculated (V3) | Sum of all XP awards. Monotonically increasing (never decreases) |
+| level | integer | **Derived** (V3) | Computed from xp: level where N^2 * 100 ≤ xp. Never stored — calculated on read |
+| current_streak | integer | System-calculated (V2) | Days of consecutive practice. Reset on miss. Stored because recalculation is expensive |
+| longest_streak | integer | System-calculated (V2) | Max of all historical current_streak values. Monotonically increasing |
+| last_practice_date | date, nullable | System-set on any practice activity (V2) | User's timezone-local date. Used for streak calculation |
+
+**State Machine: Subscription**
+```
+none → active (checkout.completed)
+active → past_due (invoice.payment_failed)
+active → cancelled (user cancels — access until period_end)
+past_due → active (invoice.paid)
+past_due → expired (payment failed + grace period exhausted)
+cancelled → expired (period_end reached)
+expired → active (user re-subscribes)
+cancelled → active (user re-subscribes before period_end)
+```
+
+**Research value:** User table enables cohort analysis by registration date, instrument, subscription tier. Streak and XP data enable motivation/retention studies.
+
+---
+
+#### PracticeGrid
+A structured practice plan for a piece of music or collection of technical studies.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set at creation | Immutable. The owner. Used for all access control |
+| name | string (1-200) | User-provided | Required. Updatable by owner |
+| notes | text, nullable | User-provided | Optional. Updatable by owner |
+| grid_type | enum(repertoire,technique) | User-set at creation (V2) | Default: repertoire. Affects UI labels, not behavior |
+| fade_enabled | boolean | User-set, defaults from User.default_fade_enabled | Controls whether freshness decay is active |
+| archived | boolean | User-set (V2) | Default false. Archived grids hidden from main list |
+| source_template_id | FK→LibraryTemplate, nullable | System-set when cloned from library (V2) | Null for user-created grids. Immutable. Used for community stats |
+| assignment_id | FK→Assignment, nullable | System-set when created from assignment (V6) | Null for user-created grids. Immutable |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**Derived values (never stored):**
+- `completion_percentage`: count of fresh+aging cells / total cells (fade on) OR completed cells / total cells (fade off)
+- `total_cells`: sum of all cells across all rows
+- `stale_cell_count`: count of cells in stale or decayed state
+- `last_practiced_at`: max(completion_date) across all cells in this grid
+
+**Research value:** Grid metadata (type, source template, assignment link) enables analysis of what musicians practice, how they structure practice, and which library resources are most effective.
+
+---
+
+#### PracticeRow
+A segment of music within a grid — a specific passage, measure range, or technical exercise to be practiced at graduated tempos.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| practice_grid_id | FK→PracticeGrid | System-set at creation | Immutable. Cascading delete |
+| sort_order | integer | System-set, user-adjustable | Position within the grid. Allows reordering |
+| song_title | string, nullable | User-provided | For repertoire grids |
+| composer | string, nullable | User-provided | For repertoire grids |
+| part | string, nullable | User-provided | e.g., "1st Cornet", "2nd Trombone" |
+| study_reference | string, nullable | User-provided or from template | For technique grids (e.g., "Clarke #3 in Eb") |
+| start_measure | string | User-provided | Free-text (supports "1", "A", "Intro") |
+| end_measure | string | User-provided | Free-text |
+| target_tempo | integer | User-provided | BPM. Any positive integer |
+| steps | integer | User-provided | Positive integer. Determines number of cells generated |
+| priority | enum(critical,high,medium,low) | User-set | Default: medium. Affects practice feed ordering |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**Derived values:**
+- `completion_percentage`: computed from child cells' freshness state
+- `max_fresh_tempo_percentage`: highest target_tempo_percentage among fresh/aging cells
+- `freshness_summary`: { fresh: N, aging: N, stale: N, decayed: N }
+
+**Research value:** Row-level data enables per-passage analysis: which measure ranges are hardest (most re-practices), how tempo progression correlates with mastery, priority vs actual practice frequency.
+
+---
+
+#### PracticeCell
+A single tempo step within a row. Represents "practice this passage at this percentage of target tempo."
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| practice_row_id | FK→PracticeRow | System-set at creation | Immutable. Cascading delete |
+| step_number | integer | System-set at creation | 0-indexed position. Used for tempo calculation |
+| target_tempo_percentage | float | **Derived but stored** | Formula: 0.4 + (0.6 * step_number / (total_steps - 1)). Stored for query performance, but must match formula exactly |
+| freshness_interval_days | integer | System-managed | Default: 1. Doubles on re-practice (cap 30). Resets on uncomplete |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated (interval changes) |
+
+**Derived values (never stored):**
+- `target_tempo_bpm`: target_tempo_percentage * parent_row.target_tempo (rounded to integer)
+- `freshness_state`: computed from last completion date + freshness_interval_days + cascading fade rules. One of: fresh, aging, stale, decayed, incomplete
+- `last_completion_date`: max(completion_date) from child completions
+- `is_shielded`: whether a higher-tempo cell in the same row prevents this cell from starting its fade timer
+
+**Invariant:** target_tempo_percentage MUST equal the formula result. If steps change, cells are regenerated.
+
+**Research value:** Cell-level data with spaced repetition intervals enables analysis of skill acquisition curves — how quickly intervals grow (learning speed), how often cells decay (retention patterns).
+
+---
+
+#### PracticeCellCompletion
+An immutable record that a musician practiced a cell on a specific date. The fundamental unit of practice evidence.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| practice_cell_id | FK→PracticeCell | System-set at creation | Immutable. Cascading delete |
+| completion_date | date | System-set (user's timezone-local date) | The date the cell was practiced |
+| created_at | timestamptz | System-generated | Immutable. Actual moment of completion (includes time) |
+
+**Constraint:** Unique on (practice_cell_id, completion_date) — at most one completion per cell per day.
+
+**Research value:** This is the richest research table. Completion patterns (time of day, day of week, frequency, gaps) directly measure practice behavior. Combined with cell tempo data, enables learning curve analysis.
+
+---
+
+#### PracticeSession (V2)
+A manually logged or system-inferred practice session with duration.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| practice_grid_id | FK→PracticeGrid, nullable | User-associated or system-inferred | Which grid was practiced. Nullable for general practice |
+| session_date | date | User-provided or system-set | User's timezone-local date |
+| duration_minutes | integer | User-provided or system-calculated | Positive integer |
+| notes | text, nullable | User-provided | Optional session notes |
+| source | enum(manual, inferred) | System-set | Manual = user logged it. Inferred = system calculated from completion timestamps |
+| created_at | timestamptz | System-generated | Immutable |
+
+**Research value:** Practice session duration data combined with completion data enables "time-to-mastery" analysis — how many hours does it take to complete a grid at different difficulty levels?
+
+---
+
+#### PracticeGoal (V2)
+A user-set practice target that tracks progress.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| goal_type | enum(daily_minutes, weekly_minutes, weekly_sessions, monthly_grids) | User-set | Immutable after creation |
+| target_value | integer | User-set | Positive integer. Updatable |
+| active | boolean | User-set | Default true. User can deactivate without deleting |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**Derived values:** `current_progress` and `percentage_complete` computed from PracticeSession and PracticeCellCompletion data for the relevant time period.
+
+**Research value:** Goal-setting behavior correlates with practice consistency and retention.
+
+---
+
+#### LibraryTemplate (V2)
+An admin-curated practice grid template from public-domain music education literature.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| title | string | Admin-provided | e.g., "Technical Study #3 in Eb" |
+| author | string | Admin-provided | e.g., "Herbert L. Clarke" |
+| collection | string | Admin-provided | e.g., "Technical Studies for the Cornet" |
+| description | text, nullable | Admin-provided | |
+| instrument_tags | text[] | Admin-provided | e.g., ["trumpet", "cornet", "brass"] |
+| tier_required | enum(free, pro) | Admin-set | Which subscription tier can access this template |
+| grid_data | JSON | Admin-provided | Serialized grid structure: { rows: [{ title, start_measure, end_measure, target_tempo, steps }] } |
+| active | boolean | Admin-set | Default true. Deactivated templates hidden from library |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**Derived values (cached with daily refresh):**
+- `community_user_count`: count of PracticeGrids with source_template_id = this.id
+- `community_avg_completion`: average completion_percentage across those grids
+
+**Research value:** Template usage and completion rates measure pedagogy effectiveness — which studies produce the best outcomes?
+
+---
+
+#### Achievement (V3)
+A system-defined milestone that musicians can unlock.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| key | string, unique | Admin-defined | Machine identifier (e.g., "first_cell_complete") |
+| name | string | Admin-defined | Display name (e.g., "First Steps") |
+| description | string | Admin-defined | What the user did to earn it |
+| category | enum(streak, completion, time, exploration) | Admin-defined | For grouping in UI |
+| icon | string | Admin-defined | Icon identifier or URL |
+| xp_reward | integer | Admin-defined | XP granted on unlock |
+| criteria | JSON | Admin-defined | Machine-readable condition (e.g., { "type": "streak_days", "value": 7 }) |
+| created_at | timestamptz | System-generated | Immutable |
+
+**Immutable after creation.** Changes require a new achievement (old one grandfathered).
+
+---
+
+#### UserAchievement (V3)
+Join table: records when a user unlocked an achievement. Immutable once created.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| achievement_id | FK→Achievement | System-set | Immutable |
+| unlocked_at | timestamptz | System-set | Immutable. Moment of unlock |
+
+**Constraint:** Unique on (user_id, achievement_id) — cannot unlock the same achievement twice.
+
+**Research value:** Achievement unlock timing correlates with engagement — do achievements drive continued practice or are they just a consequence of it?
+
+---
+
+#### Grant (V3)
+A specific feature permission or usage limit for a user, derived from their subscription tier or admin override.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| grant_type | string | System-set from tier mapping or admin | e.g., "max_active_grids", "analytics_access" |
+| grant_value | string | System-set | e.g., "unlimited", "full", "3", "subset" |
+| source | enum(subscription, admin_override) | System-set | Distinguishes origin |
+| expires_at | timestamptz, nullable | Admin-set (for overrides) | Null = no expiry |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**Constraint:** Unique on (user_id, grant_type) — one grant per type per user. Admin override replaces subscription-based grant.
+
+---
+
+#### Ensemble (V5)
+A group of musicians managed by a director.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| name | string | Director-provided | Required. Updatable by admin role |
+| description | text, nullable | Director-provided | Updatable |
+| instrument_tags | text[] | Director-provided | e.g., ["brass", "wind"] |
+| created_by | FK→User | System-set | Immutable. The founding director |
+| invite_code | string, unique | System-generated | Cryptographically random. Regenerable by admin |
+| visibility | enum(public, private) | Director-set | Default: private |
+| social_feed_mode | enum(full, achievements_only, off) | Director-set | Default: full |
+| join_approval_required | boolean | Director-set | Default: false. If true, joins go to pending state |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+---
+
+#### EnsembleMembership (V5)
+Join table with role and section assignment. Has a state machine.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| ensemble_id | FK→Ensemble | System-set | Immutable |
+| user_id | FK→User | System-set | Immutable |
+| role | enum(admin, section_leader, member) | Director-set | Default: member. Updatable by admin |
+| section | string, nullable | Director-set | e.g., "Cornets", "Percussion". Updatable |
+| status | enum(pending, active, removed) | System-managed | State machine |
+| joined_at | timestamptz, nullable | System-set when status→active | |
+| removed_at | timestamptz, nullable | System-set when status→removed | |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**State Machine: Membership**
+```
+(join request) → pending (if join_approval_required) → active (admin approves)
+(join request) → active (if no approval required)
+active → removed (admin removes or user leaves)
+removed → (terminal — rejoin creates new membership)
+```
+
+**Constraint:** Unique on (ensemble_id, user_id, status) where status != 'removed' — a user can only have one active/pending membership per ensemble.
+
+---
+
+#### FeedItem (V5)
+A social activity event within an ensemble.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| ensemble_id | FK→Ensemble | System-set | Immutable |
+| user_id | FK→User | System-set | The musician who triggered the event |
+| event_type | enum(grid_complete, row_complete, achievement, streak_milestone, challenge_win, assignment_complete) | System-set | |
+| event_data | JSON | System-set | Structured event payload (grid name, achievement name, streak count, etc.) |
+| created_at | timestamptz | System-generated | Immutable |
+
+**FeedItem is immutable.** No edits, no deletes (except by admin for moderation).
+
+---
+
+#### FeedReaction (V5)
+Emoji reactions on feed items. Separate table to avoid JSON array mutation.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| feed_item_id | FK→FeedItem | System-set | Immutable |
+| user_id | FK→User | System-set | The reactor |
+| emoji | string | User-provided | Single emoji character. Constrained to allowed set |
+| created_at | timestamptz | System-generated | Immutable |
+
+**Constraint:** Unique on (feed_item_id, user_id, emoji) — one reaction per emoji per user per item.
+
+---
+
+#### Assignment (V6)
+A director-created practice assignment for ensemble members.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| ensemble_id | FK→Ensemble | System-set | Immutable |
+| created_by | FK→User | System-set | The director who created it |
+| grid_template_id | FK→PracticeGrid | Director-selected | Source grid to clone. Immutable after creation |
+| title | string | Director-provided | |
+| description | text, nullable | Director-provided | |
+| due_date | date | Director-provided | Updatable |
+| target_completion_percentage | integer (0-100) | Director-provided | Default: 100 |
+| required | boolean | Director-set | Default: true |
+| status | enum(draft, active, completed, cancelled) | System-managed | State machine |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+
+**State Machine: Assignment**
+```
+draft → active (director publishes)
+active → completed (due_date passed or director closes)
+active → cancelled (director cancels)
+draft → cancelled (director cancels before publishing)
+```
+
+---
+
+#### AssignmentRecipient (V6)
+Who receives the assignment and their individual grid clone.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| assignment_id | FK→Assignment | System-set | Immutable |
+| user_id | FK→User | System-set | Immutable |
+| practice_grid_id | FK→PracticeGrid | System-set | The cloned grid for this recipient. Immutable |
+| created_at | timestamptz | System-generated | Immutable |
+
+**Constraint:** Unique on (assignment_id, user_id).
+
+---
+
+#### Challenge (V6)
+A competitive practice challenge within an ensemble.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| ensemble_id | FK→Ensemble | System-set | Immutable |
+| created_by | FK→User | System-set | Director or member (if allowed) |
+| challenge_type | enum(most_minutes, first_complete, longest_streak) | Creator-set | Immutable after creation |
+| title | string | Creator-provided | |
+| description | text, nullable | Creator-provided | |
+| start_date | date | Creator-provided | Must be future or today |
+| end_date | date | Creator-provided | Must be after start_date |
+| status | enum(upcoming, active, completed) | System-managed | Based on current date vs start/end |
+| winner_user_id | FK→User, nullable | System-set | Set when challenge completes |
+| created_at | timestamptz | System-generated | Immutable |
+
+---
+
+#### ChallengeParticipant (V6)
+Tracks who is participating in a challenge.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| challenge_id | FK→Challenge | System-set | Immutable |
+| user_id | FK→User | System-set | Immutable |
+| joined_at | timestamptz | System-generated | Immutable |
+
+**Derived values:** Leaderboard position computed from PracticeSession/PracticeCellCompletion data within the challenge date range.
+
+---
+
+#### Feedback (V6)
+Comments on shared grid snapshots. Supports threading.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| grid_id | FK→PracticeGrid | System-set | The shared grid being commented on |
+| author_id | FK→User | System-set | Immutable |
+| parent_id | FK→Feedback, nullable | System-set | For threading. Null = top-level comment |
+| content | text | Author-provided | Sanitized. Max 5000 chars |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Updated if author edits |
+
+---
+
+### Indexes (Performance-Critical)
+
+```
+PracticeCellCompletion: (practice_cell_id, completion_date) UNIQUE
+PracticeCellCompletion: (completion_date) — for streak and time-range queries
+PracticeGrid: (user_id, archived) — for grid list queries
+PracticeGrid: (source_template_id) — for community stats aggregation
+PracticeRow: (practice_grid_id, sort_order) — for ordered row display
+Grant: (user_id, grant_type) UNIQUE
+EnsembleMembership: (ensemble_id, user_id) — for membership lookups
+FeedItem: (ensemble_id, created_at DESC) — for feed pagination
+UserAchievement: (user_id, achievement_id) UNIQUE
+```
+
+### Research Dimensions
+
+The domain model supports the following research questions without schema changes:
+
+**Practice Patterns:**
+- How does practice frequency correlate with grid completion speed?
+- What time of day do musicians practice most? (PracticeCellCompletion.created_at)
+- How does freshness interval growth rate indicate skill retention?
+- What is the average time-to-mastery per grid type, difficulty level, instrument?
+
+**Pedagogy Effectiveness:**
+- Which LibraryTemplates produce the highest completion rates?
+- Do assigned grids (via Assignment) get completed more than self-created grids?
+- How does practice feed usage (suggestion acceptance) correlate with improvement?
+- Which row priorities get the most actual practice?
+
+**Motivation & Retention:**
+- Does streak length predict continued engagement? At what streak length do users "stick"?
+- Which achievements are most commonly the last one before a user churns?
+- Does social feed participation (FeedReaction) correlate with practice frequency?
+- How does challenge participation affect practice minutes?
+- Does gamification (XP, levels) independently drive practice, or just correlate?
 
 ---
 
