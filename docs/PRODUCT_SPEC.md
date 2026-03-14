@@ -1054,101 +1054,360 @@ Many features that seem to require AI can be accomplished with well-understood s
 ### Phase A: Built-In Practice Tools
 *All features in this phase use signal processing or audio synthesis — no AI, no credits.*
 
-**Metronome** *(audio synthesis)*
-- Built into the practice interface, tied to the active practice cell
-- Auto-sets BPM to the cell's target tempo when a cell is selected
-- Subdivisions, accent patterns, count-in
-- Visual and audio beat (accessibility: works with headphones or silently)
+### Use Cases
 
-**Tuner** *(signal processing — FFT/autocorrelation)*
-- Free chromatic tuner built into practice interface (extends existing Web Audio tuner)
-- Real-time pitch detection with cent deviation display
-- **In-tune percentage tracking:** records what % of time the player is within ±10 cents (configurable threshold)
-- In-tune data recorded alongside practice session time tracking
-- Historical in-tune trend per session, per piece, over time
-- Transposition support: display in concert pitch or transposed pitch (Bb, Eb, F, etc.)
+**UC-A.1: Activate Metronome**
+- Actor: Musician
+- User enables the built-in metronome during practice
+- Implementation: audio synthesis
+- Acceptance Criteria:
+  - Metronome accessible from the practice grid view (toggle button)
+  - When a practice cell is selected/active, metronome auto-sets to that cell's target BPM
+  - Manual BPM override available (does not change cell data)
+  - Subdivision options: quarter, eighth, triplet, sixteenth
+  - Accent pattern: configurable (e.g., accent beat 1 of 4)
+  - Count-in: 1 or 2 bars before starting
+  - Visual beat indicator (flashing dot or bar) for silent practice
+  - Audio click works with headphones
+  - Metronome does not interfere with tuner or recording (can run simultaneously)
+- Rejection Criteria:
+  - Metronome tempo drifts over time (must be sample-accurate using Web Audio API scheduling)
+  - Click bleeds into recording audio
+  - Metronome auto-set changes the cell's stored target tempo
+  - Audible latency or lag between visual and audio beat
 
-**Automated Recording & Playback** *(Web Audio API)*
-- One-click recording during practice sessions
-- Recordings linked to specific cells/rows/grids
-- Playback with A/B looping for self-review
-- Storage: compressed audio, user-managed (delete old recordings to save space)
-- Reinforces good practice behavior: listen back, compare across sessions
+**UC-A.2: Use Chromatic Tuner**
+- Actor: Musician
+- User activates the built-in tuner for real-time pitch feedback during practice
+- Implementation: signal processing (FFT/autocorrelation)
+- Acceptance Criteria:
+  - Tuner uses device microphone (permission requested on first use)
+  - Displays: detected note name, cent deviation from nearest pitch (±50 cents), frequency in Hz
+  - Visual needle/gauge showing sharp/flat deviation
+  - Reference pitch configurable (default A4 = 440Hz, adjustable 430-450Hz)
+  - Transposition support: display in concert pitch or transposed (Bb, Eb, F instruments)
+  - Detection range: at minimum C2 (65Hz) to C7 (2093Hz)
+  - Update rate: ≥15 updates per second for smooth visual feedback
+- Rejection Criteria:
+  - Tuner fails to detect pitch in a quiet room at normal playing volume
+  - Detected pitch is wrong by more than ±5 cents on a stable tone
+  - Tuner crashes or hangs when ambient noise is present
+  - Microphone permission denied leaves UI in broken state (must show clear message)
+
+**UC-A.3: Track In-Tune Percentage**
+- Actor: Musician, System
+- System records what percentage of time the musician is in tune during a practice session
+- Implementation: signal processing
+- Acceptance Criteria:
+  - In-tune threshold: configurable, default ±10 cents from target pitch
+  - Tracking starts when tuner is active and a practice cell is selected
+  - Records: total time, in-tune time, in-tune percentage per cell/row/session
+  - In-tune data stored alongside practice session time tracking
+  - Historical trend: in-tune % over time per piece, per session
+  - Dashboard widget showing in-tune trend
+- Rejection Criteria:
+  - In-tune tracking runs when no sound is detected (silence should not count as "out of tune" or "in tune")
+  - Percentage calculation uses integer division (must be precise)
+  - In-tune data attributed to wrong cell or session
+  - Tracking continues after user stops the tuner
+
+**UC-A.4: Record Practice Session Audio**
+- Actor: Musician
+- User records audio during practice for self-review
+- Implementation: Web Audio API
+- Acceptance Criteria:
+  - One-click record button in practice interface
+  - Recording linked to the active practice cell/row/grid
+  - Compressed audio format (e.g., WebM/Opus or AAC) to minimize storage
+  - Playback with timeline scrubbing
+  - A/B loop: set start and end points for repeated listening
+  - User can delete recordings to manage storage
+  - Recordings persist across sessions
+- Rejection Criteria:
+  - Recording starts without clear visual indicator (user must always know when recording)
+  - Recording persists after user explicitly deletes it
+  - Audio quality is so compressed it's not useful for self-review
+  - Recording fails silently (must show error if microphone unavailable)
+
+**UC-A.5: Playback and Compare Recordings**
+- Actor: Musician
+- User listens to past recordings and compares across sessions
+- Acceptance Criteria:
+  - Recording list per cell/row showing date and duration
+  - Side-by-side playback: play two recordings sequentially for comparison
+  - Recordings sorted chronologically with newest first
+  - Delete individual recordings
+  - Storage usage visible to user (e.g., "Using 45MB of 200MB")
+- Rejection Criteria:
+  - User can access recordings from another user's practice sessions
+  - Deleted recording is still playable (must be actually removed)
+  - Playback fails on recordings older than 30 days (no expiry on recordings)
+
+---
 
 ### Phase B: Score Analysis & Auto-Grid Generation
 *Mixed approach: OMR requires AI (credits), analysis uses heuristics first.*
 
-**Sheet Music Scanning / Import** *(AI/ML — costs credits)*
-- Upload a PDF/image of a part (individual instrument part)
-- OCR/OMR (Optical Music Recognition) to extract note data: pitches, rhythms, dynamics, articulations
-- Parse into structured music data: measures, beats, note sequences
+### Use Cases
 
-**Automated Segment Identification** *(heuristics first, ML if insufficient)*
-- Analyze the part to identify natural segments (phrases, sections, technical passages)
-- Heuristics: difficulty spikes (large intervals, fast passages, extreme range), phrase boundaries, rehearsal marks
-- Compare individual part against a full score (if uploaded) to determine:
-  - Song structure (intro, verse, chorus, bridge, coda, or rehearsal letters)
-  - Voicing context: is this the melody? harmony? bass line? countermelody?
-  - Exposed passages vs tutti sections
-- Auto-suggest priority levels based on analysis (exposed solo = Critical, tutti unison = Low)
+**UC-B.1: Upload Sheet Music**
+- Actor: Musician
+- User uploads a PDF or image of their instrumental part
+- Implementation: file upload + AI/ML for OCR/OMR (costs credits)
+- Acceptance Criteria:
+  - Accepts PDF, PNG, JPG, TIFF formats
+  - Maximum file size: 50MB
+  - Upload shows processing progress indicator
+  - Extracted data: note pitches, rhythms, time signatures, key signatures, dynamics, articulations, tempo markings, rehearsal marks
+  - Output stored as structured music data (MusicXML-like internal format)
+  - User can review and correct OCR results before accepting
+  - **Credit cost:** 1 credit per page scanned
+  - Failed OCR refunds the credit
+- Rejection Criteria:
+  - Upload accepts non-music files (must validate file contains music notation)
+  - Credit charged before processing completes successfully
+  - Extracted data is not reviewable/editable by user before import
+  - User's uploaded files are accessible to other users
+  - File stored indefinitely after processing (should offer cleanup)
 
-**Auto-Grid Generation** *(deterministic — maps analysis output to grid structure)*
-- From analyzed score data, automatically generate a practice grid
-- Each identified segment becomes a row
-- Target tempos derived from tempo markings in the score
-- Step count suggested based on segment difficulty
-- User reviews and adjusts before accepting
-- Dramatically reduces grid setup time — go from "I got new music" to "I'm practicing" in minutes
+**UC-B.2: Analyze Part Difficulty**
+- Actor: System
+- System analyzes extracted music data to score difficulty of each segment
+- Implementation: heuristics first (ML only if insufficient)
+- Acceptance Criteria:
+  - Difficulty factors evaluated:
+    - Interval sizes (large leaps = harder)
+    - Tempo relative to note density (fast passages = harder)
+    - Range (extreme high/low = harder)
+    - Rhythm complexity (syncopation, odd meters = harder)
+    - Dynamic changes (pp to ff = harder)
+    - Articulation density (fast tonguing = harder)
+  - Each measure or phrase scored on a difficulty scale (1-10)
+  - Difficulty scores used to auto-suggest priority levels for generated grid rows
+  - User can override difficulty scores
+- Rejection Criteria:
+  - Difficulty scoring runs without extracted music data (depends on UC-B.1)
+  - Scoring algorithm is opaque — user must be able to see WHY a section scored high
+  - Algorithm produces different scores for identical input (must be deterministic)
+
+**UC-B.3: Identify Score Structure**
+- Actor: System
+- System identifies structural segments, voicing context, and exposed passages
+- Implementation: heuristics first
+- Acceptance Criteria:
+  - Identifies: phrases, sections, rehearsal letter boundaries, key changes, time signature changes
+  - If full score uploaded alongside part: identifies melody vs harmony vs bass, solo vs tutti, exposed vs covered
+  - Auto-suggests segment boundaries for grid row creation
+  - Segments labeled with contextual tags (e.g., "Solo", "Tutti", "Exposed", "Melody")
+  - User can adjust segment boundaries before accepting
+- Rejection Criteria:
+  - Segment identification requires full score (must work on part alone, with reduced context)
+  - Generated segments overlap or leave gaps in the music
+  - Voicing analysis asserts confidence it doesn't have (must indicate when context is insufficient)
+
+**UC-B.4: Auto-Generate Practice Grid from Score**
+- Actor: Musician
+- System generates a complete practice grid from analyzed score data
+- Implementation: deterministic mapping
+- Acceptance Criteria:
+  - Each identified segment becomes a practice row
+  - Row target tempo: derived from tempo markings in score (or user-set default if none)
+  - Row step count: suggested based on segment difficulty (harder = more steps)
+  - Row priority: suggested based on structure analysis (solo/exposed = Critical, tutti = Low)
+  - Row measure range: auto-populated from segment boundaries
+  - Generated grid presented to user for review — user can add, remove, or edit rows before accepting
+  - Accepting creates a standard PracticeGrid that works identically to manually created grids
+  - User can regenerate with different parameters without losing previous grid
+- Rejection Criteria:
+  - Grid auto-accepted without user review
+  - Generated grid has different behavior than manually created grids
+  - Row count exceeds a reasonable limit without user confirmation (e.g., 100+ rows)
+  - Generated grid references score data that no longer exists (must be self-contained after creation)
+
+---
 
 ### Phase C: Audio-Linked Practice Verification
 *Primarily signal processing + DTW alignment. JI is pure math.*
 
-**Tonal Energy / External Tuner Integration** *(data import/API)*
-- API or data import from Tonal Energy Tuner (or similar apps)
-- Link tuning data — actual played frequencies — to the active practice session
-- Map played tones to the written music (from Phase B score data)
+### Use Cases
 
-**Automated Practice Verification** *(signal processing + DTW, may need ML for noisy audio)*
-- With note data (from score) + audio data (from tuner/mic):
-  - Detect which notes were played and their duration
-  - Map played notes to written notes in the current segment
-  - Identify: correct notes, wrong notes, missed notes, timing accuracy
-  - Score the attempt: pitch accuracy %, rhythm accuracy %, note coverage %
-- Practice cell completion could be auto-suggested: "You played this segment at 90% accuracy at 80 BPM — mark as complete?"
-- Verification data stored per-attempt for progress tracking over time
+**UC-C.1: Import External Tuner Data**
+- Actor: Musician
+- User imports tuning data from Tonal Energy Tuner or similar external apps
+- Implementation: data import/API
+- Acceptance Criteria:
+  - Import via file upload (CSV/JSON export from Tonal Energy) or API integration
+  - Imported data linked to a specific practice session and cell/row
+  - Data includes: timestamps, detected frequencies, note names, cent deviations
+  - User maps imported data to the correct practice cell(s)
+  - Import is additive — does not overwrite existing practice data
+- Rejection Criteria:
+  - Imported data corrupts existing practice session data
+  - Import accepts malformed data without validation
+  - Data from one user importable to another user's session
+  - Import creates duplicate records for the same time period
 
-**Just Intonation Support** *(pure math — frequency ratios + heuristic chord analysis)*
-- With score analysis (Phase B), determine harmonic context of each note:
-  - Root, third, fifth, seventh of the chord
-  - Passing tone, suspension, etc.
-- Apply just intonation adjustments: "This is the major third — tune 14 cents flat from equal temperament"
-- Tuner overlay shows JI target pitch alongside equal temperament
-- Evaluate tuning accuracy against JI targets, not just ET
-- Requires: chord analysis from score, or director-annotated harmonic analysis
+**UC-C.2: Map Played Notes to Written Music**
+- Actor: System
+- System aligns detected audio (played notes) against the written score (from Phase B)
+- Implementation: signal processing (DTW), hybrid with ML if needed for noisy environments
+- Acceptance Criteria:
+  - Input: stream of detected pitches + durations (from tuner or recording) + written note sequence (from score analysis)
+  - Alignment algorithm: Dynamic Time Warping (DTW) to match played sequence to written sequence
+  - Output: per-note match results — each written note mapped to played note(s) or marked as missed
+  - Handles: repeated notes, held notes, grace notes, trills
+  - Tolerance for tempo variation (player may not be exactly at metronome tempo)
+  - Alignment runs in <5 seconds for a 30-second passage
+- Rejection Criteria:
+  - Alignment crashes on passages with rests or silence
+  - Algorithm requires exact tempo adherence (must tolerate rubato)
+  - Alignment produces false positives (marking wrong notes as correct)
+  - Processing time scales exponentially with passage length
+
+**UC-C.3: Score Practice Attempt**
+- Actor: Musician, System
+- System scores a practice attempt based on note-to-score mapping
+- Acceptance Criteria:
+  - Scores: pitch accuracy % (correct notes / total notes), rhythm accuracy % (notes within timing tolerance), note coverage % (notes attempted / total notes)
+  - Per-note feedback: correct (green), wrong pitch (red), wrong rhythm (yellow), missed (grey)
+  - Overall attempt score displayed after playing
+  - Historical attempt scores stored per cell for progress tracking
+  - **Auto-suggest completion:** "You played this at 92% accuracy at 80 BPM — mark as complete?" (user confirms or declines)
+- Rejection Criteria:
+  - Cell auto-completed without user confirmation
+  - Scoring algorithm penalizes musical interpretation (e.g., slight tempo rubato shouldn't count as "wrong rhythm")
+  - Attempt data attributed to wrong cell or user
+  - Attempt scores are not reproducible (same audio input should produce same score)
+
+**UC-C.4: Just Intonation Tuning Targets**
+- Actor: Musician, System
+- System calculates just intonation targets for each note based on harmonic context
+- Implementation: pure math (frequency ratios) + heuristic chord analysis
+- Acceptance Criteria:
+  - With score analysis data (Phase B), determine each note's harmonic function:
+    - Root, third, fifth, seventh of the prevailing chord
+    - Passing tone, suspension, neighbor tone
+  - Calculate JI frequency adjustment in cents:
+    - Major third: -14 cents from ET
+    - Minor third: +16 cents from ET
+    - Perfect fifth: +2 cents from ET
+    - Minor seventh: -31 cents from ET (7th harmonic)
+  - Tuner overlay mode: shows JI target alongside ET target
+  - In-tune % can be evaluated against JI targets instead of ET (user toggle)
+  - Requires: chord analysis from score data, or director-annotated harmonic analysis
+- Rejection Criteria:
+  - JI adjustments applied without score/harmonic context (must have chord data)
+  - Frequency calculations use floating-point approximations where exact ratios exist
+  - JI mode enabled when no harmonic analysis is available (must fall back to ET)
+  - JI adjustments contradict standard music theory (e.g., flattening a root)
+
+---
 
 ### Phase D: Ear Training & Tone Analysis
 *Ear training is synthesis + comparison (no AI). Tone analysis requires ML (credits).*
 
-**Ear Training Module** *(audio synthesis + signal processing)*
-- Play a random tone, user identifies the pitch
-- Modes:
-  - Concert pitch identification (C, C#, D, ...)
-  - Transposed pitch identification (for Bb/Eb/F instruments)
-  - Interval identification (play two notes, identify the interval)
-  - Chord quality identification (major, minor, diminished, augmented)
-- Difficulty scaling: start with octave range, expand
-- Track accuracy over time, feed into achievement system
-- Spaced repetition on weak intervals/pitches
+### Use Cases
 
-**Tone Quality Analysis** *(AI/ML — costs credits)*
-- Record the player's tone on sustained notes
-- Analyze spectral characteristics: fundamental strength, overtone series, noise floor
-- Compare against:
-  - A reference model built from recordings of accomplished players
-  - The user's own "best tone" recordings (self-identified benchmarks)
-- Provide feedback: "Your tone on this note has stronger upper partials than your reference — try more air support"
-- Track tone quality trends over time
-- Requires significant ML/signal processing work — likely the furthest-out feature
+**UC-D.1: Pitch Identification Drill**
+- Actor: Musician
+- System plays a random tone and the user identifies the pitch
+- Implementation: audio synthesis + comparison
+- Acceptance Criteria:
+  - Modes:
+    - Concert pitch identification (C, C#, D, ...)
+    - Transposed pitch identification (for Bb/Eb/F instruments — user selects transposition)
+  - Difficulty levels:
+    - Beginner: single octave (C4-B4), natural notes only
+    - Intermediate: two octaves, all chromatic notes
+    - Advanced: full range, accidentals, enharmonic spelling
+  - Tone plays for 2 seconds (configurable)
+  - User selects answer from note grid
+  - Immediate feedback: correct/incorrect with the correct answer shown
+  - Session stats: accuracy %, streak of correct answers
+  - Spaced repetition on missed notes (notes the user gets wrong appear more frequently)
+- Rejection Criteria:
+  - Generated tone frequency is inaccurate (must be within ±1 cent of target)
+  - Same note plays repeatedly without sufficient variety
+  - Difficulty level doesn't actually restrict the note pool
+  - Spaced repetition data lost between sessions
+
+**UC-D.2: Interval Identification Drill**
+- Actor: Musician
+- System plays two notes and the user identifies the interval
+- Acceptance Criteria:
+  - Plays two notes sequentially (melodic interval) or simultaneously (harmonic interval) — user selects mode
+  - Intervals: unison through octave (13 intervals), with compound intervals in advanced mode
+  - Ascending and descending intervals
+  - User selects interval name from list
+  - Immediate feedback with interval name and both note names
+  - Session accuracy tracking and spaced repetition on weak intervals
+- Rejection Criteria:
+  - Harmonic intervals use tones that are indistinguishable (must use distinct timbres or panning)
+  - Interval pool doesn't match selected difficulty level
+  - Audio plays over itself if user clicks too quickly (must queue or debounce)
+
+**UC-D.3: Chord Quality Identification**
+- Actor: Musician
+- System plays a chord and the user identifies its quality
+- Acceptance Criteria:
+  - Chord types: major, minor, diminished, augmented (basic), add dominant 7th, major 7th, minor 7th, half-diminished, fully-diminished (advanced)
+  - Chords played as arpeggiated or blocked (user selects)
+  - Root position and inversions (advanced mode)
+  - User selects chord quality from options
+  - Immediate feedback
+  - Session tracking and spaced repetition
+- Rejection Criteria:
+  - Chord voicing is physically impossible on the user's instrument (informational only — this is ear training, not performance)
+  - Chords generated with notes outside audible range
+
+**UC-D.4: Ear Training Progress Analytics**
+- Actor: Musician
+- User views their ear training accuracy trends over time
+- Acceptance Criteria:
+  - Per-exercise type: accuracy % over time (last 30 sessions)
+  - Weak spots identified: "You struggle with minor 6ths and tritones"
+  - Total drills completed, overall accuracy, current accuracy streak
+  - Feeds into achievement system (e.g., "Perfect Ear — 100% on an interval drill")
+- Rejection Criteria:
+  - Analytics include data from other users
+  - Accuracy calculation counts skipped questions as incorrect
+  - Historical data lost when user changes difficulty level
+
+**UC-D.5: Record Reference Tone**
+- Actor: Musician
+- User records their own "best tone" as a personal reference for tone quality comparison
+- Implementation: Web Audio API + signal processing
+- Acceptance Criteria:
+  - User plays a sustained note while recording (minimum 3 seconds)
+  - System captures spectral profile: fundamental frequency, overtone amplitudes, noise floor
+  - User labels the reference (e.g., "Concert Bb, mezzo-forte, best tone")
+  - Multiple references can be stored (different notes, dynamics, contexts)
+  - Reference serves as personal benchmark for UC-D.6
+- Rejection Criteria:
+  - Recording too short to extract reliable spectral data (<3 seconds)
+  - Spectral analysis produces different results on repeated analysis of same audio
+  - User's reference recordings accessible to other users
+
+**UC-D.6: Analyze Tone Quality**
+- Actor: Musician
+- System analyzes the musician's tone and compares against reference models
+- Implementation: AI/ML (costs credits)
+- Acceptance Criteria:
+  - User plays a sustained note (minimum 3 seconds)
+  - System analyzes: fundamental strength, overtone series distribution, noise-to-signal ratio, attack characteristics, sustain stability
+  - Comparison against:
+    - User's own reference recordings (UC-D.5)
+    - Community reference model (built from contributed recordings of accomplished players, anonymized)
+  - Feedback: spectral comparison visualization, natural language summary (e.g., "Your tone has strong fundamental but weak 2nd overtone compared to your reference — try more open oral cavity")
+  - Tone quality score: 0-100 relative to reference
+  - Historical tone quality trend per note, per dynamic
+  - **Credit cost:** 1 credit per analysis session
+- Rejection Criteria:
+  - Analysis runs without sufficient audio data (<3 seconds of sustained tone)
+  - Credit charged for a failed analysis
+  - Tone quality score is not reproducible (same audio should produce same score ±2 points)
+  - Feedback contains incorrect music pedagogy advice
+  - Community reference model includes identifiable individual recordings
 
 ### Phase Dependencies (Vision Features)
 
