@@ -1817,8 +1817,20 @@ Types: `feat`, `fix`, `refactor`, `test`, `infra`, `docs`, `style`
 9. Security review: input sanitization, auth/authz checks, no leaked secrets
 10. No accessibility regressions (semantic HTML, keyboard navigation, screen reader compatible)
 
+### Persistent Task List
+- A persistent task list is maintained and kept up-to-date at all times.
+- Task states: `todo` → `in-progress` → `ready-for-review` → `completed`
+- **Work pattern:**
+  1. Pull the next task, mark it `in-progress`
+  2. Work on it following all Development Principles
+  3. When done, issue PR, mark task `ready-for-review`
+  4. When review approved and PR merged, mark task `completed`
+  5. Verify deploy succeeds, then move to next task
+- The task record is the source of truth for work status — always keep it current in case of connectivity loss or session interruption.
+- Tasks map to milestone tasks defined in the Engineering Milestones section.
+
 ### Task & PR Workflow
-1. **Pick up a task** from the milestone task list
+1. **Pick up a task** from the persistent task list, mark it `in-progress`
 2. **Complete task** following all Development Principles (TDD, domain model first, etc.)
 3. **Issue PR** with the following required sections in the description:
    - **Acceptance Criteria Checklist:** For every acceptance criterion in the relevant UC(s), explicitly state how this PR addresses it, with evidence (test names, code references)
