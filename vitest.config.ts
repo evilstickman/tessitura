@@ -7,6 +7,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+    env: {
+      DATABASE_URL: 'postgresql://willow@localhost:5432/tessitura_test',
+    },
+    setupFiles: ['tests/setup.ts'],
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
