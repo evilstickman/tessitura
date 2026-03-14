@@ -1,3 +1,8 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -5,106 +10,4 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-}
-
-// ─── Enums ───────────────────────────────────────────────────
-
-enum FreshnessResetStrategy {
-  FULL
-  HALVE
-}
-
-enum Priority {
-  CRITICAL
-  HIGH
-  MEDIUM
-  LOW
-}
-
-// ─── Models ──────────────────────────────────────────────────
-
-model User {
-  id                     String                 @id @default(uuid()) @db.Uuid
-  email                  String                 @unique
-  passwordHash           String                 @map("password_hash")
-  displayName            String                 @map("display_name")
-  instruments            String[]
-  emailVerified          Boolean                @default(false) @map("email_verified")
-  timezone               String                 @default("UTC")
-  defaultFadeEnabled     Boolean                @default(true) @map("default_fade_enabled")
-  freshnessResetStrategy FreshnessResetStrategy @default(FULL) @map("freshness_reset_strategy")
-  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime               @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt              DateTime?              @map("deleted_at") @db.Timestamptz
-
-  practiceGrids PracticeGrid[]
-
-  @@map("users")
-}
-
-model PracticeGrid {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  name        String
-  notes       String?
-  fadeEnabled Boolean   @default(true) @map("fade_enabled")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
-
-  user         User          @relation(fields: [userId], references: [id])
-  practiceRows PracticeRow[]
-
-  @@map("practice_grids")
-}
-
-model PracticeRow {
-  id             String    @id @default(uuid()) @db.Uuid
-  practiceGridId String    @map("practice_grid_id") @db.Uuid
-  sortOrder      Int       @map("sort_order")
-  songTitle      String?   @map("song_title")
-  composer       String?
-  part           String?
-  startMeasure   Int       @map("start_measure")
-  endMeasure     Int       @map("end_measure")
-  targetTempo    Int       @map("target_tempo")
-  steps          Int
-  priority       Priority  @default(MEDIUM)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
-
-  practiceGrid  PracticeGrid   @relation(fields: [practiceGridId], references: [id])
-  practiceCells PracticeCell[]
-
-  @@map("practice_rows")
-}
-
-model PracticeCell {
-  id                     String    @id @default(uuid()) @db.Uuid
-  practiceRowId          String    @map("practice_row_id") @db.Uuid
-  stepNumber             Int       @map("step_number")
-  targetTempoPercentage  Float     @map("target_tempo_percentage")
-  freshnessIntervalDays  Int       @default(1) @map("freshness_interval_days")
-  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz
-
-  practiceRow PracticeRow              @relation(fields: [practiceRowId], references: [id])
-  completions PracticeCellCompletion[]
-
-  @@map("practice_cells")
-}
-
-model PracticeCellCompletion {
-  id             String    @id @default(uuid()) @db.Uuid
-  practiceCellId String    @map("practice_cell_id") @db.Uuid
-  completionDate DateTime  @map("completion_date") @db.Date
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
-
-  practiceCell PracticeCell @relation(fields: [practiceCellId], references: [id])
-
-  @@unique([practiceCellId, completionDate])
-  @@map("practice_cell_completions")
 }
