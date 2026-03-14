@@ -107,6 +107,7 @@ The following rejection criteria apply to EVERY use case in this spec. A feature
 - XSS prevention via framework-level output escaping.
 
 ### UX
+- **The UI must NEVER be technical.** Users must never see internal IDs, database field names, enum values, timestamps in ISO format, or any implementation detail. All data displayed must be human-readable presentation data. URLs may contain IDs for routing purposes, but IDs must never appear in visible UI text, labels, or messages.
 - Zero JavaScript console errors in normal operation. Console warnings must be reviewed and either resolved or explicitly documented as acceptable.
 - No unhandled promise rejections.
 - Every UI state change must provide visual feedback within 200ms (loading indicators for longer operations).
@@ -250,7 +251,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Double-click creates duplicate completion records for the same cell on the same date
   - Completion percentage exceeds 100% or goes negative
 
-**UC-1.6: Uncomplete Practice Cell**
+**UC-1.7: Uncomplete Practice Cell**
 - Actor: Musician
 - User removes a completion from a previously completed cell
 - Acceptance Criteria:
@@ -263,7 +264,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - User can uncomplete a cell on a grid they don't own
   - Grid completion percentage does not update after uncomplete
 
-**UC-1.7: Freshness Decay (Spaced Repetition)**
+**UC-1.8: Freshness Decay (Spaced Repetition)**
 - Actor: System
 - Completed cells are not permanently "done" — they decay over time, requiring maintenance practice
 - Acceptance Criteria:
@@ -283,7 +284,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Freshness state calculated using server time instead of user's timezone
   - A cell displays as "Fresh" when it should be "Stale" or vice versa (off-by-one in interval math)
 
-**UC-1.8: Cascading Fade Order**
+**UC-1.9: Cascading Fade Order**
 - Actor: System
 - Within a row, decay begins at the highest completed tempo and works downward
 - This models real musicianship: top-end speed is hardest to maintain, foundational tempos persist longer
@@ -298,7 +299,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Cascading order breaks when cells are completed out of sequence (e.g., 40% and 60% completed but not 50%)
   - Fade calculations produce different results on page refresh vs initial render
 
-**UC-1.9: Configure Fade Per Grid**
+**UC-1.10: Configure Fade Per Grid**
 - Actor: Musician
 - User can toggle freshness decay on or off for each practice grid
 - Acceptance Criteria:
@@ -313,7 +314,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Grid completion percentage doesn't recalculate when fade is toggled
   - Fade setting changes on one device don't sync to another device/session
 
-**UC-1.10: Set Row Priority**
+**UC-1.11: Set Row Priority**
 - Actor: Musician
 - User assigns a priority level to each practice row indicating its importance
 - Acceptance Criteria:
@@ -325,7 +326,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Priority value falls outside the defined enum (Critical/High/Medium/Low)
   - Priority change not persisted after page refresh
 
-**UC-1.11: View Practice Grid**
+**UC-1.12: View Practice Grid**
 - Actor: Musician
 - User views their practice grid with all rows, cells, completion state, and freshness
 - Grid shows overall completion percentage (accounting for decay when fade is enabled)
@@ -346,21 +347,21 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Grid layout breaks with 1 row, 50 rows, 1 step, or 100 steps
   - Tempo display shows floating-point artifacts (e.g., "79.99999 BPM" instead of "80 BPM")
 
-**UC-1.12: Delete Practice Grid**
+**UC-1.13: Delete Practice Grid**
 - Actor: Musician
-- User can delete a grid they own
+- User can delete a grid they own (soft delete — sets deleted_at)
 - Acceptance Criteria:
   - Confirmation dialog before deletion
-  - Cascading delete removes all rows, cells, and completions
-  - Grid disappears from list immediately
-  - Deletion is permanent (no soft delete in V1)
+  - Soft delete: sets deleted_at on grid AND cascades to all child rows, cells, and completions
+  - Grid disappears from user's list immediately
+  - Soft-deleted grid excluded from all queries and dashboard stats
 - Rejection Criteria:
-  - Orphaned rows, cells, or completions remain in database after grid deletion
+  - Hard delete (row physically removed from database)
   - User can delete a grid they don't own by manipulating the request
-  - Grid reappears after deletion (stale cache)
+  - Soft-deleted grid still appears in list or affects completion stats
   - Deletion proceeds without user confirmation
 
-**UC-1.13: Edit Practice Row**
+**UC-1.14: Edit Practice Row**
 - Actor: Musician
 - User can edit measure range, target tempo, and step count on existing rows
 - Acceptance Criteria:
@@ -373,7 +374,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Edit allows setting target tempo to zero or negative
   - Edit applies to a row on a grid the user doesn't own
 
-**UC-1.14: Edit Row Priority**
+**UC-1.15: Edit Row Priority**
 - Actor: Musician
 - User can change the priority level of an existing row
 - Acceptance Criteria:
@@ -382,6 +383,38 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - No impact on existing completion data
 - Rejection Criteria:
   - Priority change affects completion data or freshness intervals
+
+**UC-1.16: Delete Practice Row**
+- Actor: Musician
+- User removes a row from their practice grid (soft delete)
+- Acceptance Criteria:
+  - Delete button on each row (with confirmation)
+  - Soft delete: sets deleted_at on row AND cascades to all child cells and completions
+  - Grid completion percentage recalculates after deletion
+  - Row disappears immediately from grid view
+- Rejection Criteria:
+  - Hard delete (row physically removed)
+  - User can delete a row on a grid they don't own
+  - Soft-deleted row's cells still count toward grid completion
+  - Deletion proceeds without user confirmation
+
+**UC-1.17: Delete User Account**
+- Actor: Musician
+- User can delete their account (soft delete — data retained for migration/compliance)
+- Acceptance Criteria:
+  - Delete account option in user settings
+  - Requires password confirmation before proceeding
+  - Soft delete: sets deleted_at on user, cascades to all owned entities
+  - If user has an active Stripe subscription, cancel it via Stripe API
+  - User's email and display name are anonymized (e.g., "deleted-user-[hash]") to prevent PII retention
+  - Confirmation dialog explaining the action
+  - Account immediately inaccessible — login fails
+  - User's data excluded from all community stats, feeds, and ensemble views
+- Rejection Criteria:
+  - Soft-deleted user's data still visible to other users (ensemble feeds, community stats)
+  - Active subscription continues billing after account deletion
+  - Account deletion accessible without password confirmation
+  - Anonymization fails to remove all PII
 
 ### V1 Limits
 - 1 practice grid per user (enforced at creation)
@@ -645,8 +678,12 @@ Add gamification to drive engagement and build the access control layer that wil
     - `assignment_access`: Free=none, Pro=none, Team=full
     - `export_access`: Free=none, Pro=none, Team=full
     - `library_access`: Free=subset (curated free-tier templates), Pro=full, Team=full
+    - `goals_access`: Free=none, Pro=full, Team=full
+    - `practice_feed_access`: Free=none, Pro=full, Team=full
+    - `director_analytics_access`: Free=none, Pro=none, Team=full
   - Tier-to-grant mapping is defined in configuration (not hardcoded per-user)
   - When a user's subscription tier changes, their grants update immediately
+  - **Future (Vision phases):** Grant system will be extended to support credit-based grants for AI features (e.g., `ai_credits_monthly`: Free=0, Pro=10, Team=50). Credit grants are consumed per-use and reset each billing period. This does not need to be built in V3 but the grant architecture must be extensible enough to support it.
 - Rejection Criteria:
   - A tier change leaves grants in an inconsistent state (partially updated)
   - Grant values are hardcoded per-user instead of derived from tier configuration
@@ -907,6 +944,32 @@ Enable the teacher-student / director-performer relationship with ensemble tools
   - Role change doesn't immediately restrict/expand data access
   - Removing the last admin leaves the ensemble with no admin
 
+**UC-5.6: Delete Ensemble**
+- Actor: Director (Admin role)
+- Director deletes an ensemble (soft delete)
+- Acceptance Criteria:
+  - Only the ensemble admin can delete the ensemble
+  - Confirmation dialog with ensemble name and member count
+  - Soft delete: sets deleted_at on ensemble, cascades to memberships, feed items
+  - Does NOT soft-delete members' personal data (grids, completions, achievements)
+  - Members are notified of ensemble dissolution
+- Rejection Criteria:
+  - Non-admin member can delete the ensemble
+  - Member personal practice data soft-deleted alongside ensemble
+  - Active assignments within the ensemble continue after deletion
+  - Hard delete of any ensemble data
+
+**UC-5.7: Remove Feed Reaction**
+- Actor: Musician
+- User removes their own emoji reaction from a feed item
+- Acceptance Criteria:
+  - Click/tap on own reaction removes it
+  - Reaction disappears immediately
+  - Cannot remove other users' reactions
+- Rejection Criteria:
+  - User can remove another user's reaction
+  - Removed reaction still appears on refresh
+
 ### V5 Limits
 - No assignments yet (V6)
 - No cross-ensemble social features yet
@@ -991,6 +1054,29 @@ Directors can assign specific practice work and track group progress against goa
   - Feedback thread visible to users not in the thread
   - Feedback allows HTML/script injection in comment content
   - Notification sent for feedback on a grid the user no longer has access to
+
+**UC-6.6: Cancel Challenge**
+- Actor: Director
+- Director cancels an active or upcoming challenge
+- Acceptance Criteria:
+  - Only the challenge creator or ensemble admin can cancel
+  - Cancelled challenge removed from leaderboard view
+  - Participants notified of cancellation
+  - No winner declared for cancelled challenges
+- Rejection Criteria:
+  - Regular member can cancel a challenge they didn't create
+  - Completed challenge can be cancelled (only active/upcoming)
+
+**UC-6.7: Delete Feedback Comment**
+- Actor: Musician, Director
+- Author deletes their own comment on a shared grid
+- Acceptance Criteria:
+  - Delete button visible only on own comments
+  - Threaded replies to deleted comment are preserved (parent shows "[deleted]")
+  - Deletion is immediate
+- Rejection Criteria:
+  - User can delete another user's comment (except ensemble admin for moderation)
+  - Deleting a parent comment cascades to delete all replies
 
 ### V6 Limits
 - No audio/recording sharing (future feature)
@@ -1553,7 +1639,16 @@ These are non-negotiable. They govern all implementation work across all phases.
 - No "we'll fix this later" — if it's not ready, it's not merged.
 - Every action has consequences — own them all.
 
-### 12. ACID & 12-Factor
+### 12. No Hard Deletes (Soft Delete Pattern)
+- All "delete" operations set a `deleted_at` timestamp — they do NOT remove rows from the database.
+- Soft-deleted records are excluded from all queries by default (application-level filter or database view).
+- Soft-deleted data can be restored if needed (admin operation).
+- Data migration jobs can permanently purge soft-deleted records after a retention period (e.g., 90 days), but this is a deliberate administrative action, never automatic.
+- This applies to ALL entities: grids, rows, cells, completions, users, ensembles, memberships, feedback — everything.
+- Cascading "deletes" set deleted_at on the parent AND all children (e.g., deleting a grid soft-deletes its rows, cells, and completions).
+- Exceptions: none. If we think we need a hard delete, we discuss it first.
+
+### 13. ACID & 12-Factor
 - All data-modifying operations use ACID transactions.
 - No partial writes — operations succeed completely or roll back completely.
 - Application follows [12-factor app](https://12factor.net/) methodology:
@@ -1570,7 +1665,16 @@ These are non-negotiable. They govern all implementation work across all phases.
   - Logs as event streams
   - Admin processes as one-off tasks
 
-### 13. Extensible
+### 14. Database Migrations
+- All schema changes go through the migration system (Prisma Migrate or equivalent). No manual DDL.
+- Every migration is version-controlled in git alongside the code that uses it.
+- Migrations must be backwards-compatible for zero-downtime deploys (additive first, remove old in subsequent deploy).
+- Every migration must be reversible (down migration defined).
+- Migration files are never edited after they've been applied to any environment — new migrations only.
+- Migration naming convention: timestamp-prefixed with descriptive name (e.g., `20260315_add_practice_session_table`).
+- Test environment gets fresh migrations on every suite run (migrate up from scratch).
+
+### 15. Extensible
 - This list of principles will grow as the project evolves.
 - New principles require discussion and mutual agreement.
 - Principles are never silently violated — if a principle can't be followed, it's discussed and either the approach changes or the principle is updated.
@@ -1579,11 +1683,13 @@ These are non-negotiable. They govern all implementation work across all phases.
 
 ## Development Strategy
 
-### Branching: Trunk-Based
-- All work on `main` branch
-- Small, atomic commits (one logical change per commit)
-- Commits should be buildable — no broken intermediate states
-- Review checkpoints: ad hoc, at Willow's request
+### Branching: GitHub Flow (Trunk-Based with PRs)
+- `main` is the single long-lived branch — always deployable
+- Each task gets a short-lived feature branch (branched from main, merged back via PR)
+- Feature branches are small and short-lived (hours to 1-2 days max, not weeks)
+- Small, atomic commits within feature branches (one logical change per commit)
+- All commits should be buildable — no broken intermediate states
+- PRs require Willow's approval before merge to main
 
 ### Commit Convention
 ```
@@ -1646,8 +1752,16 @@ This model is designed to support both the product AND long-term research into p
 ### Design Principles
 - **Single source of truth:** Every fact is stored exactly once. Derived values are computed, not cached (except explicit caches with refresh policies).
 - **Temporal completeness:** Every state change is timestamped. The system can reconstruct the state at any point in time.
+- **Soft delete everywhere:** All entities include a `deleted_at` (timestamptz, nullable) field. All queries filter `WHERE deleted_at IS NULL` by default. No hard deletes. Administrative purge of soft-deleted records is a separate, deliberate process.
 - **Research-ready:** The data model supports answering questions about practice patterns, skill acquisition curves, pedagogy effectiveness, gamification impact, and retention without schema changes.
 - **Normalization:** 3NF minimum. Denormalization only for explicit performance caches, always with documented refresh policy.
+
+### Legacy Data Migration
+- Existing PostgreSQL data on DigitalOcean from the Django-era schema must be migrated to the new schema.
+- Django models (PracticeGrid, PracticeRow, PracticeCell, PracticeCellCompletion, Song, User, Ensemble, Library, Music) have existing data.
+- Migration strategy: write a one-time migration script that maps old schema to new, run it before V1 launch.
+- Old data is preserved — migration is additive (new columns, new tables), not destructive.
+- Existing User model will need mapping to new auth model (no existing passwords — users will need to register fresh or go through a reset flow).
 
 ### Entity Relationship Overview
 
