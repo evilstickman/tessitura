@@ -1767,6 +1767,380 @@ Feedback (V6)
 
 ---
 
+## Engineering Milestones & Tasks
+
+Each phase is broken into milestones. Each milestone contains tasks that map to specific UC acceptance criteria. Milestones follow a consistent pattern: **domain model first**, then API/business logic, then UI, then integration/polish.
+
+A milestone is complete when all its tasks pass their mapped acceptance criteria AND none of the rejection criteria are triggered.
+
+---
+
+### V1 Milestones
+
+**M1.1: Project Bootstrap**
+- Task: Initialize Next.js project with TypeScript, App Router
+- Task: Configure PostgreSQL + Prisma ORM with dev/test/prod environments
+- Task: Set up Vitest (unit) + Playwright (e2e) test frameworks
+- Task: Configure GitHub Actions CI (lint, type-check, test, build)
+- Task: Create initial CLAUDE.md with project conventions
+- Task: Configure environment separation (test DB created/torn down per suite)
+- Completion: `npm run build && npm run test` passes with empty project scaffold
+
+**M1.2: Domain Model — Grid, Row, Cell, Completion**
+- Task: Design Prisma schema for User, PracticeGrid, PracticeRow, PracticeCell, PracticeCellCompletion
+- Task: Define field provenance: who owns, who creates, who updates each field
+- Task: Define freshness_interval_days on PracticeCell, fade_enabled on PracticeGrid, priority on PracticeRow
+- Task: Write and run database migrations
+- Task: Write unit tests for domain model constraints (required fields, enums, FK integrity)
+- Task: Document domain model in auto-generated schema docs
+- Maps to: UC-1.3, UC-1.4 (data layer), UC-1.7, UC-1.8, UC-1.9, UC-1.10
+
+**M1.3: Grid CRUD API**
+- Task: Create grid endpoint (POST) — validates name, sets user_id, defaults
+- Task: Delete grid endpoint (DELETE) — cascading delete, ownership check
+- Task: List grids endpoint (GET) — user-scoped, sorted by last modified
+- Task: Get grid detail endpoint (GET) — includes rows, cells, completion state
+- Task: Write integration tests for each endpoint (success, validation error, auth error)
+- Maps to: UC-1.3, UC-1.12
+
+**M1.4: Row & Cell Operations API**
+- Task: Add row endpoint (POST) — auto-generates cells with tempo percentages
+- Task: Write unit tests for cell generation math (tempo percentage = 0.4 + 0.6 * step/total)
+- Task: Edit row endpoint (PUT) — handles step count change (regenerate cells with warning)
+- Task: Set/edit priority endpoint (PUT) — validates enum
+- Task: Integration tests for all row operations
+- Maps to: UC-1.4, UC-1.10, UC-1.13, UC-1.14
+
+**M1.5: Cell Completion & Freshness API**
+- Task: Complete cell endpoint (POST) — creates PracticeCellCompletion, updates freshness interval
+- Task: Uncomplete cell endpoint (DELETE) — removes completion, resets interval
+- Task: Write freshness calculation logic (pure function: last_completion_date + interval → state)
+- Task: Write cascading fade logic (pure function: within a row, highest tempo fades first)
+- Task: Configure fade toggle endpoint (PUT on PracticeGrid.fade_enabled)
+- Task: Write grid completion percentage calculation (respects fade on/off)
+- Task: Unit tests for: interval doubling, interval cap (30 days), cascade ordering, completion % with/without fade
+- Task: Integration tests for completion lifecycle
+- Maps to: UC-1.6, UC-1.6, UC-1.7, UC-1.8, UC-1.9
+
+**M1.6: Grid View UI**
+- Task: Build grid view component — rows, cells, tempo display
+- Task: Implement cell color states (fresh/aging/stale/decayed/completed/empty)
+- Task: Implement click-to-complete and right-click-to-uncomplete interactions
+- Task: Implement cascading fade visual (green drains right to left)
+- Task: Implement fade toggle control on grid
+- Task: Implement priority badges on rows
+- Task: Progress bar showing grid completion %
+- Task: Responsive layout (320px+ viewports, adapts to large step counts)
+- Task: Playwright e2e tests with screenshots for each visual state
+- Maps to: UC-1.11, UC-1.6, UC-1.6
+
+**M1.7: Dashboard UI**
+- Task: Build 4-quadrant dashboard layout (responsive: 2x2 desktop, stacked mobile)
+- Task: Upper-left: greeting + alerts (stale cells, resume prompts)
+- Task: Upper-right: grid list with completion %, freshness summary, "New Grid" CTA
+- Task: Lower-left: basic stats (streak placeholder, cells completed, grid %)
+- Task: Lower-right: practice focus suggestions (top priority + most decayed rows)
+- Task: Empty states for new users in each quadrant
+- Task: Playwright e2e tests with screenshots
+- Maps to: UC-1.5
+
+**M1.8: Authentication**
+- Task: Prisma schema for auth fields (email, password_hash, email_verified, etc.)
+- Task: Registration endpoint with email/password validation
+- Task: Email verification flow (token generation, verification endpoint)
+- Task: Login endpoint with JWT/session token
+- Task: Logout endpoint with session invalidation
+- Task: Forgot password flow
+- Task: Account lockout after 5 failed attempts
+- Task: Auth middleware — protect all API endpoints
+- Task: Retrofit existing grid/row/cell endpoints to require auth and scope to user
+- Task: Integration tests for all auth flows (including negative: wrong password, expired token, locked account)
+- Maps to: UC-1.1, UC-1.2
+
+**M1.9: V1 Polish & System Verification**
+- Task: Cross-browser testing (Chrome, Firefox, Safari, Edge — latest 2 versions)
+- Task: Mobile viewport testing (320px, 375px, 768px, 1024px, 1440px)
+- Task: Performance audit (<2s load on 3G, no API >500ms, no main thread blocks >100ms)
+- Task: Security audit (CORS, CSRF, input sanitization, no data leaks between users)
+- Task: Accessibility audit (keyboard navigation, semantic HTML, screen reader test)
+- Task: Code coverage verification (≥95% on all code)
+- Task: Final CLAUDE.md update with V1 patterns and conventions
+- Maps to: V1 system-level acceptance criteria
+
+---
+
+### V2 Milestones
+
+**M2.1: Domain Model — Sessions, Goals, Library Templates**
+- Task: Extend Prisma schema: PracticeSession, PracticeGoal, LibraryTemplate
+- Task: Add grid_type (repertoire/technique) and archived fields to PracticeGrid
+- Task: Add source_template_id to PracticeGrid
+- Task: Define field provenance for all new entities
+- Task: Migrations + unit tests for schema constraints
+- Maps to: UC-2.1, UC-2.2, UC-2.5, UC-2.7, UC-2.8
+
+**M2.2: Multiple Grids & Archive**
+- Task: Remove single-grid limit from API
+- Task: Archive grid endpoint (PUT)
+- Task: Grid list: filter by active/archived, sort by last modified
+- Task: Integration tests
+- Maps to: UC-2.1
+
+**M2.3: Practice Time Tracking**
+- Task: Manual practice log endpoint (POST) — date, duration, notes
+- Task: Automatic timestamp on cell completions (extend completion model)
+- Task: Practice time aggregation queries (daily/weekly/monthly)
+- Task: Integration tests
+- Maps to: UC-2.2
+
+**M2.4: Analytics API & UI**
+- Task: Practice time trend API (last 30 days, weekly summary, monthly comparison)
+- Task: Piece-level analytics API (per-row completion %, max completed tempo, progress curve)
+- Task: Streak calculation logic and API
+- Task: Build analytics dashboard UI (charts: line/bar for time trends, heat map for piece-level)
+- Task: Playwright e2e tests with screenshots for chart rendering
+- Maps to: UC-2.3, UC-2.4
+
+**M2.5: Practice Goals**
+- Task: Goal CRUD endpoints (create, read, update, deactivate)
+- Task: Goal progress calculation logic
+- Task: Goal achievement notification
+- Task: Goals UI in dashboard lower-left quadrant
+- Task: Integration and e2e tests
+- Maps to: UC-2.5
+
+**M2.6: Practice Feed (Smart Suggestions)**
+- Task: Feed algorithm: weight by (1) priority, (2) freshness urgency, (3) time since last practiced
+- Task: Feed API endpoint (GET) — per-grid or aggregated, paginated
+- Task: Dismiss/snooze suggestions endpoint
+- Task: Feed UI in dashboard lower-right quadrant
+- Task: Unit tests for feed algorithm determinism
+- Maps to: UC-2.6
+
+**M2.7: Technique Grids**
+- Task: Grid type field in creation flow
+- Task: UI label adaptation (Study vs Piece, Exercise vs Measures)
+- Task: Filter toggle in grid list
+- Task: Integration tests
+- Maps to: UC-2.7
+
+**M2.8: Education Literature Library**
+- Task: LibraryTemplate CRUD (admin endpoints)
+- Task: Browse library endpoint (public, filtered by tier)
+- Task: Clone template endpoint (creates user's own grid from template)
+- Task: Community stats aggregation (user count, avg completion — cached, refreshed daily)
+- Task: Library browse UI with search/filter
+- Task: Clone flow UI with "already cloned" warning
+- Task: Seed initial library data (Arban, Clarke, Schlossberg selections)
+- Task: Playwright e2e tests
+- Maps to: UC-2.8, UC-2.9, UC-2.10, UC-2.11
+
+**M2.9: V2 Polish & Verification**
+- Task: Analytics render with sample data + empty data
+- Task: Library content review (public domain verification)
+- Task: Performance audit with multiple grids (10, 50, 100)
+- Task: Coverage verification (≥95%)
+- Task: CLAUDE.md update with V2 patterns
+
+---
+
+### V3 Milestones
+
+**M3.1: Domain Model — Achievements, XP, Grants**
+- Task: Extend schema: Achievement, UserAchievement, Grant
+- Task: Add xp, level, current_streak, longest_streak to User
+- Task: Define achievement criteria format (JSON machine-readable conditions)
+- Task: Define grant type registry and tier mapping configuration
+- Task: Migrations + unit tests
+- Maps to: UC-3.1, UC-3.2, UC-3.3, UC-3.4
+
+**M3.2: Achievement Engine**
+- Task: Achievement evaluation engine (checks criteria against user state)
+- Task: Idempotent award logic (never double-award)
+- Task: Achievement notification system (toast/push)
+- Task: Seed initial achievement set (First Steps, Grid Master, Week Warrior, Century, Tempo Climber, Marathon, etc.)
+- Task: Unit tests for each achievement trigger condition
+- Maps to: UC-3.1
+
+**M3.3: Streak System**
+- Task: Streak increment logic (timezone-aware, once per calendar day)
+- Task: Streak reset logic (midnight rollover handling, race condition prevention)
+- Task: Streak milestone detection (7, 30, 100, 365 → trigger achievements)
+- Task: Unit tests for timezone edge cases
+- Maps to: UC-3.2
+
+**M3.4: XP & Leveling**
+- Task: XP award logic per action (idempotent, integer math only)
+- Task: Level threshold calculation (quadratic: N^2 * 100)
+- Task: Level-up detection and notification
+- Task: Unit tests for XP accumulation and level boundaries
+- Maps to: UC-3.3
+
+**M3.5: Grant System**
+- Task: Grant tier mapping configuration (not hardcoded per-user)
+- Task: Grant enforcement middleware (API-level checks)
+- Task: Grant-limit response format (structured: which grant, which tier unlocks)
+- Task: Admin grant override endpoints
+- Task: Integration tests: grant check on every gated endpoint
+- Maps to: UC-3.4, UC-3.5, UC-3.6
+
+**M3.6: Upgrade Prompts & Gamification UI**
+- Task: Upgrade prompt component (inline, contextual, with cooldown)
+- Task: Achievement showcase UI (profile page, recent unlocks)
+- Task: XP/level display in dashboard and profile
+- Task: Streak display in dashboard
+- Task: Playwright e2e tests for grant boundaries and upgrade flow
+- Maps to: UC-3.7
+
+**M3.7: V3 Polish & Verification**
+- Task: Test grant enforcement by downgrading a user mid-session
+- Task: Verify each achievement triggers correctly
+- Task: Coverage verification
+- Task: CLAUDE.md update
+
+---
+
+### V4 Milestones
+
+**M4.1: Domain Model — Billing**
+- Task: Add stripe_customer_id, subscription fields to User
+- Task: Define subscription state machine (states: none, active, past_due, cancelled, expired)
+- Task: Migrations + unit tests for state transitions
+- Maps to: UC-4.1, UC-4.2
+
+**M4.2: Stripe Integration**
+- Task: Stripe SDK setup + test mode configuration
+- Task: Checkout session creation endpoint
+- Task: Webhook endpoint with signature verification
+- Task: Webhook handlers for all lifecycle events (checkout.completed, invoice.paid, invoice.failed, subscription.updated, subscription.deleted)
+- Task: Idempotent webhook processing
+- Task: Grant tier update on subscription change
+- Task: Integration tests against Stripe test mode
+- Maps to: UC-4.1, UC-4.7
+
+**M4.3: Subscription Management UI**
+- Task: View current plan page
+- Task: Upgrade flow (Stripe Checkout redirect)
+- Task: Downgrade flow (confirmation with impact summary, effective at period end)
+- Task: Cancel flow (confirmation, access until period end)
+- Task: Team subscription management (add/remove seats)
+- Task: Playwright e2e for full billing lifecycle
+- Maps to: UC-4.2, UC-4.3, UC-4.4, UC-4.5, UC-4.6
+
+**M4.4: Production Deployment**
+- Task: DigitalOcean setup (Droplet or App Platform with Docker)
+- Task: PostgreSQL production database with automated daily backups
+- Task: SSL certificate setup for practicegrids.com
+- Task: Environment configuration (secrets management, no secrets in code)
+- Task: CI/CD pipeline: GitHub Actions → build → test → deploy
+- Task: Zero-downtime deployment strategy (rolling or blue-green)
+- Task: Monitoring and error tracking setup
+- Task: Rate limiting on auth + webhook endpoints
+- Task: CORS locked to production domain
+- Task: Backup restore test (verify backup actually works)
+- Maps to: UC-4.8
+
+**M4.5: V4 Polish & Verification**
+- Task: Full billing lifecycle test in Stripe test mode (subscribe, upgrade, downgrade, cancel, webhook)
+- Task: Penetration testing on auth and billing endpoints
+- Task: Load testing (simulate 100 concurrent users)
+- Task: Coverage verification
+- Task: CLAUDE.md update
+
+---
+
+### V5 Milestones
+
+**M5.1: Domain Model — Ensembles, Membership, Feed**
+- Task: Extend schema: Ensemble, EnsembleMembership, FeedItem
+- Task: Define membership state machine (pending → active → removed)
+- Task: Define role hierarchy and permissions matrix
+- Task: Define ensemble visibility and feed mode settings
+- Task: Migrations + unit tests
+- Maps to: UC-5.1, UC-5.2, UC-5.4, UC-5.5
+
+**M5.2: Ensemble CRUD & Membership**
+- Task: Create ensemble endpoint (Team tier required)
+- Task: Generate cryptographically random invite codes
+- Task: Join ensemble endpoint (invite code validation)
+- Task: Leave ensemble endpoint
+- Task: Role management endpoints (assign roles, organize sections)
+- Task: Guard: last admin cannot be removed
+- Task: Integration tests for all membership flows
+- Maps to: UC-5.1, UC-5.2, UC-5.5
+
+**M5.3: Director Dashboard**
+- Task: Ensemble overview API (total practice time, active members, avg streak)
+- Task: Per-member drill-down API (practice time, grid completions, streak, last active)
+- Task: Sortable/filterable member list
+- Task: Date range selector for all metrics
+- Task: Director dashboard UI
+- Task: Section Leader scoped views
+- Task: Playwright e2e tests
+- Maps to: UC-5.3
+
+**M5.4: Activity Feed**
+- Task: Feed item creation on events (grid complete, achievement, streak milestone)
+- Task: Feed API with pagination, filtered by ensemble
+- Task: Feed visibility enforcement (respect director setting and musician opt-out)
+- Task: Emoji reactions on feed items
+- Task: Feed UI component
+- Task: Integration tests for visibility rules
+- Maps to: UC-5.4
+
+**M5.5: V5 Polish & Verification**
+- Task: Test cross-ensemble data isolation
+- Task: Test role permission boundaries
+- Task: Coverage verification
+- Task: CLAUDE.md update
+
+---
+
+### V6 Milestones
+
+**M6.1: Domain Model — Assignments, Challenges, Feedback**
+- Task: Extend schema: Assignment, Challenge, Feedback
+- Task: Define assignment state machine (draft → active → past_due → completed)
+- Task: Define challenge state machine (upcoming → active → completed)
+- Task: Migrations + unit tests
+- Maps to: UC-6.1, UC-6.3, UC-6.5
+
+**M6.2: Assignment System**
+- Task: Create assignment endpoint (clone grid template to assigned musicians)
+- Task: Assignment scoping (ensemble/section/individuals)
+- Task: Assignment progress API (per-musician completion %, aggregate stats)
+- Task: Assignment progress UI for directors
+- Task: Assignment display in musician dashboard
+- Task: Integration tests
+- Maps to: UC-6.1, UC-6.2
+
+**M6.3: Practice Challenges**
+- Task: Challenge CRUD endpoints
+- Task: Challenge leaderboard calculation
+- Task: Challenge winner detection and feed announcement
+- Task: Challenge UI (create, join, leaderboard)
+- Task: Privacy enforcement (respect feed visibility opt-outs)
+- Task: Integration tests
+- Maps to: UC-6.3
+
+**M6.4: Export & Feedback**
+- Task: CSV export endpoint (practice summary, assignment progress, student reports)
+- Task: PDF export endpoint (formatted reports)
+- Task: Grid snapshot sharing (read-only link generation)
+- Task: Feedback/comment CRUD on shared grids
+- Task: Notification on new feedback
+- Task: Export and feedback UI
+- Task: Integration tests (including CSV escaping, PDF formatting)
+- Maps to: UC-6.4, UC-6.5
+
+**M6.5: V6 Polish & Verification**
+- Task: Test assignment clone independence
+- Task: Test export data isolation
+- Task: Coverage verification
+- Task: CLAUDE.md update
+
+---
+
 ## Verification Strategy
 
 ### Per-Phase Verification
