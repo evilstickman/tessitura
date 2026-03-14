@@ -191,7 +191,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
 - Rejection Criteria:
   - Row created with zero or negative steps
   - Row created with zero or negative target tempo
-  - Cells generated with incorrect tempo percentages (must be mathematically exact: 0.4 + (0.6 * step/total_steps))
+  - Cells generated with incorrect tempo percentages (must be mathematically exact: 0.4 + (0.6 * step_number / (total_steps - 1)), where step_number is 0-indexed — first cell = 40%, last cell = 100%)
   - Row created without parent grid association
   - Row visible on a grid the user does not own
 
@@ -1231,7 +1231,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ### Use Cases
 
-**UC-A.1: Activate Metronome**
+**UC-8.1: Activate Metronome**
 - As a musician, I want to use a built-in metronome that auto-sets to my practice cell's tempo so that I can stay in time without needing a separate app.
 - Actor: Musician
 - User enables the built-in metronome during practice
@@ -1252,7 +1252,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Metronome auto-set changes the cell's stored target tempo
   - Audible latency or lag between visual and audio beat
 
-**UC-A.2: Use Chromatic Tuner**
+**UC-8.2: Use Chromatic Tuner**
 - As a musician, I want to use a built-in chromatic tuner with real-time pitch feedback so that I can monitor my intonation while practicing.
 - Actor: Musician
 - User activates the built-in tuner for real-time pitch feedback during practice
@@ -1271,7 +1271,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Tuner crashes or hangs when ambient noise is present
   - Microphone permission denied leaves UI in broken state (must show clear message)
 
-**UC-A.3: Track In-Tune Percentage**
+**UC-8.3: Track In-Tune Percentage**
 - As a musician, I want the system to track what percentage of time I'm playing in tune so that I can measure my intonation improvement over time.
 - Actor: Musician, System
 - System records what percentage of time the musician is in tune during a practice session
@@ -1289,7 +1289,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - In-tune data attributed to wrong cell or session
   - Tracking continues after user stops the tuner
 
-**UC-A.4: Record Practice Session Audio**
+**UC-8.4: Record Practice Session Audio**
 - As a musician, I want to record audio during practice so that I can listen back and evaluate my own playing.
 - Actor: Musician
 - User records audio during practice for self-review
@@ -1308,7 +1308,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Audio quality is so compressed it's not useful for self-review
   - Recording fails silently (must show error if microphone unavailable)
 
-**UC-A.5: Playback and Compare Recordings**
+**UC-8.5: Playback and Compare Recordings**
 - As a musician, I want to listen to past recordings and compare them across sessions so that I can hear my improvement over time.
 - Actor: Musician
 - User listens to past recordings and compares across sessions
@@ -1330,7 +1330,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ### Use Cases
 
-**UC-B.1: Upload Sheet Music**
+**UC-9.1: Upload Sheet Music**
 - As a musician, I want to upload a PDF or image of my sheet music so that the system can extract the notes and structure for automated grid generation.
 - Actor: Musician
 - User uploads a PDF or image of their instrumental part
@@ -1351,7 +1351,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - User's uploaded files are accessible to other users
   - File stored indefinitely after processing (should offer cleanup)
 
-**UC-B.2: Analyze Part Difficulty**
+**UC-9.2: Analyze Part Difficulty**
 - As a musician, I expect the system to analyze the difficulty of each segment in my music so that I can see which passages need the most practice attention.
 - Actor: System
 - System analyzes extracted music data to score difficulty of each segment
@@ -1368,11 +1368,11 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Difficulty scores used to auto-suggest priority levels for generated grid rows
   - User can override difficulty scores
 - Rejection Criteria:
-  - Difficulty scoring runs without extracted music data (depends on UC-B.1)
+  - Difficulty scoring runs without extracted music data (depends on UC-9.1)
   - Scoring algorithm is opaque — user must be able to see WHY a section scored high
   - Algorithm produces different scores for identical input (must be deterministic)
 
-**UC-B.3: Identify Score Structure**
+**UC-9.3: Identify Score Structure**
 - As a musician, I expect the system to identify structural segments, solos, and exposed passages in my music so that the generated practice grid reflects the musical context.
 - Actor: System
 - System identifies structural segments, voicing context, and exposed passages
@@ -1388,7 +1388,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Generated segments overlap or leave gaps in the music
   - Voicing analysis asserts confidence it doesn't have (must indicate when context is insufficient)
 
-**UC-B.4: Auto-Generate Practice Grid from Score**
+**UC-9.4: Auto-Generate Practice Grid from Score**
 - As a musician, I want the system to auto-generate a complete practice grid from my analyzed score so that I get a structured practice plan without manually creating every row.
 - Actor: Musician
 - System generates a complete practice grid from analyzed score data
@@ -1415,7 +1415,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ### Use Cases
 
-**UC-C.1: Import External Tuner Data**
+**UC-10.1: Import External Tuner Data**
 - As a musician, I want to import tuning data from external apps like Tonal Energy so that I can consolidate my intonation tracking in one place.
 - Actor: Musician
 - User imports tuning data from Tonal Energy Tuner or similar external apps
@@ -1432,7 +1432,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Data from one user importable to another user's session
   - Import creates duplicate records for the same time period
 
-**UC-C.2: Map Played Notes to Written Music**
+**UC-10.2: Map Played Notes to Written Music**
 - As a musician, I expect the system to align what I played against the written score so that I can see exactly which notes I got right and which I missed.
 - Actor: System
 - System aligns detected audio (played notes) against the written score (from Phase B)
@@ -1450,7 +1450,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Alignment produces false positives (marking wrong notes as correct)
   - Processing time scales exponentially with passage length
 
-**UC-C.3: Score Practice Attempt**
+**UC-10.3: Score Practice Attempt**
 - As a musician, I want the system to score my practice attempts on pitch, rhythm, and note coverage so that I get objective feedback on my accuracy.
 - Actor: Musician, System
 - System scores a practice attempt based on note-to-score mapping
@@ -1466,7 +1466,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Attempt data attributed to wrong cell or user
   - Attempt scores are not reproducible (same audio input should produce same score)
 
-**UC-C.4: Just Intonation Tuning Targets**
+**UC-10.4: Just Intonation Tuning Targets**
 - As a musician, I want the system to calculate just intonation targets for each note based on its harmonic context so that I can practice tuning to pure intervals rather than equal temperament.
 - Actor: Musician, System
 - System calculates just intonation targets for each note based on harmonic context
@@ -1496,7 +1496,7 @@ Many features that seem to require AI can be accomplished with well-understood s
 
 ### Use Cases
 
-**UC-D.1: Pitch Identification Drill**
+**UC-11.1: Pitch Identification Drill**
 - As a musician, I want to practice identifying pitches by ear so that I can develop my aural skills and recognize notes more quickly.
 - Actor: Musician
 - System plays a random tone and the user identifies the pitch
@@ -1520,7 +1520,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Difficulty level doesn't actually restrict the note pool
   - Spaced repetition data lost between sessions
 
-**UC-D.2: Interval Identification Drill**
+**UC-11.2: Interval Identification Drill**
 - As a musician, I want to practice identifying intervals by ear so that I can improve my ability to hear and sing melodic and harmonic distances.
 - Actor: Musician
 - System plays two notes and the user identifies the interval
@@ -1536,7 +1536,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Interval pool doesn't match selected difficulty level
   - Audio plays over itself if user clicks too quickly (must queue or debounce)
 
-**UC-D.3: Chord Quality Identification**
+**UC-11.3: Chord Quality Identification**
 - As a musician, I want to practice identifying chord qualities by ear so that I can better understand harmonic context when playing in an ensemble.
 - Actor: Musician
 - System plays a chord and the user identifies its quality
@@ -1551,7 +1551,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Chord voicing is physically impossible on the user's instrument (informational only — this is ear training, not performance)
   - Chords generated with notes outside audible range
 
-**UC-D.4: Ear Training Progress Analytics**
+**UC-11.4: Ear Training Progress Analytics**
 - As a musician, I want to view my ear training accuracy trends over time so that I can see which skills are improving and which need more work.
 - Actor: Musician
 - User views their ear training accuracy trends over time
@@ -1565,7 +1565,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - Accuracy calculation counts skipped questions as incorrect
   - Historical data lost when user changes difficulty level
 
-**UC-D.5: Record Reference Tone**
+**UC-11.5: Record Reference Tone**
 - As a musician, I want to record my best tone as a personal reference so that I can compare future playing against my own standard.
 - Actor: Musician
 - User records their own "best tone" as a personal reference for tone quality comparison
@@ -1575,13 +1575,13 @@ Many features that seem to require AI can be accomplished with well-understood s
   - System captures spectral profile: fundamental frequency, overtone amplitudes, noise floor
   - User labels the reference (e.g., "Concert Bb, mezzo-forte, best tone")
   - Multiple references can be stored (different notes, dynamics, contexts)
-  - Reference serves as personal benchmark for UC-D.6
+  - Reference serves as personal benchmark for UC-11.6
 - Rejection Criteria:
   - Recording too short to extract reliable spectral data (<3 seconds)
   - Spectral analysis produces different results on repeated analysis of same audio
   - User's reference recordings accessible to other users
 
-**UC-D.6: Analyze Tone Quality**
+**UC-11.6: Analyze Tone Quality**
 - As a musician, I want the system to analyze my tone quality and compare it against reference models so that I get objective feedback on my sound.
 - Actor: Musician
 - System analyzes the musician's tone and compares against reference models
@@ -1590,7 +1590,7 @@ Many features that seem to require AI can be accomplished with well-understood s
   - User plays a sustained note (minimum 3 seconds)
   - System analyzes: fundamental strength, overtone series distribution, noise-to-signal ratio, attack characteristics, sustain stability
   - Comparison against:
-    - User's own reference recordings (UC-D.5)
+    - User's own reference recordings (UC-11.5)
     - Community reference model (built from contributed recordings of accomplished players, anonymized)
   - Feedback: spectral comparison visualization, natural language summary (e.g., "Your tone has strong fundamental but weak 2nd overtone compared to your reference — try more open oral cavity")
   - Tone quality score: 0-100 relative to reference
@@ -2971,16 +2971,16 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 ### V8 Milestones (Sketch)
 
 **M8.1: Domain Model — Recording, InTuneSession**
-- Maps to: UC-A.1, UC-A.2, UC-A.3, UC-A.4, UC-A.5
+- Maps to: UC-8.1, UC-8.2, UC-8.3, UC-8.4, UC-8.5
 
 **M8.2: Metronome**
-- Maps to: UC-A.1
+- Maps to: UC-8.1
 
 **M8.3: Chromatic Tuner & In-Tune Tracking**
-- Maps to: UC-A.2, UC-A.3
+- Maps to: UC-8.2, UC-8.3
 
 **M8.4: Recording & Playback**
-- Maps to: UC-A.4, UC-A.5
+- Maps to: UC-8.4, UC-8.5
 
 **M8.5: V8 Polish & Verification**
 
@@ -2989,16 +2989,16 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 ### V9 Milestones (Sketch)
 
 **M9.1: Domain Model — UploadedScore, ScoreSegment**
-- Maps to: UC-B.1, UC-B.2, UC-B.3, UC-B.4
+- Maps to: UC-9.1, UC-9.2, UC-9.3, UC-9.4
 
 **M9.2: Sheet Music Upload & OMR**
-- Maps to: UC-B.1
+- Maps to: UC-9.1
 
 **M9.3: Difficulty Analysis & Structure Identification**
-- Maps to: UC-B.2, UC-B.3
+- Maps to: UC-9.2, UC-9.3
 
 **M9.4: Auto-Grid Generation**
-- Maps to: UC-B.4
+- Maps to: UC-9.4
 
 **M9.5: V9 Polish & Verification**
 
@@ -3007,19 +3007,19 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 ### V10 Milestones (Sketch)
 
 **M10.1: Domain Model — PracticeAttempt, TunerDataImport**
-- Maps to: UC-C.1, UC-C.2, UC-C.3, UC-C.4
+- Maps to: UC-10.1, UC-10.2, UC-10.3, UC-10.4
 
 **M10.2: External Tuner Data Import**
-- Maps to: UC-C.1
+- Maps to: UC-10.1
 
 **M10.3: Note-to-Score Mapping (DTW)**
-- Maps to: UC-C.2
+- Maps to: UC-10.2
 
 **M10.4: Practice Attempt Scoring**
-- Maps to: UC-C.3
+- Maps to: UC-10.3
 
 **M10.5: Just Intonation Targets**
-- Maps to: UC-C.4
+- Maps to: UC-10.4
 
 **M10.6: V10 Polish & Verification**
 
@@ -3028,22 +3028,22 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 ### V11 Milestones (Sketch)
 
 **M11.1: Domain Model — EarTrainingSession, ReferenceRecording, ToneAnalysisResult**
-- Maps to: UC-D.1, UC-D.2, UC-D.3, UC-D.4, UC-D.5, UC-D.6
+- Maps to: UC-11.1, UC-11.2, UC-11.3, UC-11.4, UC-11.5, UC-11.6
 
 **M11.2: Pitch Identification Drill**
-- Maps to: UC-D.1
+- Maps to: UC-11.1
 
 **M11.3: Interval & Chord Drills**
-- Maps to: UC-D.2, UC-D.3
+- Maps to: UC-11.2, UC-11.3
 
 **M11.4: Ear Training Analytics**
-- Maps to: UC-D.4
+- Maps to: UC-11.4
 
 **M11.5: Reference Tone Recording**
-- Maps to: UC-D.5
+- Maps to: UC-11.5
 
 **M11.6: Tone Quality Analysis (ML)**
-- Maps to: UC-D.6
+- Maps to: UC-11.6
 
 **M11.7: V11 Polish & Verification**
 
