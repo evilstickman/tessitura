@@ -1613,11 +1613,23 @@ Types: `feat`, `fix`, `refactor`, `test`, `infra`, `docs`, `style`
 9. Security review: input sanitization, auth/authz checks, no leaked secrets
 10. No accessibility regressions (semantic HTML, keyboard navigation, screen reader compatible)
 
+### Task & PR Workflow
+1. **Pick up a task** from the milestone task list
+2. **Complete task** following all Development Principles (TDD, domain model first, etc.)
+3. **Issue PR** with the following required sections in the description:
+   - **Acceptance Criteria Checklist:** For every acceptance criterion in the relevant UC(s), explicitly state how this PR addresses it, with evidence (test names, code references)
+   - **Rejection Criteria Checklist:** For every rejection criterion, explicitly state that it is NOT violated, with evidence
+   - **Screenshots:** Required for ALL UI changes. Before/after where applicable.
+   - If any criterion cannot be satisfactorily addressed, the PR is not ready — fix it before requesting review
+4. **Request review from Willow** — review is required before merge
+5. **Respond to review comments** — expect back-and-forth. Address every comment.
+6. **Willow approves** → merge to main. Move to next task.
+
 ### Review Process
-- Trunk-based: commits go to main
-- Willow requests review checkpoints ad hoc
-- Code review focuses on: architecture alignment, security, UX quality
-- No PR process (trunk-based), but tagged releases for each version milestone
+- Every task produces a PR (even on trunk-based flow — short-lived feature branches)
+- Willow reviews and approves all PRs — no self-merge
+- Code review focuses on: architecture alignment, security, UX quality, acceptance/rejection criteria coverage
+- Tagged releases for each version milestone
 
 ### Release Strategy
 - Semantic versioning: V1.0, V2.0, etc. for major phases
@@ -2499,16 +2511,83 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 
 ## Verification Strategy
 
-### Per-Phase Verification
+Verification happens at three levels: automated (CI), manual (Playwright-driven), and phase-gate (milestone completion). Each level has specific tools and criteria.
 
-**V1:** `npm run test && npm run build && npm run e2e` — all pass. Manual: register, create grid, add rows, complete cells, view progress, logout/login persistence.
+### Level 1: Automated Verification (every commit)
 
-**V2:** Above + analytics render correctly with sample data. Manual: create multiple grids, log practice time, verify charts render, set and track goals.
+Runs in CI (GitHub Actions) on every push. Build fails if any check fails.
 
-**V3:** Above + grant enforcement verified (downgrade user, confirm feature gating). Manual: trigger each achievement, verify XP/level calculations, test upgrade prompts.
+| Check | Tool | Criteria |
+|-------|------|----------|
+| Type safety | TypeScript compiler | Zero errors, strict mode |
+| Unit tests | Vitest | All pass, ≥95% coverage |
+| Integration tests | Vitest + test DB | All pass, all API endpoints covered |
+| E2E tests | Playwright | All pass, screenshots captured |
+| Lint | ESLint | Zero errors, zero warnings |
+| Build | Next.js build | Successful production build |
+| Security | npm audit | No high/critical vulnerabilities |
 
-**V4:** Above + Stripe test mode end-to-end (subscribe, upgrade, downgrade, cancel, webhook processing). Manual: full billing lifecycle in Stripe test mode.
+**Command:** `npm run verify` (runs all of the above in sequence)
 
-**V5:** Above + ensemble creation, member management, feed items. Manual: create ensemble, invite member, verify director dashboard, test feed visibility settings.
+### Level 2: Manual Verification (every PR)
 
-**V6:** Above + assignment creation and progress tracking. Manual: create assignment, verify clone to members, track completion, export report.
+Performed by the developer before requesting review. Uses Playwright to drive the browser.
+
+| What | How |
+|------|-----|
+| Visual correctness | Playwright screenshots compared against golden files for each UI state |
+| Responsive layout | Playwright tests at 320px, 375px, 768px, 1024px, 1440px viewports |
+| Console errors | Playwright captures browser console — must be empty |
+| Keyboard accessibility | Tab through all interactive elements, verify focus visible |
+| Cross-browser | Playwright runs on Chromium, Firefox, WebKit |
+| Data integrity | Complete a cell, kill the browser, reload — completion persists |
+| Auth isolation | Log in as User A, attempt to access User B's data via URL manipulation — must fail |
+
+Results included in PR description with screenshots.
+
+### Level 3: Phase Gate Verification (milestone completion)
+
+At the end of each milestone's final task, verify the milestone as a whole:
+
+**V1 Phase Gate:**
+- Fresh install test: clone repo, `npm install`, configure DB, `npm run verify` — everything passes
+- Complete user journey: register → verify email → create grid → add rows → complete cells → view freshness → dashboard
+- Security: attempt IDOR (direct object reference) attacks on all endpoints
+- Performance: Lighthouse score ≥90 on performance, accessibility, best practices
+- Mobile: complete full journey on 320px viewport
+
+**V2 Phase Gate:**
+- All V1 gates, plus:
+- Create 50 grids, verify list performance (<500ms load)
+- Analytics render with 90 days of sample data
+- Practice feed determinism: same data produces same suggestions on 10 repeated loads
+- Library: clone template, verify independence from source
+
+**V3 Phase Gate:**
+- All previous gates, plus:
+- Grant enforcement: set user to Free tier, verify all Pro features are blocked at API level (not just UI)
+- Achievement triggers: automated test that triggers every achievement condition
+- XP math: verify level calculation matches quadratic formula for edge cases (level boundaries)
+- Streak timezone test: simulate practice at 11:55 PM and 12:05 AM in user's timezone
+
+**V4 Phase Gate:**
+- All previous gates, plus:
+- Stripe lifecycle: subscribe → use → upgrade → use → downgrade → wait for period end → verify grant change → cancel → verify access until period end → verify revert to Free
+- Webhook replay: send each webhook type twice, verify idempotent handling
+- Backup/restore: take backup, add data, restore backup, verify data matches backup state
+- SSL: verify HTTPS enforced, HTTP redirected, HSTS header present
+- Penetration test: OWASP top 10 checklist against production deployment
+
+**V5 Phase Gate:**
+- All previous gates, plus:
+- Ensemble isolation: User A in Ensemble 1 cannot see Ensemble 2 data
+- Role enforcement: Section Leader sees only their section's data
+- Feed visibility: opted-out musician's activity does not appear in feed
+- Invite code security: brute-force 1000 random codes, verify none match valid codes
+
+**V6 Phase Gate:**
+- All previous gates, plus:
+- Assignment independence: edit assigned grid, verify source template unchanged
+- Export integrity: CSV opens correctly in Excel and Google Sheets
+- PDF export: renders correctly with Unicode characters, long names, empty data
+- Challenge manipulation: attempt to backdate practice entries during active challenge
