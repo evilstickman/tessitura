@@ -131,7 +131,41 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Cells generated with evenly distributed tempo percentages
   - Row appears immediately in grid view
 
-**UC-1.5: Complete Practice Cell**
+**UC-1.5: Musician Dashboard**
+- Actor: Musician
+- After login, the musician lands on a 4-quadrant dashboard that provides at-a-glance status and quick access to all primary actions
+- **Core UX principle:** This is the first thing non-technical, skeptical users see. It must be immediately useful, uncluttered, and self-explanatory. No jargon, no empty states without guidance.
+- Acceptance Criteria:
+  - **Upper-left: Intro & Alerts**
+    - Personalized greeting ("Welcome back, [name]")
+    - Actionable alerts, prioritized:
+      - Resume prompts ("Resume [grid name] — 3 stale cells need attention")
+      - Task counts ("You have 5 rows approaching decay")
+      - Social notifications ("New comments on your achievements!", "Director posted an assignment") (V5+)
+    - Alerts are clickable — each navigates directly to the relevant context
+    - Empty state (new user): onboarding prompt ("Create your first practice grid →")
+  - **Upper-right: My Grids**
+    - List of user's active practice grids with completion % and freshness summary
+    - Each grid is clickable — navigates directly into the grid view
+    - "New Grid" button prominently visible
+    - Grid cards show: name, completion %, last practiced date, freshness indicator (how many cells are stale/decayed)
+    - Sort: last modified (default), or alphabetical
+    - V1: single grid displayed; V2+: scrollable list with archive toggle
+  - **Lower-left: Statistics**
+    - V1: basic stats — current streak, total cells completed, grid completion %
+    - V2+: expanded with practice time trends, charts, goal progress
+    - Always shows something meaningful even for brand-new users ("Complete your first cell to start tracking!")
+  - **Lower-right: Achievements & Practice Focus**
+    - V1-V2: practice focus suggestions (rows with highest priority + most decay urgency)
+    - V3+: achievement showcase with recent unlocks and next-closest achievements
+    - Practice focus shows top 3-5 suggested rows to work on, each clickable to jump into that grid/row
+    - Empty state: "Start practicing to see personalized suggestions here"
+  - **Layout:**
+    - Responsive: 4-quadrant on desktop (2x2 grid), stacks vertically on mobile (alerts → grids → stats → achievements)
+    - Each quadrant has a clear header and bounded content area
+    - No quadrant should require scrolling on initial load (content truncated with "See all →" links)
+
+**UC-1.6: Complete Practice Cell**
 - Actor: Musician
 - User marks a practice cell as complete
 - Acceptance Criteria:
