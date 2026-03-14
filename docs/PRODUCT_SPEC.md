@@ -1013,19 +1013,54 @@ Directors can assign specific practice work and track group progress against goa
 
 ---
 
-## Long-Term Vision: AI Practice Partner
+## Long-Term Vision: Intelligent Practice Partner
 
-The following features represent the evolution of Tessitura from a practice tracker into an intelligent practice companion. Each phase builds on the previous, creating a progressively deeper understanding of the musician's playing and the music they're working on. These are sketched at vision level — detailed specs will be written as they approach implementation.
+The following features represent the evolution of Tessitura from a practice tracker into an intelligent practice companion. Each phase builds on the previous, creating a progressively deeper understanding of the musician's playing and the music they're working on.
+
+### Implementation Approach: Signal Processing First, AI Only When Necessary
+
+Many features that seem to require AI can be accomplished with well-understood signal processing techniques (FFT, autocorrelation, spectral analysis) and rule-based heuristics. AI/ML is introduced only when:
+1. The problem is proven too complex for heuristic approaches
+2. Sufficient training data exists
+3. The accuracy improvement justifies the computational cost
+
+**This matters for cost:** Signal processing runs locally or cheaply on the server. AI/ML operations (OMR, tone modeling) incur significant compute costs and must carry usage-based charges.
+
+### AI Feature Pricing Model
+- AI-powered operations (sheet music scanning, tone quality analysis) consume **credits**
+- Credits are purchased per-use (e.g., 1 credit per sheet music scan, 1 credit per tone analysis session)
+- Pro/Team tiers may include a monthly credit allowance, with overage charged per-credit
+- Non-AI features (tuner, metronome, ear training, recording) are included in the base subscription — no per-use charges
+- Credit pricing must cover compute costs with margin — no subsidizing AI features from subscription revenue
+
+### Feature Classification
+
+| Feature | Approach | Rationale |
+|---------|----------|-----------|
+| Chromatic tuner | Signal processing | FFT/autocorrelation — well-solved problem |
+| In-tune % tracking | Signal processing | Compare detected pitch to target frequency |
+| Metronome | Audio synthesis | Pure tone generation, no analysis |
+| Recording & playback | Web Audio API | Standard browser APIs |
+| Note detection & duration | Signal processing | Pitch tracking over time via autocorrelation |
+| JI target calculation | Pure math | Frequency ratios are deterministic |
+| Ear training | Audio synthesis + comparison | Generate tones, compare user input |
+| Difficulty scoring | Heuristics first | Rule-based: interval size, tempo, range, rhythm complexity |
+| Score structure analysis | Heuristics first | Rehearsal marks, key/time changes, dynamics, phrase boundaries |
+| Voicing/melody detection | Heuristics first | Part range analysis, note density, rhythmic patterns |
+| Sheet music OCR/OMR | AI/ML (credits) | Image recognition — requires trained model |
+| Tone quality analysis | AI/ML (credits) | Spectral comparison requires learned reference models |
+| Note-to-score mapping | Hybrid | DTW (Dynamic Time Warping) for alignment — signal processing, but may need ML for robust real-world audio |
 
 ### Phase A: Built-In Practice Tools
+*All features in this phase use signal processing or audio synthesis — no AI, no credits.*
 
-**Metronome**
+**Metronome** *(audio synthesis)*
 - Built into the practice interface, tied to the active practice cell
 - Auto-sets BPM to the cell's target tempo when a cell is selected
 - Subdivisions, accent patterns, count-in
 - Visual and audio beat (accessibility: works with headphones or silently)
 
-**Tuner**
+**Tuner** *(signal processing — FFT/autocorrelation)*
 - Free chromatic tuner built into practice interface (extends existing Web Audio tuner)
 - Real-time pitch detection with cent deviation display
 - **In-tune percentage tracking:** records what % of time the player is within ±10 cents (configurable threshold)
@@ -1033,7 +1068,7 @@ The following features represent the evolution of Tessitura from a practice trac
 - Historical in-tune trend per session, per piece, over time
 - Transposition support: display in concert pitch or transposed pitch (Bb, Eb, F, etc.)
 
-**Automated Recording & Playback**
+**Automated Recording & Playback** *(Web Audio API)*
 - One-click recording during practice sessions
 - Recordings linked to specific cells/rows/grids
 - Playback with A/B looping for self-review
@@ -1041,13 +1076,14 @@ The following features represent the evolution of Tessitura from a practice trac
 - Reinforces good practice behavior: listen back, compare across sessions
 
 ### Phase B: Score Analysis & Auto-Grid Generation
+*Mixed approach: OMR requires AI (credits), analysis uses heuristics first.*
 
-**Sheet Music Scanning / Import**
+**Sheet Music Scanning / Import** *(AI/ML — costs credits)*
 - Upload a PDF/image of a part (individual instrument part)
 - OCR/OMR (Optical Music Recognition) to extract note data: pitches, rhythms, dynamics, articulations
 - Parse into structured music data: measures, beats, note sequences
 
-**Automated Segment Identification**
+**Automated Segment Identification** *(heuristics first, ML if insufficient)*
 - Analyze the part to identify natural segments (phrases, sections, technical passages)
 - Heuristics: difficulty spikes (large intervals, fast passages, extreme range), phrase boundaries, rehearsal marks
 - Compare individual part against a full score (if uploaded) to determine:
@@ -1056,7 +1092,7 @@ The following features represent the evolution of Tessitura from a practice trac
   - Exposed passages vs tutti sections
 - Auto-suggest priority levels based on analysis (exposed solo = Critical, tutti unison = Low)
 
-**Auto-Grid Generation**
+**Auto-Grid Generation** *(deterministic — maps analysis output to grid structure)*
 - From analyzed score data, automatically generate a practice grid
 - Each identified segment becomes a row
 - Target tempos derived from tempo markings in the score
@@ -1065,13 +1101,14 @@ The following features represent the evolution of Tessitura from a practice trac
 - Dramatically reduces grid setup time — go from "I got new music" to "I'm practicing" in minutes
 
 ### Phase C: Audio-Linked Practice Verification
+*Primarily signal processing + DTW alignment. JI is pure math.*
 
-**Tonal Energy / External Tuner Integration**
+**Tonal Energy / External Tuner Integration** *(data import/API)*
 - API or data import from Tonal Energy Tuner (or similar apps)
 - Link tuning data — actual played frequencies — to the active practice session
 - Map played tones to the written music (from Phase B score data)
 
-**Automated Practice Verification**
+**Automated Practice Verification** *(signal processing + DTW, may need ML for noisy audio)*
 - With note data (from score) + audio data (from tuner/mic):
   - Detect which notes were played and their duration
   - Map played notes to written notes in the current segment
@@ -1080,7 +1117,7 @@ The following features represent the evolution of Tessitura from a practice trac
 - Practice cell completion could be auto-suggested: "You played this segment at 90% accuracy at 80 BPM — mark as complete?"
 - Verification data stored per-attempt for progress tracking over time
 
-**Just Intonation Support**
+**Just Intonation Support** *(pure math — frequency ratios + heuristic chord analysis)*
 - With score analysis (Phase B), determine harmonic context of each note:
   - Root, third, fifth, seventh of the chord
   - Passing tone, suspension, etc.
@@ -1090,8 +1127,9 @@ The following features represent the evolution of Tessitura from a practice trac
 - Requires: chord analysis from score, or director-annotated harmonic analysis
 
 ### Phase D: Ear Training & Tone Analysis
+*Ear training is synthesis + comparison (no AI). Tone analysis requires ML (credits).*
 
-**Ear Training Module**
+**Ear Training Module** *(audio synthesis + signal processing)*
 - Play a random tone, user identifies the pitch
 - Modes:
   - Concert pitch identification (C, C#, D, ...)
@@ -1102,7 +1140,7 @@ The following features represent the evolution of Tessitura from a practice trac
 - Track accuracy over time, feed into achievement system
 - Spaced repetition on weak intervals/pitches
 
-**Tone Quality Analysis**
+**Tone Quality Analysis** *(AI/ML — costs credits)*
 - Record the player's tone on sustained notes
 - Analyze spectral characteristics: fundamental strength, overtone series, noise floor
 - Compare against:
@@ -1127,11 +1165,14 @@ Phase D (Ear/Tone) ─ Ear Training: standalone
 ```
 
 ### Vision Limits & Principles
-- No LLM integration in V1-V6 — these features are explicitly post-foundation
+- No LLM/ML integration in V1-V6 — these features are explicitly post-foundation
+- Signal processing and heuristics are the default approach. AI/ML is introduced only when heuristics are proven insufficient, sufficient training data exists, and the accuracy improvement justifies the cost.
+- **AI features cost credits.** Signal processing features are included in subscriptions. This boundary is clear and must be communicated to users.
 - Each vision phase should be viable as a standalone premium feature
 - Privacy: audio recordings and tuning data are user-owned, not shared without consent
 - Accuracy before automation: never auto-complete a cell without user confirmation
 - Instrument-agnostic where possible, but brass-optimized initially (JI, tone analysis)
+- Heuristic features that graduate to ML retain their heuristic fallback — AI failures degrade gracefully to rule-based behavior
 
 ---
 
