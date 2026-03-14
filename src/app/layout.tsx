@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tessitura",
-  description: "Music practice platform",
+  title: "Tessitura — Practice Grid Platform for Musicians",
+  description: "Structured practice tracking with tempo progression for musicians.",
 };
 
 export default function RootLayout({
