@@ -11,6 +11,7 @@ export default defineConfig({
       DATABASE_URL: 'postgresql://willow@localhost:5432/tessitura_test',
     },
     setupFiles: ['tests/setup.ts'],
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

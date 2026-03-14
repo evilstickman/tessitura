@@ -24,16 +24,13 @@ export function getTestPrisma(): PrismaClient {
 }
 
 /**
- * Deletes all data from all tables in reverse FK order (real deletes).
+ * Deletes all data from all tables using TRUNCATE CASCADE for reliability.
  */
 export async function cleanDatabase(): Promise<void> {
   const prisma = getTestPrisma();
-  // Delete in reverse FK order to avoid constraint violations
-  await prisma.practiceCellCompletion.deleteMany();
-  await prisma.practiceCell.deleteMany();
-  await prisma.practiceRow.deleteMany();
-  await prisma.practiceGrid.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE practice_cell_completions, practice_cells, practice_rows, practice_grids, users CASCADE`,
+  );
 }
 
 /**
