@@ -131,35 +131,62 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Cells generated with evenly distributed tempo percentages
   - Row appears immediately in grid view
 
-**UC-1.5: Complete / Uncomplete Practice Cell**
+**UC-1.5: Complete Practice Cell**
 - Actor: Musician
-- User marks a cell as complete (records completion date)
-- User can uncomplete a cell (removes completion record)
-- Completions decay over time using spaced repetition — a cell is not "done forever"
+- User marks a practice cell as complete
 - Acceptance Criteria:
-  - Completion creates a PracticeCellCompletion with today's date
-  - Uncomplete removes the completion record
-  - Grid completion percentage updates in real-time
-  - Completion state persists across sessions
-  - **Freshness model (spaced repetition):**
-    - Each cell tracks a freshness interval (initial: 1 day)
-    - Re-practicing a cell before it goes stale doubles the interval (1→2→4→8→16→... days, capped at 30)
-    - Missing the interval resets it (configurable: full reset to 1, or halve)
-    - Cell visual state: Fresh (green) → Aging (yellow, >50% through interval) → Stale (red, past interval) → Decayed (grey, 2x past interval)
-    - Decayed cells no longer count toward grid completion percentage
-    - Freshness is calculated on read, not stored as state (derived from last completion date + interval)
-  - **Cascading fade (highest tempo first):**
-    - Within a row, decay begins at the highest completed tempo and works downward
-    - Example: if cells at 40%, 50%, 60% are completed, 60% fades first; 50% only begins fading once 60% is fully decayed; 40% only once 50% is fully decayed
-    - This models real musicianship: top-end tempo is hardest to maintain, foundational work persists longer
-    - Visual effect: green fills erode from the right edge of a row inward — the grid "drains" over time
-  - **Fade is configurable:**
-    - User can toggle fade on/off per grid (setting on PracticeGrid)
-    - When fade is off, completions are permanent (classic checkbox behavior)
-    - Default: fade ON for new grids (can be changed in user preferences)
-    - Toggling fade off does not delete freshness data — toggling back on restores the decay view
+  - Click/tap on an incomplete cell creates a PracticeCellCompletion with today's date
+  - Cell immediately transitions to "completed" visual state (solid green)
+  - Grid completion percentage recalculates and updates in real-time
+  - Completion state persists across sessions and page reloads
 
-**UC-1.6: Set Row Priority**
+**UC-1.6: Uncomplete Practice Cell**
+- Actor: Musician
+- User removes a completion from a previously completed cell
+- Acceptance Criteria:
+  - Right-click or long-press on a completed cell removes its PracticeCellCompletion record
+  - Cell immediately transitions back to incomplete visual state
+  - Grid completion percentage recalculates
+  - If the cell had a freshness interval > 1 day (from prior spaced repetition), the interval resets to 1
+
+**UC-1.7: Freshness Decay (Spaced Repetition)**
+- Actor: System
+- Completed cells are not permanently "done" — they decay over time, requiring maintenance practice
+- Acceptance Criteria:
+  - Each cell tracks a freshness interval (initial: 1 day after first completion)
+  - Re-practicing a cell before it goes stale doubles the interval (1→2→4→8→16→... days, capped at 30)
+  - Missing the interval resets it (configurable per user: full reset to 1, or halve)
+  - Cell visual states based on time since last completion relative to interval:
+    - **Fresh** (green): within the first 50% of the interval
+    - **Aging** (yellow/fading green): 50%-100% through the interval
+    - **Stale** (orange/red): past the interval but within 2x
+    - **Decayed** (grey): more than 2x past the interval
+  - Decayed cells no longer count toward grid completion percentage
+  - Freshness is calculated on read (derived from last completion date + current interval), not stored as separate state
+
+**UC-1.8: Cascading Fade Order**
+- Actor: System
+- Within a row, decay begins at the highest completed tempo and works downward
+- This models real musicianship: top-end speed is hardest to maintain, foundational tempos persist longer
+- Acceptance Criteria:
+  - If cells at 40%, 50%, 60% are all completed, 60% begins fading first
+  - 50% only begins its fade timer once 60% has fully decayed
+  - 40% only begins its fade timer once 50% has fully decayed
+  - Visual effect: green erodes from the right edge of a row inward — the grid "drains" over time
+  - A cell that is "waiting" (lower tempo, shielded by a higher cell that hasn't decayed yet) displays as Fresh regardless of time elapsed
+
+**UC-1.9: Configure Fade Per Grid**
+- Actor: Musician
+- User can toggle freshness decay on or off for each practice grid
+- Acceptance Criteria:
+  - Toggle control on the grid settings/header
+  - **Fade ON (default):** cells decay per UC-1.7 and UC-1.8 rules
+  - **Fade OFF:** completions are permanent — classic checkbox behavior, solid green stays green forever
+  - Default for new grids: fade ON (configurable in user preferences)
+  - Toggling fade off does NOT delete freshness data — toggling back on restores the decay view with current state
+  - Grid completion percentage calculation adjusts: fade ON = only fresh+aging count; fade OFF = all completions count
+
+**UC-1.10: Set Row Priority**
 - Actor: Musician
 - User assigns a priority level to each practice row indicating its importance
 - Acceptance Criteria:
@@ -168,22 +195,22 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Priority affects practice feed ordering (V2)
   - Priority persists and is editable at any time
 
-**UC-1.7: View Practice Grid**
+**UC-1.11: View Practice Grid**
 - Actor: Musician
 - User views their practice grid with all rows, cells, completion state, and freshness
-- Grid shows overall completion percentage (accounting for decay)
+- Grid shows overall completion percentage (accounting for decay when fade is enabled)
 - **Core UX principle:** The visual grid filling with green is a primary motivator. The grid layout and color feedback must feel satisfying and rewarding. Design decisions should preserve and enhance the "wall of green" experience.
 - Acceptance Criteria:
   - Each cell displays its target tempo (BPM, calculated from percentage * row target)
   - **Color states (when fade enabled):** Fresh = solid green, Aging = fading green/yellow, Stale = orange/red, Decayed = grey. Transitions should feel organic, not abrupt.
   - **Color states (when fade disabled):** Completed = solid green, Incomplete = empty. Classic satisfying checkbox behavior.
-  - Grid completion percentage shown as progress bar (when fade on: only fresh+aging cells count)
+  - Grid completion percentage shown as progress bar
   - With fade on, the grid visually "drains" from right to left within each row (highest tempos fade first), creating urgency to maintain mastery
   - Rows show priority indicator (color accent or badge)
   - Responsive layout works on mobile viewports (320px+)
   - Grid must render smoothly with large step counts (50+ cells per row)
 
-**UC-1.8: Delete Practice Grid**
+**UC-1.12: Delete Practice Grid**
 - Actor: Musician
 - User can delete a grid they own
 - Acceptance Criteria:
@@ -192,14 +219,21 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Grid disappears from list immediately
   - Deletion is permanent (no soft delete in V1)
 
-**UC-1.9: Edit Practice Row**
+**UC-1.13: Edit Practice Row**
 - Actor: Musician
-- User can edit measure range, target tempo, step count, and priority on existing rows
+- User can edit measure range, target tempo, and step count on existing rows
 - Acceptance Criteria:
-  - Changing step count regenerates cells (existing completions are lost — user warned)
+  - Changing step count regenerates cells (existing completions are lost — user warned with confirmation dialog)
   - Changing target tempo updates cell display values without losing completions
   - Changing measures updates display only
-  - Changing priority updates display and future feed weighting
+
+**UC-1.14: Edit Row Priority**
+- Actor: Musician
+- User can change the priority level of an existing row
+- Acceptance Criteria:
+  - Priority change takes effect immediately in display
+  - Updates future practice feed weighting (V2)
+  - No impact on existing completion data
 
 ### V1 Limits
 - 1 practice grid per user (enforced at creation)
@@ -294,23 +328,49 @@ Expand practice capability and give musicians insight into their practice habits
   - UI labels adapt: "Study" instead of "Piece", "Exercise" instead of "Measures" (where contextual)
   - Technique grids appear in their own section or with a filter toggle in the grid list
 
-**UC-2.8: Education Literature Library**
-- Actor: Musician, Admin
-- System provides a curated library of pre-built technique grid templates from public-domain brass/music education literature
-- Users can browse and clone templates to their own account
+**UC-2.8: Browse Education Literature Library**
+- Actor: Musician
+- User browses a curated library of technique grid templates from public-domain music education literature
 - Acceptance Criteria:
   - Library organized by author/collection:
     - Arban — Complete Conservatory Method
     - Clarke — Technical Studies for the Cornet
     - Schlossberg — Daily Drills and Technical Studies
     - Additional authors added over time by Admin
-  - Each library entry is a grid template with pre-configured rows (studies, tempos, steps)
-  - User clicks "Add to My Grids" → clones template as their own grid with independent progress tracking
-  - Library entries show community stats: number of users practicing, average completion
-  - **Free tier:** curated subset of library available (e.g., 5-10 foundational studies per author)
+  - Each entry shows: title, author, collection, description, instrument tags
+  - Searchable and filterable by author, instrument, difficulty
+  - Entries gated by tier are visible but marked with a Pro badge
+  - **Free tier:** curated subset available (e.g., 5-10 foundational studies per author)
   - **Pro/Team tier:** full library access
-  - Library content is admin-managed (CRUD for templates)
+
+**UC-2.9: Clone Library Template to My Grids**
+- Actor: Musician
+- User adds a library template to their own grids as an independent copy
+- Acceptance Criteria:
+  - "Add to My Grids" button on each library entry
+  - Clones the template's grid structure (rows, tempos, steps) into a new PracticeGrid owned by the user
+  - User's copy is fully independent — editable, deletable, tracks its own completions
+  - Source template ID stored on the cloned grid (for community stats tracking)
+  - If user already cloned this template, show a warning ("You already have this grid — clone again?")
+
+**UC-2.10: Library Community Stats**
+- Actor: Musician, System
+- Library entries display aggregate community practice data
+- Acceptance Criteria:
+  - Each entry shows: number of users currently practicing this template, average completion %
+  - Stats are cached and refreshed periodically (not real-time)
+  - Stats are anonymous — no individual user data exposed
+  - Provides social proof: "1,247 musicians are working on this study"
+
+**UC-2.11: Admin Manage Library Templates**
+- Actor: Admin
+- Admin creates, edits, and manages library template content
+- Acceptance Criteria:
+  - Admin CRUD interface for library templates
+  - Each template defines: title, author, collection, description, instrument tags, tier (free/pro), grid structure (rows with tempos and steps)
   - Templates constructed from public-domain works only
+  - Changes to a template do not affect already-cloned user grids
+  - Admin can deactivate a template (hides from library, does not affect cloned grids)
 
 ### V2 Limits
 - No limits on grid count yet (V3 adds grants)
@@ -364,11 +424,11 @@ Add gamification to drive engagement and build the access control layer that wil
   - Level displayed on profile and in social contexts
   - Level-up triggers notification/animation
 
-**UC-3.4: Grant System (Feature Gating)**
-- Actor: System, Admin
-- Grants control access to features and usage limits based on subscription tier
+**UC-3.4: Grant Tier Mapping**
+- Actor: System
+- System maps subscription tiers to specific feature grants and usage limits
 - Acceptance Criteria:
-  - Grant types:
+  - Grant types and their tier values:
     - `max_active_grids`: Free=1, Pro=unlimited, Team=unlimited
     - `analytics_access`: Free=basic (streak only), Pro=full, Team=full
     - `achievements_access`: Free=limited set, Pro=full, Team=full
@@ -377,12 +437,30 @@ Add gamification to drive engagement and build the access control layer that wil
     - `assignment_access`: Free=none, Pro=none, Team=full
     - `export_access`: Free=none, Pro=none, Team=full
     - `library_access`: Free=subset (curated free-tier templates), Pro=full, Team=full
-  - Grants checked at API level (not just UI hiding)
-  - Graceful degradation: hitting a limit shows upgrade prompt, not an error
-  - Grant changes take effect immediately (no cache staleness)
-  - Admin can override grants for individual users
+  - Tier-to-grant mapping is defined in configuration (not hardcoded per-user)
+  - When a user's subscription tier changes, their grants update immediately
 
-**UC-3.5: Upgrade Prompts**
+**UC-3.5: Grant Enforcement at API Level**
+- Actor: System
+- Every API endpoint checks the user's grants before allowing access to gated features
+- Acceptance Criteria:
+  - Grant checks happen at the API layer, not just UI hiding
+  - Attempting a gated action returns a structured error with: which grant was insufficient, which tier unlocks it
+  - Hitting a usage limit (e.g., max grids) does not error — it returns a grant-limit response that the UI renders as an upgrade prompt
+  - Users cannot bypass grant restrictions by calling the API directly
+  - Grant evaluation is fast (cached per-request, invalidated on tier change)
+
+**UC-3.6: Admin Grant Override**
+- Actor: Admin
+- Admin can override grants for individual users independent of their subscription tier
+- Acceptance Criteria:
+  - Admin can set any grant type to any value for a specific user
+  - Override takes precedence over tier-based grants
+  - Override has an optional expiry date
+  - Override source tracked (distinguishes subscription-based vs admin-override grants)
+  - Admin can remove an override, reverting the user to their tier-based grants
+
+**UC-3.7: Upgrade Prompts**
 - Actor: Musician
 - When a user hits a grant boundary, they see a contextual upgrade prompt
 - Acceptance Criteria:
@@ -416,17 +494,45 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Supports credit/debit cards at minimum
   - Subscription confirmation email sent
 
-**UC-4.2: Manage Subscription**
+**UC-4.2: View Current Subscription**
 - Actor: Musician
-- User can view current plan, upgrade, downgrade, or cancel
+- User views their current subscription plan and billing status
 - Acceptance Criteria:
-  - Stripe Customer Portal for self-service billing management
-  - Upgrade takes effect immediately (prorated billing)
-  - Downgrade takes effect at end of current billing period
-  - Cancel: access continues until end of billing period, then reverts to Free grants
-  - User warned about data implications of downgrade (e.g., extra grids become read-only, not deleted)
+  - Shows: current tier (Free/Pro/Team), billing period, next payment date, payment method
+  - Free users see a comparison of tiers with upgrade CTA
+  - Link to Stripe Customer Portal for payment method management
+  - Shows grant summary: what features are available at current tier
 
-**UC-4.3: Team Subscription Management**
+**UC-4.3: Upgrade Subscription**
+- Actor: Musician
+- User upgrades from a lower tier to a higher tier
+- Acceptance Criteria:
+  - Upgrade takes effect immediately
+  - Billing is prorated (pay the difference for the remainder of the current period)
+  - Grants update immediately upon successful payment
+  - Confirmation page shows what new features are now available
+
+**UC-4.4: Downgrade Subscription**
+- Actor: Musician
+- User downgrades from a higher tier to a lower tier
+- Acceptance Criteria:
+  - Downgrade takes effect at end of current billing period (user keeps current tier until then)
+  - User warned about data implications before confirming:
+    - Extra grids beyond new tier limit become read-only (not deleted)
+    - Access to gated features (analytics, social, library) will be restricted
+  - Confirmation shows exactly what will change and when
+
+**UC-4.5: Cancel Subscription**
+- Actor: Musician
+- User cancels their paid subscription
+- Acceptance Criteria:
+  - Access continues until end of current billing period
+  - After period ends, account reverts to Free tier grants
+  - User data is preserved (grids, completions, achievements) — not deleted
+  - Extra grids become read-only
+  - User can re-subscribe at any time to restore access
+
+**UC-4.6: Team Subscription Management**
 - Actor: Director
 - Director subscribes to Team plan and manages seats
 - Acceptance Criteria:
@@ -436,7 +542,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Removing a member reverts them to their individual tier
   - Billing visible to director only
 
-**UC-4.4: Webhook Processing**
+**UC-4.7: Webhook Processing**
 - Actor: System
 - System processes Stripe webhooks for subscription lifecycle events
 - Acceptance Criteria:
@@ -446,7 +552,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
   - Failed webhook processing retried with backoff
   - Grant tier updated within 60 seconds of Stripe event
 
-**UC-4.5: Production Deployment**
+**UC-4.8: Production Deployment**
 - Actor: Admin
 - Application deployed to production on DigitalOcean
 - Acceptance Criteria:
