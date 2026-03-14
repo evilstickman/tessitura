@@ -62,7 +62,7 @@ Background processes and integrations.
 - Unlimited practice grids
 - Full analytics dashboard (time trends, piece-level, goal tracking)
 - Complete achievement system
-- Social features (feed, challenges, mentorship)
+- Individual social features (user profiles, community library stats, practice feed suggestions)
 - Practice goal setting
 - Full education literature library access
 - Smart practice feed (suggestions engine)
@@ -73,6 +73,7 @@ Background processes and integrations.
 - Assignment system with due dates
 - Director analytics dashboard with custom reports
 - Export capabilities
+- Ensemble social features (activity feed, practice challenges, mentorship/feedback)
 - Configurable social visibility controls
 
 ---
@@ -324,6 +325,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - 40% only begins its fade timer once 50% has fully decayed
   - Visual effect: green erodes from the right edge of a row inward — the grid "drains" over time
   - A cell that is "waiting" (lower tempo, shielded by a higher cell that hasn't decayed yet) displays as Fresh regardless of time elapsed
+  - Shielded cells count as 'fresh' for grid completion percentage — they are effectively maintained by the higher-tempo cell above them
 - Rejection Criteria:
   - Lower-tempo cells begin fading while higher-tempo cells in the same row are still fresh/aging
   - Cascading order breaks when cells are completed out of sequence (e.g., 40% and 60% completed but not 50%)
@@ -481,6 +483,21 @@ Expand practice capability and give musicians insight into their practice habits
   - Archived grids lose their completion or freshness data
   - User sees another user's grids in their list
   - Grid sort order is inconsistent between page loads
+
+**UC-2.1a: Archive Practice Grid**
+- As a musician, I want to archive a completed or inactive grid so that it's hidden from my main list but preserved for reference.
+- Actor: Musician
+- Acceptance Criteria:
+  - Archive button on each grid (toggleable)
+  - Archived grids hidden from main grid list and dashboard
+  - Archived grids viewable in a separate "Archive" section
+  - Archiving preserves all data (completions, freshness, rows, cells)
+  - Archived grids do not appear in practice feed suggestions
+  - User can unarchive a grid to restore it to the main list
+- Rejection Criteria:
+  - Archiving deletes or modifies any grid data
+  - Archived grids still appear in dashboard stats or practice feed
+  - Unarchive fails to fully restore the grid to active state
 
 **UC-2.2: Practice Time Tracking**
 - As a musician, I want to log my practice sessions and have the system track when I complete cells so that I can see how much time I'm investing in my practice.
@@ -717,7 +734,7 @@ Add gamification to drive engagement and build the access control layer that wil
     - `max_active_grids`: Free=1, Pro=unlimited, Team=unlimited
     - `analytics_access`: Free=basic (streak only), Pro=full, Team=full
     - `achievements_access`: Free=limited set, Pro=full, Team=full
-    - `social_access`: Free=none, Pro=full, Team=full
+    - `social_access`: Free=none, Pro=individual (profiles, library stats, practice feed), Team=full (ensemble feed, challenges, mentorship)
     - `ensemble_access`: Free=none, Pro=none, Team=full
     - `assignment_access`: Free=none, Pro=none, Team=full
     - `export_access`: Free=none, Pro=none, Team=full
@@ -846,6 +863,7 @@ Monetize. Users can subscribe, manage billing, and the product is live for real 
     - Extra grids beyond new tier limit become read-only (not deleted)
     - Access to gated features (analytics, social, library) will be restricted
   - Confirmation shows exactly what will change and when
+  - Pending downgrade state is managed by Stripe — the application queries Stripe for scheduled subscription changes rather than storing a local pending_tier field
 - Rejection Criteria:
   - Downgrade takes effect immediately (must wait until end of billing period)
   - User data deleted on downgrade (grids become read-only, never deleted)
@@ -1052,7 +1070,9 @@ Directors can assign specific practice work and track group progress against goa
 - Actor: Director
 - Director creates a practice assignment for the ensemble or specific sections
 - Acceptance Criteria:
-  - Assignment contains: practice grid template, due date, target completion %, assigned to (ensemble/section/individuals)
+  - Assignment contains: source grid (director's own grid OR library template), due date, target completion %, assigned to (ensemble/section/individuals)
+  - Director can select from their own practice grids or from education library templates as the source
+  - Source grid is snapshotted at assignment creation — subsequent changes to the source do not affect assigned copies
   - Grid template is cloned to each assigned musician's account
   - Assignment appears in musician's dashboard with due date
   - Director can set assignment as required or optional
@@ -1892,7 +1912,16 @@ User ─┬─< PracticeGrid ─< PracticeRow ─< PracticeCell ─< PracticeCel
       │                              ├─< FeedItem
       │                              ├─< Assignment ─< AssignmentRecipient
       │                              └─< Challenge ─< ChallengeParticipant
-      └─< Feedback (as author)
+      ├─< Feedback (as author)
+      ├─< Recording (V8)
+      ├─< InTuneSession (V8)
+      ├─< TunerDataImport (V10)
+      ├─< EarTrainingSession (V11)
+      ├─< ReferenceRecording (V11)
+      └─< ToneAnalysisResult (V11)
+
+UploadedScore (V9) ─< ScoreSegment
+PracticeCell ─< PracticeAttempt (V10)
 
 Cardinality: ─< means one-to-many, >── means many-to-one
 ```
@@ -1914,12 +1943,13 @@ The central identity. Every piece of data in the system is owned by or attribute
 | email_verified | boolean | System-set on verification | Default false. Set true when verification token consumed |
 | timezone | string | User-provided or detected | IANA timezone (e.g., "America/Chicago"). Used for streak/freshness calculations |
 | default_fade_enabled | boolean | User preference | Default true. Applied to new grids |
+| freshness_reset_strategy | enum(full, halve) | User preference | Default: full. When a cell's freshness interval expires: 'full' resets to 1 day, 'halve' cuts interval in half |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated on any field change |
 | stripe_customer_id | string, nullable | System-set on first Stripe interaction (V4) | Immutable once set |
-| subscription_tier | enum(free,pro,team) | System-set via grant system (V3) or Stripe webhook (V4) | Derived from active subscription state |
+| subscription_tier | enum(free,pro,team) | System-set via grant system (V3) or Stripe webhook (V4) | Derived from active Stripe subscription state. Pending downgrades tracked by Stripe, not locally. |
 | subscription_status | enum(none,active,past_due,cancelled,expired) | System-set via Stripe webhook (V4) | State machine — see Subscription States below |
-| subscription_period_end | timestamptz, nullable | System-set via Stripe webhook (V4) | When current billing period ends |
+| subscription_period_end | timestamptz, nullable | System-set via Stripe webhook (V4) | Queried from Stripe when needed. Cached locally for display but Stripe is source of truth. |
 | xp | integer | System-calculated (V3) | Sum of all XP awards. Monotonically increasing (never decreases) |
 | level | integer | System-calculated (V3) | Calculated from xp using quadratic formula (N^2 * 100). Stored on write. Updated when XP changes |
 | current_streak | integer | System-calculated (V2) | Days of consecutive practice. Reset on miss. Stored because recalculation is expensive |
@@ -2019,7 +2049,7 @@ A single tempo step within a row. Represents "practice this passage at this perc
 - `target_tempo_bpm`: target_tempo_percentage * parent_row.target_tempo (rounded to integer)
 - `freshness_state`: computed from last completion date + freshness_interval_days + cascading fade rules. One of: fresh, aging, stale, decayed, incomplete
 - `last_completion_date`: max(completion_date) from child completions
-- `is_shielded`: whether a higher-tempo cell in the same row prevents this cell from starting its fade timer
+- `is_shielded`: whether a higher-tempo cell in the same row prevents this cell from starting its fade timer. Shielded cells count as 'fresh' for completion percentage calculation.
 
 **Research value:** Cell-level data with spaced repetition intervals enables analysis of skill acquisition curves — how quickly intervals grow (learning speed), how often cells decay (retention patterns).
 
@@ -2253,7 +2283,8 @@ A director-created practice assignment for ensemble members.
 | id | UUID | System-generated | Immutable PK |
 | ensemble_id | FK→Ensemble | System-set | Immutable |
 | created_by | FK→User | System-set | The director who created it |
-| grid_template_id | FK→PracticeGrid | Director-selected | Source grid to clone. Immutable after creation |
+| grid_template_id | FK→PracticeGrid | Director-selected | Source grid to clone. Can be a director's own PracticeGrid or a LibraryTemplate. Immutable after creation. |
+| grid_source_type | enum(user_grid, library_template) | Director-selected | Determines whether grid_template_id references a PracticeGrid or LibraryTemplate |
 | title | string | Director-provided | |
 | description | text, nullable | Director-provided | |
 | due_date | date | Director-provided | Updatable |
@@ -2338,6 +2369,189 @@ Comments on shared grid snapshots. Supports threading.
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Updated if author edits |
 | deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
+
+---
+
+#### V8-V11 Entities (Performer Enhancement & Practice Intelligence)
+
+---
+
+#### Recording (V8)
+An audio recording of a practice session linked to a specific cell, row, or grid.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable. Owner |
+| practice_cell_id | FK→PracticeCell, nullable | User-associated | Which cell was being practiced |
+| practice_row_id | FK→PracticeRow, nullable | User-associated | Which row (if not cell-specific) |
+| practice_grid_id | FK→PracticeGrid | User-associated | Which grid |
+| duration_seconds | integer | System-measured | Length of recording |
+| file_path | string | System-generated | Path to compressed audio file (WebM/Opus or AAC) |
+| file_size_bytes | integer | System-measured | For storage tracking |
+| label | string, nullable | User-provided | Optional user label |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### InTuneSession (V8)
+Tracks in-tune percentage data for a practice session.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| practice_cell_id | FK→PracticeCell, nullable | System-associated | Which cell was active |
+| practice_session_id | FK→PracticeSession, nullable | System-associated | Linked practice session |
+| total_time_ms | integer | System-measured | Total time tuner was active (milliseconds) |
+| in_tune_time_ms | integer | System-measured | Time within threshold (milliseconds) |
+| threshold_cents | integer | User-configured | e.g., 10 for ±10 cents |
+| reference_frequency | float | User-configured | e.g., 440.0 Hz |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+**Derived:** in_tune_percentage = in_tune_time_ms / total_time_ms * 100. Calculated on creation, stored.
+
+---
+
+#### UploadedScore (V9)
+A piece of sheet music uploaded by a user, with extracted music data.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable. Owner |
+| original_filename | string | User-provided | Original uploaded filename |
+| file_format | enum(pdf, png, jpg, tiff) | System-detected | |
+| page_count | integer | System-detected | Number of pages processed |
+| credits_consumed | integer | System-calculated | Credits charged for this scan |
+| processing_status | enum(pending, processing, completed, failed) | System-managed | State machine |
+| music_data | JSON | System-generated (OMR) | Extracted structured music data (MusicXML-like format) |
+| user_corrections | JSON, nullable | User-provided | User's manual corrections to OCR output |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### ScoreSegment (V9)
+An identified segment within an uploaded score, representing a passage for practice.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| uploaded_score_id | FK→UploadedScore | System-set | Immutable |
+| start_measure | integer | System-identified or user-adjusted | First measure of segment |
+| end_measure | integer | System-identified or user-adjusted | Last measure of segment |
+| difficulty_score | integer (1-10) | System-calculated (heuristics) | Stored on creation. User-overridable |
+| difficulty_factors | JSON | System-generated | Breakdown: { intervals: N, tempo: N, range: N, rhythm: N, dynamics: N } |
+| segment_type | enum(phrase, section, technical_passage, rehearsal_mark) | System-identified | |
+| context_tags | text[] | System-generated or user-set | e.g., ["Solo", "Exposed", "Melody", "Tutti"] |
+| suggested_priority | enum(critical, high, medium, low) | System-derived from context | Based on solo/exposed/tutti analysis |
+| tempo_marking | integer, nullable | System-extracted from score | BPM from tempo marking, if present |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### PracticeAttempt (V10)
+A recorded attempt at playing a passage, with scoring data from note-to-score alignment.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| practice_cell_id | FK→PracticeCell | System-associated | Which cell was being attempted |
+| recording_id | FK→Recording, nullable | System-linked | The audio recording of this attempt |
+| uploaded_score_id | FK→UploadedScore | System-linked | Source score data for alignment |
+| pitch_accuracy_pct | float | System-calculated | % of notes with correct pitch |
+| rhythm_accuracy_pct | float | System-calculated | % of notes within timing tolerance |
+| note_coverage_pct | float | System-calculated | % of written notes that were attempted |
+| overall_score | float | System-calculated | Weighted composite score |
+| note_results | JSON | System-generated | Per-note results: { note_index, written_pitch, played_pitch, status: correct/wrong/missed, timing_offset_ms } |
+| tempo_bpm | integer | System-detected | Detected tempo of the attempt |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### TunerDataImport (V10)
+Imported tuning data from an external app (e.g., Tonal Energy).
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| practice_session_id | FK→PracticeSession, nullable | User-mapped | Linked practice session |
+| source_app | string | User-provided or auto-detected | e.g., "Tonal Energy", "iStroboSoft" |
+| import_format | enum(csv, json) | System-detected | Format of imported file |
+| data_points | JSON | System-parsed from import | Array of { timestamp, frequency_hz, note_name, cent_deviation } |
+| data_point_count | integer | System-calculated | Number of data points imported |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### EarTrainingSession (V11)
+A session of ear training drills with results.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| drill_type | enum(pitch_id, interval_id, chord_quality) | User-selected | Type of drill |
+| difficulty_level | enum(beginner, intermediate, advanced) | User-selected | |
+| total_questions | integer | System-counted | Questions presented |
+| correct_answers | integer | System-counted | Correct responses |
+| accuracy_pct | float | System-calculated | Stored on session completion |
+| duration_seconds | integer | System-measured | Total session length |
+| question_results | JSON | System-generated | Per-question: { question_index, presented, answered, correct: bool, response_time_ms } |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+**Research value:** Ear training data enables study of aural skill development, correlation between ear training accuracy and practice quality, and spaced repetition effectiveness for musical intervals.
+
+---
+
+#### ReferenceRecording (V11)
+A user's self-identified "best tone" recording used as a personal benchmark.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable. Owner |
+| label | string | User-provided | e.g., "Concert Bb, mezzo-forte, best tone" |
+| note_name | string | User-provided or auto-detected | e.g., "Bb4" |
+| dynamic | string, nullable | User-provided | e.g., "mf", "ff" |
+| file_path | string | System-generated | Path to audio file |
+| duration_seconds | float | System-measured | Must be ≥3 seconds |
+| spectral_profile | JSON | System-analyzed | { fundamental_hz, overtone_amplitudes: [float], noise_floor_db } |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+---
+
+#### ToneAnalysisResult (V11)
+Result of an AI-powered tone quality analysis session.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set | Immutable |
+| reference_recording_id | FK→ReferenceRecording, nullable | User-selected | Personal reference used for comparison |
+| recording_id | FK→Recording | System-linked | The audio being analyzed |
+| credits_consumed | integer | System-calculated | Credits charged for this analysis |
+| tone_quality_score | integer (0-100) | System-calculated (ML) | Relative to reference. Stored. Reproducible ±2 |
+| spectral_comparison | JSON | System-generated | { user_profile: {...}, reference_profile: {...}, differences: [...] } |
+| feedback_summary | text | System-generated | Natural language feedback on tone quality |
+| note_name | string | System-detected | Which note was analyzed |
+| dynamic | string, nullable | System-detected | Detected dynamic level |
+| created_at | timestamptz | System-generated | Immutable |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active |
+
+**Research value:** Tone analysis data, combined with practice time and recording history, enables longitudinal study of tone development and the effectiveness of different practice approaches on sound quality.
 
 ---
 
@@ -2699,7 +2913,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Emoji reactions on feed items
 - Task: Feed UI component
 - Task: Integration tests for visibility rules
-- Maps to: UC-5.4
+- Maps to: UC-5.4, UC-5.7
 
 **M5.5: V5 Polish & Verification**
 - Task: Test cross-ensemble data isolation
@@ -2716,7 +2930,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Define assignment state machine (draft → active → past_due → completed)
 - Task: Define challenge state machine (upcoming → active → completed)
 - Task: Migrations + unit tests
-- Maps to: UC-6.1, UC-6.3, UC-6.5
+- Maps to: UC-6.1, UC-6.3, UC-6.5, UC-6.6, UC-6.7
 
 **M6.2: Assignment System**
 - Task: Create assignment endpoint (clone grid template to assigned musicians)
@@ -2734,7 +2948,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Challenge UI (create, join, leaderboard)
 - Task: Privacy enforcement (respect feed visibility opt-outs)
 - Task: Integration tests
-- Maps to: UC-6.3
+- Maps to: UC-6.3, UC-6.6
 
 **M6.4: Export & Feedback**
 - Task: CSV export endpoint (practice summary, assignment progress, student reports)
@@ -2744,7 +2958,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Notification on new feedback
 - Task: Export and feedback UI
 - Task: Integration tests (including CSV escaping, PDF formatting)
-- Maps to: UC-6.4, UC-6.5
+- Maps to: UC-6.4, UC-6.5, UC-6.7
 
 **M6.5: V6 Polish & Verification**
 - Task: Test assignment clone independence
