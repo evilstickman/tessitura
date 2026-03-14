@@ -63,3 +63,29 @@ jobs:
 
       - name: E2E tests
         run: npx playwright test --project=chromium
+
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 159.223.198.58 >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: bash deploy/deploy.sh
