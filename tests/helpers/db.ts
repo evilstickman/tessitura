@@ -15,9 +15,7 @@ export function hasTestPrisma(): boolean {
  */
 export function getTestPrisma(): PrismaClient {
   if (!testPrisma) {
-    const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL,
-    });
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
     testPrisma = new PrismaClient({ adapter });
   }
   return testPrisma;
