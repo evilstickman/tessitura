@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/willow/dev/tessitura -type f \\\\\\(-name *.md -o -name *.txt -o -name README* \\\\\\))",
+      "Bash(find /Users/willow/dev/tessitura -name *.py -path */models/* -type f)",
+      "Bash(wc -l /Users/willow/dev/tessitura/frontend/src/components/**/*.js)",
+      "Bash(grep -r \"description\\\\|TODO\\\\|FIXME\\\\|NOTE\" /Users/willow/dev/tessitura --include=*.py --exclude-dir=lib --exclude-dir=.git --exclude-dir=__pycache__)",
+      "Bash(find /Users/willow/dev/tessitura -maxdepth 2 -type d ! -path */lib/* ! -path */__pycache__/* ! -path */node_modules/* ! -path */.git/*)",
+      "Bash(find /Users/willow/dev/tessitura/frontend/src -name *.js -type f)",
+      "Bash(grep -r \"ensemble\\\\|musician\\\\|performance\\\\|practice\" /Users/willow/dev/tessitura --include=*.html --include=*.js ! -path */lib/* ! -path */.git/*)",
+      "Bash(find /Users/willow/dev/tessitura -name *.html ! -path */lib/* ! -path */__pycache__/* -type f)",
+      "Bash(git checkout:*)",
+      "Bash(cp /Users/willow/.claude/plans/ancient-conjuring-church.md docs/PRODUCT_SPEC.md)",
+      "Bash(mkdir -p docs)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(psql --version)",
+      "Bash(pg_isready)",
+      "Bash(npm --version)",
+      "Bash(brew list:*)",
+      "Bash(git merge:*)",
+      "Bash(git rm:*)",
+      "Bash(brew install:*)",
+      "Bash(brew services:*)",
+      "Bash(export PATH=\"/opt/homebrew/opt/postgresql@16/bin:$PATH\")",
+      "Bash(createdb tessitura_dev)",
+      "Bash(createdb tessitura_test)",
+      "Bash(psql -l)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --no-import-alias --use-npm --yes)",
+      "Bash(mv .claude /tmp/_tessitura_claude)",
+      "Bash(mv .vscode /tmp/_tessitura_vscode)"
+    ]
+  }
+}
