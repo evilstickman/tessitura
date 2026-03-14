@@ -1168,6 +1168,115 @@ Phase D (Ear/Tone) ─ Ear Training: standalone
 
 ---
 
+## Development Principles
+
+These are non-negotiable. They govern all implementation work across all phases.
+
+### 1. Test-Driven Development (TDD)
+- **Red → Green → Refactor**, always, no exceptions.
+- Write a failing test first. Write the minimum code to pass it. Refactor the code. Refactor the test. Only then move to the next item.
+- No production code exists without a test that preceded it.
+- TDD applies to backend, frontend, and infrastructure code equally.
+
+### 2. Domain Model First
+- Every feature starts with the domain model question: "How does this change the domain?"
+- Before writing any code, answer:
+  - Do we introduce new concepts, actions, or transformations?
+  - Are we duplicating data? What is the single source of truth for each field?
+  - What is the provenance of every field — who owns it, who creates it, who updates it, who reads it?
+- Domain model changes are reviewed and approved before implementation begins.
+- The domain model is the authoritative reference — if code disagrees with the model, the code is wrong.
+
+### 3. Code Quality & Language Leverage
+- Leverage polymorphism, generics, and language features to minimize duplication.
+- Normalize data to reduce ambiguity — every fact stored once, derived values computed.
+- Follow framework best practices and idiomatic patterns for the chosen stack.
+- DRY is a principle, not a religion — 3 similar lines are better than a premature abstraction, but genuine duplication must be eliminated.
+
+### 4. Clear Architecture Divisions
+- **Backend:** Model-Controller-View (MCV) pattern
+  - **Model:** Domain entities, business logic, data access
+  - **Controller:** Request handling, validation, orchestration
+  - **View:** Response serialization, API response formatting
+- **Frontend:** Director pattern
+  - Clear separation between presentation components (dumb), director/container components (smart), and state management
+- Layers do not leak — a controller never touches the database directly, a view never contains business logic.
+
+### 5. State Machines Everywhere
+- Wherever an entity has a lifecycle (subscriptions, assignments, ensemble membership, achievements), model it as an explicit state machine.
+- Each state machine has:
+  - Enumerated states (no implicit states)
+  - Defined transition criteria (what triggers the transition)
+  - Defined transition behavior (what happens during the transition)
+  - Invalid transitions that explicitly reject with meaningful errors
+- State machines combined with polymorphism yield predictable, testable systems.
+
+### 6. Environment Separation
+- **Three environments:** test, dev, prod. Clearly delineated, never mixed.
+- Test environment uses isolated databases — no test data lingers after suite completion.
+- Dev environment mirrors prod configuration but with safe defaults.
+- Prod environment has strict access controls, no debug mode, no test data.
+- Environment-specific configuration via environment variables (12-factor).
+- Test databases are created fresh per suite run and torn down after.
+
+### 7. Automated Documentation
+- Documentation is generated from code, not manually maintained.
+  - API docs: auto-generated from route definitions and types (e.g., OpenAPI/Swagger)
+  - Domain model docs: generated from schema definitions
+  - Component docs: generated from TypeScript types and JSDoc
+- Documentation is part of the build — if docs don't generate, the build fails.
+- CLAUDE.md files built incrementally as patterns emerge — these are living documents that enforce conventions for both human and AI developers.
+
+### 8. Agentic Documentation (CLAUDE.md)
+- Build CLAUDE.md files as we go, not all upfront.
+- CLAUDE.md captures: project conventions, architecture decisions, file organization, testing patterns, deployment procedures.
+- CLAUDE.md is authoritative — if an AI agent doesn't follow CLAUDE.md, the agent is wrong.
+- Update CLAUDE.md whenever a new pattern is established or a decision is made.
+
+### 9. Zero-Downtime Deployments
+- Users may be actively using the app during deployment.
+- Database migrations must be backwards-compatible (additive first, then remove old in a subsequent deploy).
+- No data loss during deployment — ever.
+- Rolling deploys or blue-green deployment strategy.
+
+### 10. Single API Version
+- There is ONE version of the API. No /v1/, /v2/ parallel paths.
+- API evolution is intentionally backwards-compatible by default.
+- Breaking changes require explicit approval from Willow — no exceptions.
+- Data migrations handle schema evolution. Old data is migrated forward, not left behind.
+- Dead code and superfluous paths are removed immediately — no accumulation.
+
+### 11. Completeness
+- Nothing is "done" until every detail is finished.
+- No TODO comments left in merged code.
+- No placeholder implementations.
+- No "we'll fix this later" — if it's not ready, it's not merged.
+- Every action has consequences — own them all.
+
+### 12. ACID & 12-Factor
+- All data-modifying operations use ACID transactions.
+- No partial writes — operations succeed completely or roll back completely.
+- Application follows [12-factor app](https://12factor.net/) methodology:
+  - Codebase tracked in git, one codebase many deploys
+  - Dependencies explicitly declared
+  - Config in environment variables
+  - Backing services as attached resources
+  - Strict separation of build, release, run
+  - Stateless processes
+  - Port binding
+  - Concurrency via process model
+  - Disposability (fast startup, graceful shutdown)
+  - Dev/prod parity
+  - Logs as event streams
+  - Admin processes as one-off tasks
+
+### 13. Extensible
+- This list of principles will grow as the project evolves.
+- New principles require discussion and mutual agreement.
+- Principles are never silently violated — if a principle can't be followed, it's discussed and either the approach changes or the principle is updated.
+
+---
+
 ## Development Strategy
 
 ### Branching: Trunk-Based
