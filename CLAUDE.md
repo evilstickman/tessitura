@@ -58,17 +58,28 @@ Types: `feat`, `fix`, `refactor`, `test`, `infra`, `docs`, `style`
 
 All commits include: `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>`
 
-## PR Workflow
+## MANDATORY WORKFLOW — NO EXCEPTIONS
 
-1. Pick task, mark `in-progress`
-2. Create short-lived branch from master
-3. TDD: write failing test → implement → refactor
-4. PR description MUST include:
-   - Acceptance criteria checklist with evidence
-   - Rejection criteria checklist with evidence
+**NEVER commit implementation code directly to master.**
+**NEVER skip the PR and review process.**
+**NEVER mark work as done without Willow's approval.**
+
+### For every task:
+
+1. **Pick task** from task list, mark `in-progress`
+2. **Create feature branch** from master: `git checkout -b <type>/<short-name>`
+3. **TDD:** Write failing test → implement minimal code → refactor → repeat
+4. **Self-verify:** `npm run lint && npx tsc --noEmit && npm run test && npm run build`
+5. **Push branch** and create PR via `gh pr create`
+6. **PR description MUST include:**
+   - Acceptance criteria checklist: for every AC in the relevant UC, state how the PR addresses it with evidence (test names, code refs)
+   - Rejection criteria checklist: for every RC, state that it is NOT violated with evidence
    - Screenshots for UI changes
-5. Willow reviews and approves
-6. Merge → auto-deploy → verify → mark task `completed`
+   - If any criterion cannot be addressed, the PR is NOT ready
+7. **Mark task `ready-for-review`** — wait for Willow
+8. **Willow reviews** — expect back-and-forth, address every comment
+9. **Willow approves** → merge to master
+10. **Verify deploy**, mark task `completed`, move to next task
 
 ## Development Principles
 
