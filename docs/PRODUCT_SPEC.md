@@ -185,7 +185,8 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
 - Acceptance Criteria:
   - Target tempo: any positive integer BPM (no artificial bounds)
   - Steps: user-defined positive integer, no fixed cap — UI adapts layout to step count (wrapping, scrolling, or condensed cells as needed)
-  - Start/end measures: required, free-text (supports "1-8", "A", "Intro", etc.)
+  - Start/end measures: required integer measure numbers
+  - Optional passage label (e.g., "Letter C to D", "Intro") — when present, displayed instead of "mm. X-Y". Allows musicians to refer to passages by rehearsal marks or other conventions.
   - Cells generated with evenly distributed tempo percentages
   - Row appears immediately in grid view
 - Rejection Criteria:
@@ -2013,8 +2014,9 @@ A segment of music within a grid — a specific passage, measure range, or techn
 | composer | string, nullable | User-provided | For repertoire grids |
 | part | string, nullable | User-provided | e.g., "1st Cornet", "2nd Trombone" |
 | study_reference | string, nullable | User-provided or from template | For technique grids (e.g., "Clarke #3 in Eb") |
-| start_measure | string | User-provided | Free-text (supports "1", "A", "Intro") |
-| end_measure | string | User-provided | Free-text |
+| start_measure | integer | User-provided | Measure number in the piece |
+| end_measure | integer | User-provided | Measure number in the piece |
+| passage_label | string, nullable | User-provided | Optional display name (e.g., "Letter C to D", "Intro"). When present, shown instead of "mm. X-Y" |
 | target_tempo | integer | User-provided | BPM. Any positive integer |
 | steps | integer | User-provided | Positive integer. Determines number of cells generated |
 | priority | enum(critical,high,medium,low) | User-set | Default: medium. Affects practice feed ordering |
