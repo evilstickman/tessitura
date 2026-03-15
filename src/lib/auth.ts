@@ -5,6 +5,14 @@
 let seedUserId: string | null = null;
 
 /**
+ * Resets the cached seed user ID. Used by test setup to prevent stale cache
+ * after database cleanup between tests.
+ */
+export function resetAuthCache(): void {
+  seedUserId = null;
+}
+
+/**
  * Returns the current user's ID.
  * Before M1.8 (auth), this returns the dev seed user.
  */
