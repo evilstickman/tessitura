@@ -23,13 +23,13 @@ ssh ${SERVER} << 'REMOTE'
 set -euo pipefail
 cd /home/tessitura/app
 
-# Load environment variables for database access
+# Install dependencies (before sourcing .env so NODE_ENV=production doesn't skip devDeps)
+npm ci
+
+# Load environment variables for database access (after npm ci, before prisma)
 set -a
 source /home/tessitura/.env
 set +a
-
-# Install dependencies
-npm ci
 
 # Generate Prisma client
 npx prisma generate
