@@ -42,6 +42,39 @@ async function createOtherUser() {
   });
 }
 
+// ─── Error handling ──────────────────────────────────────────────────────────
+
+describe('Grid API — Error handling', () => {
+  // No seed user created — exercises the 500 catch blocks
+  it('returns 500 when auth fails on createGrid', async () => {
+    const res = await createGrid(makeRequest({ name: 'Grid' }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('returns 500 when auth fails on listGrids', async () => {
+    const res = await listGrids();
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('returns 500 when auth fails on getGrid', async () => {
+    const res = await getGrid('00000000-0000-0000-0000-000000000000');
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('returns 500 when auth fails on deleteGrid', async () => {
+    const res = await deleteGrid('00000000-0000-0000-0000-000000000000');
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+});
+
 // ─── Task 9: Create Grid (tests 18–26) ────────────────────────────────────────
 
 describe('Grid API — Create', () => {
@@ -132,6 +165,14 @@ describe('Grid API — Create', () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.name).toBe(htmlName);
+  });
+
+  // Test 25a
+  it('POST with non-string notes returns 400', async () => {
+    const res = await createGrid(makeRequest({ name: 'Grid', notes: 123 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   // Test 26

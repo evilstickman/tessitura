@@ -22,7 +22,7 @@ export default defineConfig({
         statements: 95,
       },
       include: ['src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['src/app/**', 'src/components/**'],
+      exclude: ['src/app/**', 'src/components/**', 'src/generated/**'],
     },
   },
   resolve: {
