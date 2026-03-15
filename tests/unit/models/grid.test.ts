@@ -62,6 +62,12 @@ describe('Grid model — validateGridInput', () => {
     expect(result.notes).toBe('padded');
   });
 
+  // Test 10a
+  it('normalizes whitespace-only notes to null', () => {
+    const result = validateGridInput({ name: 'Grid', notes: '   ' });
+    expect(result.notes).toBeNull();
+  });
+
   // Test 11
   it('accepts notes with 10,000+ characters', () => {
     const longNotes = 'x'.repeat(10_001);
