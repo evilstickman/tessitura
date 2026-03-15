@@ -62,8 +62,8 @@ describe('Grid API — Create', () => {
     expect(body.fadeEnabled).toBe(true);
 
     // Verify userId at the database level (view strips it from response)
-    const created = await prisma.practiceGrid.findFirst({ where: { name: 'My Grid' } });
-    expect(created!.userId).toBe(seedUser.id);
+    const created = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: body.id } });
+    expect(created.userId).toBe(seedUser.id);
   });
 
   // Test 19
@@ -94,18 +94,24 @@ describe('Grid API — Create', () => {
   it('POST with empty string name returns 400', async () => {
     const res = await createGrid(makeRequest({ name: '' }));
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   // Test 22
   it('POST with whitespace-only name returns 400', async () => {
     const res = await createGrid(makeRequest({ name: '   ' }));
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   // Test 23
   it('POST with name over 200 chars returns 400', async () => {
     const res = await createGrid(makeRequest({ name: 'a'.repeat(201) }));
     expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   // Test 24
@@ -199,23 +205,29 @@ describe('Grid API — List', () => {
       where: { email: 'dev-placeholder@tessitura.local' },
     });
 
-    const grid1 = await prisma.practiceGrid.create({
-      data: { userId: seedUser.id, name: 'First' },
+    // Create 3 grids with explicit timestamps to avoid timing dependencies
+    const now = new Date();
+    await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'First', updatedAt: new Date(now.getTime() - 3000) },
+    });
+    const grid2 = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Second', updatedAt: new Date(now.getTime() - 2000) },
     });
     await prisma.practiceGrid.create({
-      data: { userId: seedUser.id, name: 'Second' },
+      data: { userId: seedUser.id, name: 'Third', updatedAt: new Date(now.getTime() - 1000) },
     });
-    // Update first grid to make it most recent
+    // Update middle grid to make it most recent
     await prisma.practiceGrid.update({
-      where: { id: grid1.id },
-      data: { notes: 'updated' },
+      where: { id: grid2.id },
+      data: { notes: 'updated', updatedAt: now },
     });
 
     const res = await listGrids();
     const body = await res.json();
-    expect(body).toHaveLength(2);
-    expect(body[0].name).toBe('First');
-    expect(body[1].name).toBe('Second');
+    expect(body).toHaveLength(3);
+    expect(body[0].name).toBe('Second'); // most recently updated
+    expect(body[1].name).toBe('Third');  // created last, never updated
+    expect(body[2].name).toBe('First');  // created first, never updated
   });
 
   // Test 31
