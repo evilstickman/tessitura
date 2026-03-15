@@ -6,6 +6,7 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

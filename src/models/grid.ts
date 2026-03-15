@@ -140,8 +140,8 @@ export async function deleteGrid(gridId: string, userId: string): Promise<boolea
       data: { deletedAt: now },
     });
 
-    await tx.practiceGrid.update({
-      where: { id: gridId },
+    await tx.practiceGrid.updateMany({
+      where: { id: gridId, deletedAt: null },
       data: { deletedAt: now },
     });
   });

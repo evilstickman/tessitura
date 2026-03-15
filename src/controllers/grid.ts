@@ -24,6 +24,10 @@ export async function createGrid(request: NextRequest) {
       return errorResponse('Grid name is required', 'VALIDATION_ERROR', 400);
     }
 
+    if (body.notes != null && typeof body.notes !== 'string') {
+      return errorResponse('Notes must be a string', 'VALIDATION_ERROR', 400);
+    }
+
     const grid = await createGridModel(userId, {
       name: body.name,
       notes: body.notes ?? null,
