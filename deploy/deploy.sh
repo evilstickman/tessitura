@@ -23,6 +23,11 @@ ssh ${SERVER} << 'REMOTE'
 set -euo pipefail
 cd /home/tessitura/app
 
+# Load environment variables for database access
+set -a
+source /home/tessitura/.env
+set +a
+
 # Install dependencies
 npm ci
 
