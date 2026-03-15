@@ -65,6 +65,7 @@ model PracticeRow {
   songTitle      String?   @map("song_title")
   composer       String?
   part           String?
+  passageLabel   String?   @map("passage_label")
   startMeasure   Int       @map("start_measure")
   endMeasure     Int       @map("end_measure")
   targetTempo    Int       @map("target_tempo")
