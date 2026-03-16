@@ -556,6 +556,20 @@ describe('Row API — Edit', () => {
     expect(gridAfter.updatedAt.getTime()).toBeGreaterThan(gridBefore.updatedAt.getTime());
   });
 
+  it('updates passageLabel', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
+    const created = await createRes.json();
+
+    const res = await updateRow(grid.id, created.id, makeRequest({ passageLabel: 'Letter C' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.passageLabel).toBe('Letter C');
+  });
+
   it('returns 400 for non-number targetTempo', async () => {
     const user = await prisma.user.findUniqueOrThrow({
       where: { email: 'dev-placeholder@tessitura.local' },
@@ -770,6 +784,23 @@ describe('Row API — Delete', () => {
 
     const res = await deleteRow(otherGrid.id, row.id);
     expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for already-deleted row', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
+    const created = await createRes.json();
+
+    // Delete once
+    const first = await deleteRow(grid.id, created.id);
+    expect(first.status).toBe(204);
+
+    // Delete again — should be 404
+    const second = await deleteRow(grid.id, created.id);
+    expect(second.status).toBe(404);
   });
 
   it('returns 400 for malformed UUID', async () => {
