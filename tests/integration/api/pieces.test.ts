@@ -90,6 +90,16 @@ describe('Piece API — Create', () => {
     expect(body.studyReference).toBe('Technical Studies, p.12');
   });
 
+  it('POST with invalid JSON returns 400', async () => {
+    const req = new NextRequest('http://localhost:3000/api/pieces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+    const res = await createPiece(req);
+    expect(res.status).toBe(400);
+  });
+
   it('POST with missing title returns 400', async () => {
     const res = await createPiece(makeRequest({}));
     expect(res.status).toBe(400);
@@ -216,6 +226,34 @@ describe('Piece API — Detail', () => {
   });
 });
 
+// ─── Auth failures on getPiece/updatePiece/deletePiece ───────────────────────
+
+describe('Piece API — Auth error paths', () => {
+  it('returns 500 when auth fails on getPiece', async () => {
+    const res = await getPiece('00000000-0000-0000-0000-000000000000');
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('returns 500 when auth fails on updatePiece', async () => {
+    const res = await updatePiece(
+      '00000000-0000-0000-0000-000000000000',
+      makeRequest({ title: 'Test' }),
+    );
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('returns 500 when auth fails on deletePiece', async () => {
+    const res = await deletePiece('00000000-0000-0000-0000-000000000000');
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.code).toBe('INTERNAL_ERROR');
+  });
+});
+
 // ─── Update ──────────────────────────────────────────────────────────────────
 
 describe('Piece API — Update', () => {
@@ -236,6 +274,39 @@ describe('Piece API — Update', () => {
     expect(body.composer).toBe('Bach'); // unchanged
   });
 
+  it('PUT with invalid JSON returns 400', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const piece = await prisma.piece.create({
+      data: { userId: seedUser.id, title: 'Original' },
+    });
+
+    const req = new NextRequest('http://localhost:3000/api/pieces', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+    const res = await updatePiece(piece.id, req);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT with non-string title returns 400', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const piece = await prisma.piece.create({
+      data: { userId: seedUser.id, title: 'Original' },
+    });
+
+    const res = await updatePiece(piece.id, makeRequest({ title: 42 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('PUT with empty title returns 400', async () => {
     const seedUser = await prisma.user.findUniqueOrThrow({
       where: { email: 'dev-placeholder@tessitura.local' },
@@ -254,6 +325,55 @@ describe('Piece API — Update', () => {
       makeRequest({ title: 'New' }),
     );
     expect(res.status).toBe(404);
+  });
+
+  it('PUT with non-string composer returns 400', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const piece = await prisma.piece.create({
+      data: { userId: seedUser.id, title: 'Original' },
+    });
+
+    const res = await updatePiece(piece.id, makeRequest({ composer: 123 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT with non-string part returns 400', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const piece = await prisma.piece.create({
+      data: { userId: seedUser.id, title: 'Original' },
+    });
+
+    const res = await updatePiece(piece.id, makeRequest({ part: 456 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT with non-string studyReference returns 400', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const piece = await prisma.piece.create({
+      data: { userId: seedUser.id, title: 'Original' },
+    });
+
+    const res = await updatePiece(piece.id, makeRequest({ studyReference: true }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT with malformed UUID returns 400', async () => {
+    const res = await updatePiece('not-a-uuid', makeRequest({ title: 'Test' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('PUT returns 404 for other user\'s piece', async () => {
@@ -285,6 +405,13 @@ describe('Piece API — Delete', () => {
 
     const deleted = await prisma.piece.findUnique({ where: { id: piece.id } });
     expect(deleted!.deletedAt).not.toBeNull();
+  });
+
+  it('DELETE returns 400 for malformed UUID', async () => {
+    const res = await deletePiece('not-a-uuid');
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('DELETE returns 404 for non-existent piece', async () => {

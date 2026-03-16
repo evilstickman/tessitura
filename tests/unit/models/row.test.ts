@@ -145,4 +145,33 @@ describe('Row Model — validateRowUpdate', () => {
     const result = validateRowUpdate({ pieceId: null });
     expect(result).toEqual({ pieceId: null });
   });
+
+  it('throws when passageLabel exceeds 200 chars in update', () => {
+    expect(() => validateRowUpdate({ passageLabel: 'a'.repeat(201) })).toThrow(ValidationError);
+  });
+
+  it('normalizes whitespace-only passageLabel to null in update', () => {
+    const result = validateRowUpdate({ passageLabel: '   ' });
+    expect(result).toEqual({ passageLabel: null });
+  });
+
+  it('normalizes and trims passageLabel in update', () => {
+    const result = validateRowUpdate({ passageLabel: '  Letter C  ' });
+    expect(result).toEqual({ passageLabel: 'Letter C' });
+  });
+
+  it('sets passageLabel to null when explicitly null in update', () => {
+    const result = validateRowUpdate({ passageLabel: null });
+    expect(result).toEqual({ passageLabel: null });
+  });
+
+  it('throws when endMeasure < startMeasure in cross-field validation', () => {
+    expect(() => validateRowUpdate({ startMeasure: 10, endMeasure: 5 })).toThrow(ValidationError);
+  });
+
+  it('allows endMeasure === startMeasure in cross-field validation', () => {
+    const result = validateRowUpdate({ startMeasure: 5, endMeasure: 5 });
+    expect(result.startMeasure).toBe(5);
+    expect(result.endMeasure).toBe(5);
+  });
 });

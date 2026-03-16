@@ -72,4 +72,36 @@ describe('Piece Model — validatePieceUpdate', () => {
     const result = validatePieceUpdate({ composer: '   ' });
     expect(result).toEqual({ composer: null });
   });
+
+  it('throws when title exceeds 200 chars in update', () => {
+    expect(() => validatePieceUpdate({ title: 'a'.repeat(201) })).toThrow(ValidationError);
+  });
+
+  it('validates and normalizes part field', () => {
+    const result = validatePieceUpdate({ part: '  Trumpet 1  ' });
+    expect(result).toEqual({ part: 'Trumpet 1' });
+  });
+
+  it('throws when part exceeds 200 chars in update', () => {
+    expect(() => validatePieceUpdate({ part: 'a'.repeat(201) })).toThrow(ValidationError);
+  });
+
+  it('normalizes whitespace-only part to null', () => {
+    const result = validatePieceUpdate({ part: '   ' });
+    expect(result).toEqual({ part: null });
+  });
+
+  it('validates and normalizes studyReference field', () => {
+    const result = validatePieceUpdate({ studyReference: '  Page 42  ' });
+    expect(result).toEqual({ studyReference: 'Page 42' });
+  });
+
+  it('throws when studyReference exceeds 200 chars in update', () => {
+    expect(() => validatePieceUpdate({ studyReference: 'a'.repeat(201) })).toThrow(ValidationError);
+  });
+
+  it('normalizes whitespace-only studyReference to null', () => {
+    const result = validatePieceUpdate({ studyReference: '   ' });
+    expect(result).toEqual({ studyReference: null });
+  });
 });

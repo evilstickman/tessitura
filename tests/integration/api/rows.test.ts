@@ -198,6 +198,45 @@ describe('Row API — Create', () => {
     expect(body2.sortOrder).toBe(1);
   });
 
+  it('returns 400 for invalid JSON body', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+
+    const req = new NextRequest('http://localhost:3000/api/grids/xxx/rows', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+    const res = await createRow(grid.id, req);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 for non-string pieceId on create', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+
+    const res = await createRow(grid.id, makeRequest({ ...VALID_ROW, pieceId: 123 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 for non-string passageLabel on create', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+
+    const res = await createRow(grid.id, makeRequest({ ...VALID_ROW, passageLabel: 999 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('returns 400 when missing required numeric fields', async () => {
     const user = await prisma.user.findUniqueOrThrow({
       where: { email: 'dev-placeholder@tessitura.local' },
@@ -568,6 +607,85 @@ describe('Row API — Edit', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.passageLabel).toBe('Letter C');
+  });
+
+  it('returns 400 for non-string pieceId on update', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
+    const created = await createRes.json();
+
+    const res = await updateRow(grid.id, created.id, makeRequest({ pieceId: 123 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 for non-string passageLabel on update', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
+    const created = await createRes.json();
+
+    const res = await updateRow(grid.id, created.id, makeRequest({ passageLabel: 999 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 when updating endMeasure below existing startMeasure', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    // Create row with startMeasure=5, endMeasure=10
+    const createRes = await createRow(
+      grid.id,
+      makeRequest({ ...VALID_ROW, startMeasure: 5, endMeasure: 10 }),
+    );
+    const created = await createRes.json();
+
+    // Update only endMeasure to be below existing startMeasure (5)
+    const res = await updateRow(grid.id, created.id, makeRequest({ endMeasure: 3 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 when updating startMeasure above existing endMeasure', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+    // Create row with startMeasure=1, endMeasure=8
+    const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
+    const created = await createRes.json();
+
+    // Update only startMeasure to be above existing endMeasure (8)
+    const res = await updateRow(grid.id, created.id, makeRequest({ startMeasure: 12 }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('returns 400 for empty request body on update', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await createGrid(user.id);
+
+    const req = new NextRequest('http://localhost:3000/api/grids/xxx/rows', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json',
+    });
+
+    const res = await updateRow(grid.id, '00000000-0000-0000-0000-000000000001', req);
+    expect(res.status).toBe(400);
   });
 
   it('returns 400 for non-number targetTempo', async () => {
