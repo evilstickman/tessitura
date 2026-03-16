@@ -69,13 +69,16 @@ export async function getGridById(gridId: string, userId: string) {
     where: { id: gridId },
     include: {
       practiceRows: {
+        where: { deletedAt: null },
         orderBy: { sortOrder: 'asc' },
         include: {
           piece: true,
           practiceCells: {
+            where: { deletedAt: null },
             orderBy: { stepNumber: 'asc' },
             include: {
               completions: {
+                where: { deletedAt: null },
                 orderBy: { completionDate: 'asc' },
               },
             },
