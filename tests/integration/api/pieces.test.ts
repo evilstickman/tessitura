@@ -45,19 +45,20 @@ async function createOtherUser() {
 
 // ─── Error handling ──────────────────────────────────────────────────────────
 
-describe('Piece API — Error handling', () => {
-  it('returns 500 when auth fails on createPiece', async () => {
+describe('Piece API — Auth failure (placeholder auth, pre-M1.8)', () => {
+  // No seed user created — exercises the AuthenticationError → 401 path
+  it('returns 401 when auth fails on createPiece', async () => {
     const res = await createPiece(makeRequest({ title: 'Test' }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on listPieces', async () => {
+  it('returns 401 when auth fails on listPieces', async () => {
     const res = await listPieces();
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 });
 
@@ -228,29 +229,30 @@ describe('Piece API — Detail', () => {
 
 // ─── Auth failures on getPiece/updatePiece/deletePiece ───────────────────────
 
-describe('Piece API — Auth error paths', () => {
-  it('returns 500 when auth fails on getPiece', async () => {
+describe('Piece API — Auth failure (placeholder auth, pre-M1.8)', () => {
+  // No seed user — exercises AuthenticationError → 401 for remaining endpoints
+  it('returns 401 when auth fails on getPiece', async () => {
     const res = await getPiece('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on updatePiece', async () => {
+  it('returns 401 when auth fails on updatePiece', async () => {
     const res = await updatePiece(
       '00000000-0000-0000-0000-000000000000',
       makeRequest({ title: 'Test' }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on deletePiece', async () => {
+  it('returns 401 when auth fails on deletePiece', async () => {
     const res = await deletePiece('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserId } from '@/lib/auth';
-import { ValidationError } from '@/lib/errors';
+import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
 import {
   createPiece as createPieceModel,
@@ -35,6 +35,9 @@ export async function createPiece(request: NextRequest) {
 
     return NextResponse.json(formatPiece(piece), { status: 201 });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -47,7 +50,10 @@ export async function listPieces() {
     const userId = await getCurrentUserId();
     const pieces = await listPiecesModel(userId);
     return NextResponse.json(formatPieceList(pieces));
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }
@@ -66,7 +72,10 @@ export async function getPiece(pieceId: string) {
     }
 
     return NextResponse.json(formatPiece(piece));
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }
@@ -102,6 +111,9 @@ export async function updatePiece(pieceId: string, request: NextRequest) {
 
     return NextResponse.json(formatPiece(piece));
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -123,7 +135,10 @@ export async function deletePiece(pieceId: string) {
     }
 
     return new NextResponse(null, { status: 204 });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }

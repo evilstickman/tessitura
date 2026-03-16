@@ -44,34 +44,34 @@ async function createOtherUser() {
 
 // ─── Error handling ──────────────────────────────────────────────────────────
 
-describe('Grid API — Error handling', () => {
-  // No seed user created — exercises the 500 catch blocks
-  it('returns 500 when auth fails on createGrid', async () => {
+describe('Grid API — Auth failure (placeholder auth, pre-M1.8)', () => {
+  // No seed user created — exercises the AuthenticationError → 401 path
+  it('returns 401 when auth fails on createGrid', async () => {
     const res = await createGrid(makeRequest({ name: 'Grid' }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on listGrids', async () => {
+  it('returns 401 when auth fails on listGrids', async () => {
     const res = await listGrids();
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on getGrid', async () => {
+  it('returns 401 when auth fails on getGrid', async () => {
     const res = await getGrid('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on deleteGrid', async () => {
+  it('returns 401 when auth fails on deleteGrid', async () => {
     const res = await deleteGrid('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 });
 

@@ -90,6 +90,18 @@ export function validatePieceUpdate(input: PieceUpdateInput): Partial<ValidatedP
   return result;
 }
 
+/**
+ * Finds a piece by ID, scoped to the given user and excluding soft-deleted records.
+ * Returns null if not found, not owned, or soft-deleted.
+ *
+ * Query-driven: ownership and soft-delete are in the WHERE clause, not post-query checks.
+ */
+async function findOwnedPiece(pieceId: string, userId: string) {
+  return prisma.piece.findFirst({
+    where: { id: pieceId, userId, deletedAt: null },
+  });
+}
+
 export async function createPiece(userId: string, input: PieceInput) {
   const validated = validatePieceInput(input);
   return prisma.piece.create({
@@ -111,14 +123,12 @@ export async function listPieces(userId: string) {
 }
 
 export async function getPieceById(pieceId: string, userId: string) {
-  const piece = await prisma.piece.findUnique({ where: { id: pieceId } });
-  if (!piece || piece.userId !== userId || piece.deletedAt !== null) return null;
-  return piece;
+  return findOwnedPiece(pieceId, userId);
 }
 
 export async function updatePiece(pieceId: string, userId: string, input: PieceUpdateInput) {
-  const piece = await prisma.piece.findUnique({ where: { id: pieceId } });
-  if (!piece || piece.userId !== userId || piece.deletedAt !== null) return null;
+  const piece = await findOwnedPiece(pieceId, userId);
+  if (!piece) return null;
 
   const validated = validatePieceUpdate(input);
   if (Object.keys(validated).length === 0) return piece;
@@ -130,8 +140,8 @@ export async function updatePiece(pieceId: string, userId: string, input: PieceU
 }
 
 export async function deletePiece(pieceId: string, userId: string): Promise<boolean> {
-  const piece = await prisma.piece.findUnique({ where: { id: pieceId } });
-  if (!piece || piece.userId !== userId || piece.deletedAt !== null) return false;
+  const piece = await findOwnedPiece(pieceId, userId);
+  if (!piece) return false;
 
   await prisma.piece.update({
     where: { id: pieceId },

@@ -62,10 +62,34 @@ export async function listGrids(userId: string) {
 }
 
 /**
+ * Finds a grid by ID, scoped to the given user and excluding soft-deleted records.
+ * Query-driven: ownership and soft-delete are in the WHERE clause, not post-query checks.
+ */
+async function findOwnedGrid(gridId: string, userId: string) {
+  return prisma.practiceGrid.findFirst({
+    where: { id: gridId, userId, deletedAt: null },
+  });
+}
+
+/**
  * Gets a single grid with full nested data. Returns null if not found or not owned.
+ *
+ * Soft-delete visibility rules for nested data:
+ * - Rows: hidden when soft-deleted (filtered out)
+ * - Cells: hidden when soft-deleted (filtered out)
+ * - Completions: hidden when soft-deleted (filtered out)
+ * - Piece: ALWAYS shown, even if the piece itself is soft-deleted.
+ *   Rationale: A row's piece reference is historical context — if a user deletes
+ *   a piece from their library, existing rows should still show what they were
+ *   practicing. The piece data is read-only in this context.
  */
 export async function getGridById(gridId: string, userId: string) {
-  const grid = await prisma.practiceGrid.findUnique({
+  // First verify ownership via query-driven check
+  const owned = await findOwnedGrid(gridId, userId);
+  if (!owned) return null;
+
+  // Then fetch with full nested data
+  return prisma.practiceGrid.findUnique({
     where: { id: gridId },
     include: {
       practiceRows: {
@@ -87,13 +111,6 @@ export async function getGridById(gridId: string, userId: string) {
       },
     },
   });
-
-  // Ownership check — return null (controller maps to 404)
-  if (!grid || grid.userId !== userId) {
-    return null;
-  }
-
-  return grid;
 }
 
 /**
@@ -101,13 +118,8 @@ export async function getGridById(gridId: string, userId: string) {
  * Returns true if deleted, false if not found/not owned.
  */
 export async function deleteGrid(gridId: string, userId: string): Promise<boolean> {
-  const grid = await prisma.practiceGrid.findUnique({
-    where: { id: gridId },
-  });
-
-  if (!grid || grid.userId !== userId) {
-    return false;
-  }
+  const grid = await findOwnedGrid(gridId, userId);
+  if (!grid) return false;
 
   const now = new Date();
 

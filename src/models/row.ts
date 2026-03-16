@@ -107,40 +107,43 @@ export function validateRowUpdate(input: RowUpdateInput): Partial<ValidatedRowIn
 }
 
 /**
- * Verifies grid exists, is not soft-deleted, and is owned by userId.
- * Returns the grid or null.
+ * Finds a grid by ID, scoped to the given user and excluding soft-deleted records.
+ * Query-driven: ownership and soft-delete are in the WHERE clause, not post-query checks.
  */
-async function verifyGridOwnership(gridId: string, userId: string) {
-  const grid = await prisma.practiceGrid.findUnique({ where: { id: gridId } });
-  if (!grid || grid.userId !== userId) return null;
-  return grid;
+async function findOwnedGrid(gridId: string, userId: string) {
+  return prisma.practiceGrid.findFirst({
+    where: { id: gridId, userId, deletedAt: null },
+  });
 }
 
 /**
- * Verifies a row exists, belongs to the specified grid, and the grid is owned by userId.
+ * Finds a row by ID, verifying it belongs to the specified grid and the grid
+ * is owned by the user. Both ownership and soft-delete checks are query-driven.
  */
-async function verifyRowOwnership(gridId: string, rowId: string, userId: string) {
-  const grid = await verifyGridOwnership(gridId, userId);
+async function findOwnedRow(gridId: string, rowId: string, userId: string) {
+  const grid = await findOwnedGrid(gridId, userId);
   if (!grid) return null;
 
-  const row = await prisma.practiceRow.findUnique({ where: { id: rowId } });
-  if (!row || row.practiceGridId !== gridId) return null;
-
-  return row;
+  return prisma.practiceRow.findFirst({
+    where: { id: rowId, practiceGridId: gridId, deletedAt: null },
+  });
 }
 
 /**
  * Validates that a pieceId references an existing, non-deleted piece owned by the user.
+ * Query-driven: all checks in the WHERE clause.
  */
 async function validatePieceOwnership(pieceId: string, userId: string): Promise<void> {
-  const piece = await prisma.piece.findUnique({ where: { id: pieceId } });
-  if (!piece || piece.userId !== userId) {
+  const piece = await prisma.piece.findFirst({
+    where: { id: pieceId, userId, deletedAt: null },
+  });
+  if (!piece) {
     throw new ValidationError('Piece not found or not owned by user');
   }
 }
 
 export async function createRow(gridId: string, userId: string, input: RowInput) {
-  const grid = await verifyGridOwnership(gridId, userId);
+  const grid = await findOwnedGrid(gridId, userId);
   if (!grid) return null;
 
   const validated = validateRowInput(input);
@@ -208,7 +211,7 @@ export async function createRow(gridId: string, userId: string, input: RowInput)
 }
 
 export async function updateRow(gridId: string, rowId: string, userId: string, input: RowUpdateInput) {
-  const existingRow = await verifyRowOwnership(gridId, rowId, userId);
+  const existingRow = await findOwnedRow(gridId, rowId, userId);
   if (!existingRow) return null;
 
   const validated = validateRowUpdate(input);
@@ -307,7 +310,7 @@ export async function updateRowPriority(
     throw new ValidationError(`Priority must be one of: ${validPriorities.join(', ')}`);
   }
 
-  const existingRow = await verifyRowOwnership(gridId, rowId, userId);
+  const existingRow = await findOwnedRow(gridId, rowId, userId);
   if (!existingRow) return null;
 
   return prisma.$transaction(async (tx) => {
@@ -342,7 +345,7 @@ export async function updateRowPriority(
 }
 
 export async function deleteRow(gridId: string, rowId: string, userId: string): Promise<boolean> {
-  const existingRow = await verifyRowOwnership(gridId, rowId, userId);
+  const existingRow = await findOwnedRow(gridId, rowId, userId);
   if (!existingRow) return false;
 
   const now = new Date();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserId } from '@/lib/auth';
-import { ValidationError } from '@/lib/errors';
+import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
 import {
   createRow as createRowModel,
@@ -53,6 +53,9 @@ export async function createRow(gridId: string, request: NextRequest) {
 
     return NextResponse.json(formatRow(row), { status: 201 });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -96,6 +99,9 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
 
     return NextResponse.json(formatRow(row));
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -124,6 +130,9 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
 
     return NextResponse.json(formatRow(row));
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -145,7 +154,10 @@ export async function deleteRow(gridId: string, rowId: string) {
     }
 
     return new NextResponse(null, { status: 204 });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }

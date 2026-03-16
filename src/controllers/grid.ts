@@ -6,7 +6,7 @@ import {
   getGridById,
   deleteGrid as deleteGridModel,
 } from '@/models/grid';
-import { ValidationError } from '@/lib/errors';
+import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
 import { formatGrid, formatGridDetail, formatGridList } from '@/views/grid';
 
@@ -30,6 +30,9 @@ export async function createGrid(request: NextRequest) {
 
     return NextResponse.json(formatGrid(grid), { status: 201 });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     if (error instanceof ValidationError) {
       return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
@@ -42,7 +45,10 @@ export async function listGrids() {
     const userId = await getCurrentUserId();
     const grids = await listGridsModel(userId);
     return NextResponse.json(formatGridList(grids));
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }
@@ -61,7 +67,10 @@ export async function getGrid(gridId: string) {
     }
 
     return NextResponse.json(formatGridDetail(grid));
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }
@@ -80,7 +89,10 @@ export async function deleteGrid(gridId: string) {
     }
 
     return new NextResponse(null, { status: 204 });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }
 }

@@ -63,44 +63,45 @@ const VALID_ROW = {
 
 // ─── Error handling ──────────────────────────────────────────────────────────
 
-describe('Row API — Error handling', () => {
-  it('returns 500 when auth fails on createRow', async () => {
+describe('Row API — Auth failure (placeholder auth, pre-M1.8)', () => {
+  // No seed user — exercises AuthenticationError → 401 path
+  it('returns 401 when auth fails on createRow', async () => {
     const res = await createRow('00000000-0000-0000-0000-000000000000', makeRequest(VALID_ROW));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on updateRow', async () => {
+  it('returns 401 when auth fails on updateRow', async () => {
     const res = await updateRow(
       '00000000-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000001',
       makeRequest({ targetTempo: 130 }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on updatePriority', async () => {
+  it('returns 401 when auth fails on updatePriority', async () => {
     const res = await updatePriority(
       '00000000-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000001',
       makeRequest({ priority: 'HIGH' }),
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on deleteRow', async () => {
+  it('returns 401 when auth fails on deleteRow', async () => {
     const res = await deleteRow(
       '00000000-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000001',
     );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 });
 
