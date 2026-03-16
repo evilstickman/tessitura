@@ -5,6 +5,7 @@ import {
   listGrids as listGridsModel,
   getGridById,
   deleteGrid as deleteGridModel,
+  updateGridFade,
 } from '@/models/grid';
 import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
@@ -89,6 +90,29 @@ export async function deleteGrid(gridId: string) {
     }
 
     return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
+    return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
+  }
+}
+
+export async function updateFade(gridId: string, request: NextRequest) {
+  try {
+    if (!UUID_REGEX.test(gridId)) {
+      return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
+    }
+    const userId = await getCurrentUserId();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.fadeEnabled !== 'boolean') {
+      return errorResponse('fadeEnabled (boolean) is required', 'VALIDATION_ERROR', 400);
+    }
+    const grid = await updateGridFade(gridId, userId, body.fadeEnabled);
+    if (!grid) {
+      return errorResponse('Grid not found', 'NOT_FOUND', 404);
+    }
+    return NextResponse.json(formatGridDetail(grid));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
