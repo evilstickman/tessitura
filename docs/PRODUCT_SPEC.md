@@ -2002,6 +2002,27 @@ A structured practice plan for a piece of music or collection of technical studi
 
 ---
 
+#### Piece
+A musical work or study in a user's library. Normalized from PracticeRow to enable deduplication and reuse across rows and grids.
+
+| Field | Type | Provenance | Notes |
+|-------|------|-----------|-------|
+| id | UUID | System-generated | Immutable PK |
+| user_id | FK→User | System-set at creation | Immutable. Owner |
+| title | string | User-provided | Required. e.g., "Firebird Suite", "Clarke #3 in Eb" |
+| composer | string, nullable | User-provided | e.g., "Stravinsky", "Herbert L. Clarke" |
+| part | string, nullable | User-provided | e.g., "1st Cornet", "2nd Trombone" |
+| study_reference | string, nullable | User-provided or from template | For technique studies (e.g., "Exercise 3, p.12") |
+| created_at | timestamptz | System-generated | Immutable |
+| updated_at | timestamptz | System-generated | Auto-updated |
+| deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
+
+**Soft-delete visibility:** When a piece is soft-deleted from the user's library, it remains visible on any rows that reference it. A row's piece reference is historical context — deleting a piece should not erase what a user was practicing. New row assignments reject soft-deleted pieces.
+
+**Research value:** Piece-level data enables cross-grid analysis: how many rows reference the same piece, which pieces are practiced most, composer-level trends.
+
+---
+
 #### PracticeRow
 A segment of music within a grid — a specific passage, measure range, or technical exercise to be practiced at graduated tempos.
 
@@ -2010,10 +2031,7 @@ A segment of music within a grid — a specific passage, measure range, or techn
 | id | UUID | System-generated | Immutable PK |
 | practice_grid_id | FK→PracticeGrid | System-set at creation | Immutable. Cascading delete |
 | sort_order | integer | System-set, user-adjustable | Position within the grid. Allows reordering |
-| song_title | string, nullable | User-provided | For repertoire grids |
-| composer | string, nullable | User-provided | For repertoire grids |
-| part | string, nullable | User-provided | e.g., "1st Cornet", "2nd Trombone" |
-| study_reference | string, nullable | User-provided or from template | For technique grids (e.g., "Clarke #3 in Eb") |
+| piece_id | FK→Piece, nullable | User-provided | References a piece from the user's library. Nullable for rows without piece context |
 | start_measure | integer | User-provided | Measure number in the piece |
 | end_measure | integer | User-provided | Measure number in the piece |
 | passage_label | string, nullable | User-provided | Optional display name (e.g., "Letter C to D", "Intro"). When present, shown instead of "mm. X-Y" |
@@ -2632,12 +2650,14 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Write integration tests for each endpoint (success, validation error, auth error)
 - Maps to: UC-1.3, UC-1.12, UC-1.13
 
-**M1.4: Row & Cell Operations API**
-- Task: Add row endpoint (POST) — auto-generates cells with tempo percentages
+**M1.4: Row & Cell Operations + Piece Normalization**
+- Task: Normalize song_title/composer/part/study_reference from PracticeRow into a Piece entity with full CRUD
+- Task: Data-preserving migration: create pieces from existing row data, deduplicate, backfill piece_id, drop old columns
+- Task: Add row endpoint (POST) — auto-generates cells with tempo percentages, validates piece ownership
 - Task: Write unit tests for cell generation math (tempo percentage = 0.4 + 0.6 * step/total)
 - Task: Edit row endpoint (PUT) — handles step count change (regenerate cells with warning)
 - Task: Set/edit priority endpoint (PUT) — validates enum
-- Task: Integration tests for all row operations
+- Task: Integration tests for all row and piece operations
 - Maps to: UC-1.4, UC-1.11, UC-1.14, UC-1.15, UC-1.16
 
 **M1.5: Cell Completion & Freshness API**
