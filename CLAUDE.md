@@ -106,6 +106,20 @@ All commits include: `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anth
 - If coverage drops below 95%, add tests — never widen exclude patterns.
 - The coverage number in CI must match what a developer sees locally.
 
+### Coverage Exclusions (justified)
+
+The following are excluded from coverage in `vitest.config.ts`. Each must have a reason here — no silent excludes.
+
+| Path | Reason |
+|------|--------|
+| `src/generated/**` | Prisma auto-generated client. Not our code; regenerated on every build. |
+| `src/components/**` | Empty directories (`.gitkeep` only). No code exists yet. Remove this exclusion when components are added (M2+). |
+| `src/app/globals.css` | CSS file, not executable code. |
+| `src/app/layout.tsx` | Next.js root layout — zero logic, pure JSX scaffolding (34 lines). Will gain tests when real UI work begins. |
+| `src/app/page.tsx` | Placeholder landing page — zero logic (10 lines). Will be replaced by real frontend. |
+
+**Rule:** When any excluded file gains application logic, it must be removed from the exclusion list and tested.
+
 ## Temporary Auth Contract (pre-M1.8)
 
 - Before M1.8 (NextAuth), a placeholder `requireAuth()` in `src/lib/auth.ts` provides the dev seed user.

@@ -4,9 +4,11 @@
 --   1. Create the pieces table
 --   2. Add piece_id column to practice_rows (nullable, no FK yet)
 --   3. Insert deduplicated pieces from existing practice_rows data
---      - Deduplication key: (user_id, COALESCE(song_title,''), COALESCE(composer,''), COALESCE(part,''))
+--      - Deduplication key: (user_id, title, composer, part) with IS NOT DISTINCT FROM for NULLs
 --      - user_id is resolved via JOIN through practice_grids
---      - Only rows that have at least a song_title get a piece created
+--      - Rows with non-empty song_title → piece with that title
+--      - Rows with blank song_title but populated composer/part → piece titled "[Untitled]"
+--      - Rows with no song data at all → piece_id stays NULL
 --   4. Populate practice_rows.piece_id with the matching piece
 --   5. Add the foreign key constraint
 --   6. Drop the now-redundant song_title, composer, part columns
@@ -32,8 +34,7 @@ ALTER TABLE "pieces" ADD CONSTRAINT "pieces_user_id_fkey"
 -- Step 2: Add piece_id column (no FK yet — we populate first)
 ALTER TABLE "practice_rows" ADD COLUMN "piece_id" UUID;
 
--- Step 3: Insert deduplicated pieces from existing row data
--- Only creates pieces for rows that have a non-null, non-empty song_title.
+-- Step 3a: Insert deduplicated pieces from active rows with a non-empty song_title.
 -- Deduplication is by (user_id, title, composer, part) so the same song
 -- referenced by multiple rows becomes a single piece record.
 INSERT INTO "pieces" ("id", "user_id", "title", "composer", "part", "created_at", "updated_at")
@@ -52,7 +53,7 @@ WHERE pr."song_title" IS NOT NULL
   AND pr."deleted_at" IS NULL
 GROUP BY g."user_id", pr."song_title", pr."composer", pr."part";
 
--- Also migrate pieces for soft-deleted rows (preserve their data too)
+-- Step 3b: Insert pieces for soft-deleted rows (preserve their data too).
 INSERT INTO "pieces" ("id", "user_id", "title", "composer", "part", "created_at", "updated_at")
 SELECT
     gen_random_uuid(),
@@ -68,7 +69,6 @@ WHERE pr."song_title" IS NOT NULL
   AND pr."song_title" != ''
   AND pr."deleted_at" IS NOT NULL
   AND NOT EXISTS (
-      -- Skip if this (user, title, composer, part) combo was already inserted above
       SELECT 1 FROM "pieces" p
       WHERE p."user_id" = g."user_id"
         AND p."title" = pr."song_title"
@@ -77,7 +77,32 @@ WHERE pr."song_title" IS NOT NULL
   )
 GROUP BY g."user_id", pr."song_title", pr."composer", pr."part";
 
--- Step 4: Populate piece_id on practice_rows by matching back to the created pieces
+-- Step 3c: Handle orphan metadata — rows with blank/null song_title but
+-- populated composer or part. The legacy schema had no constraint preventing this.
+-- We create a piece with title "[Untitled]" to preserve the composer/part data.
+INSERT INTO "pieces" ("id", "user_id", "title", "composer", "part", "created_at", "updated_at")
+SELECT
+    gen_random_uuid(),
+    g."user_id",
+    '[Untitled]',
+    pr."composer",
+    pr."part",
+    MIN(pr."created_at"),
+    MAX(pr."updated_at")
+FROM "practice_rows" pr
+JOIN "practice_grids" g ON g."id" = pr."practice_grid_id"
+WHERE (pr."song_title" IS NULL OR pr."song_title" = '')
+  AND (pr."composer" IS NOT NULL OR pr."part" IS NOT NULL)
+  AND NOT EXISTS (
+      SELECT 1 FROM "pieces" p
+      WHERE p."user_id" = g."user_id"
+        AND p."title" = '[Untitled]'
+        AND p."composer" IS NOT DISTINCT FROM pr."composer"
+        AND p."part" IS NOT DISTINCT FROM pr."part"
+  )
+GROUP BY g."user_id", pr."composer", pr."part";
+
+-- Step 4a: Populate piece_id for rows with a song_title
 UPDATE "practice_rows" pr
 SET "piece_id" = p."id"
 FROM "practice_grids" g, "pieces" p
@@ -88,6 +113,18 @@ WHERE g."id" = pr."practice_grid_id"
   AND p."part" IS NOT DISTINCT FROM pr."part"
   AND pr."song_title" IS NOT NULL
   AND pr."song_title" != '';
+
+-- Step 4b: Populate piece_id for orphan-metadata rows
+UPDATE "practice_rows" pr
+SET "piece_id" = p."id"
+FROM "practice_grids" g, "pieces" p
+WHERE g."id" = pr."practice_grid_id"
+  AND p."user_id" = g."user_id"
+  AND p."title" = '[Untitled]'
+  AND p."composer" IS NOT DISTINCT FROM pr."composer"
+  AND p."part" IS NOT DISTINCT FROM pr."part"
+  AND (pr."song_title" IS NULL OR pr."song_title" = '')
+  AND (pr."composer" IS NOT NULL OR pr."part" IS NOT NULL);
 
 -- Step 5: Add foreign key constraint now that data is populated
 ALTER TABLE "practice_rows" ADD CONSTRAINT "practice_rows_piece_id_fkey"

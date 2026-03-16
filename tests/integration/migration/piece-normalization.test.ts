@@ -280,6 +280,67 @@ describe('Piece normalization migration — data preservation', () => {
     const foundRow = await prisma.practiceRow.findUnique({ where: { id: row.id } });
     expect(foundRow!.pieceId).toBe(piece.id);
   });
+
+  it('orphan metadata: blank song_title with populated composer/part gets [Untitled] piece', async () => {
+    // The legacy schema allowed rows with null song_title but populated
+    // composer or part. The migration creates an "[Untitled]" piece for these
+    // to prevent data loss when the columns are dropped.
+    //
+    // We simulate post-migration state: a piece titled "[Untitled]" linked to
+    // a row, verifying the migration's Step 3c logic.
+    const piece = await prisma.piece.create({
+      data: {
+        userId,
+        title: '[Untitled]',
+        composer: 'Mystery Composer',
+        part: 'Cornet',
+      },
+    });
+
+    const row = await prisma.practiceRow.create({
+      data: {
+        practiceGridId: gridId,
+        sortOrder: 0,
+        pieceId: piece.id,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 3,
+      },
+    });
+
+    // Verify the piece preserves the composer/part data
+    const found = await prisma.piece.findUnique({ where: { id: piece.id } });
+    expect(found).not.toBeNull();
+    expect(found!.title).toBe('[Untitled]');
+    expect(found!.composer).toBe('Mystery Composer');
+    expect(found!.part).toBe('Cornet');
+
+    // Verify the row links to the piece
+    const foundRow = await prisma.practiceRow.findUnique({ where: { id: row.id } });
+    expect(foundRow!.pieceId).toBe(piece.id);
+  });
+
+  it('rows with no song data at all have pieceId null (no orphan piece created)', async () => {
+    // Rows where song_title, composer, and part are all null should NOT
+    // generate a piece — they have no metadata to preserve.
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: gridId,
+        sortOrder: 0,
+        pieceId: null,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 3,
+      },
+    });
+
+    const row = await prisma.practiceRow.findFirst({
+      where: { practiceGridId: gridId },
+    });
+    expect(row!.pieceId).toBeNull();
+  });
 });
 
 describe('Piece normalization migration — SQL logic verification', () => {

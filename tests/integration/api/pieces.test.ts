@@ -436,6 +436,8 @@ describe('Piece API — Delete', () => {
     expect(body).toHaveLength(0);
   });
 
+  // Soft Delete Visibility Rule (CLAUDE.md § Soft Delete Visibility Rules):
+  // Pieces on rows are ALWAYS shown, even if soft-deleted. Historical context.
   it('soft-deleted piece still displays on rows via grid detail', async () => {
     const seedUser = await prisma.user.findUniqueOrThrow({
       where: { email: 'dev-placeholder@tessitura.local' },
