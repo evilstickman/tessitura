@@ -9,11 +9,6 @@ datasource db {
 
 // ── Enums ──────────────────────────────────────────────────────────
 
-enum FreshnessResetStrategy {
-  FULL
-  HALVE
-}
-
 enum Priority {
   CRITICAL
   HIGH
@@ -32,7 +27,6 @@ model User {
   emailVerified          Boolean                @default(false) @map("email_verified")
   timezone               String                 @default("UTC")
   defaultFadeEnabled     Boolean                @default(true) @map("default_fade_enabled")
-  freshnessResetStrategy FreshnessResetStrategy @default(FULL) @map("freshness_reset_strategy")
   createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime               @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt              DateTime?              @map("deleted_at") @db.Timestamptz
