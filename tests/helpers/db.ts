@@ -27,7 +27,7 @@ export function getTestPrisma(): PrismaClient {
 export async function cleanDatabase(): Promise<void> {
   const prisma = getTestPrisma();
   await prisma.$executeRawUnsafe(
-    `TRUNCATE TABLE practice_cell_completions, practice_cells, practice_rows, practice_grids, users CASCADE`,
+    `TRUNCATE TABLE practice_cell_completions, practice_cells, practice_rows, pieces, practice_grids, users CASCADE`,
   );
 }
 

@@ -2,9 +2,7 @@ interface GridRow {
   id: string;
   practiceGridId: string;
   sortOrder: number;
-  songTitle: string | null;
-  composer: string | null;
-  part: string | null;
+  pieceId: string | null;
   passageLabel: string | null;
   startMeasure: number;
   endMeasure: number;
@@ -77,9 +75,7 @@ function formatRow(row: GridRow) {
   return {
     id: row.id,
     sortOrder: row.sortOrder,
-    songTitle: row.songTitle,
-    composer: row.composer,
-    part: row.part,
+    pieceId: row.pieceId,
     passageLabel: row.passageLabel,
     startMeasure: row.startMeasure,
     endMeasure: row.endMeasure,
