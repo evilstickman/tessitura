@@ -24,9 +24,6 @@ async function createFullChain() {
     data: {
       practiceGridId: grid.id,
       sortOrder: 1,
-      songTitle: 'Clair de Lune',
-      composer: 'Debussy',
-      part: 'Right Hand',
       startMeasure: 1,
       endMeasure: 16,
       targetTempo: 72,
@@ -41,8 +38,7 @@ describe('Full chain: Row -> Cell -> Completion', () => {
   it('creates a practice row with correct defaults', async () => {
     const { row } = await createFullChain();
 
-    expect(row.songTitle).toBe('Clair de Lune');
-    expect(row.composer).toBe('Debussy');
+    expect(row.pieceId).toBeNull();
     expect(row.priority).toBe('MEDIUM');
     expect(row.targetTempo).toBe(72);
     expect(row.steps).toBe(5);

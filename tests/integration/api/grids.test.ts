@@ -44,34 +44,34 @@ async function createOtherUser() {
 
 // ─── Error handling ──────────────────────────────────────────────────────────
 
-describe('Grid API — Error handling', () => {
-  // No seed user created — exercises the 500 catch blocks
-  it('returns 500 when auth fails on createGrid', async () => {
+describe('Grid API — Auth failure (placeholder auth, pre-M1.8)', () => {
+  // No seed user created — exercises the AuthenticationError → 401 path
+  it('returns 401 when auth fails on createGrid', async () => {
     const res = await createGrid(makeRequest({ name: 'Grid' }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on listGrids', async () => {
+  it('returns 401 when auth fails on listGrids', async () => {
     const res = await listGrids();
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on getGrid', async () => {
+  it('returns 401 when auth fails on getGrid', async () => {
     const res = await getGrid('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 
-  it('returns 500 when auth fails on deleteGrid', async () => {
+  it('returns 401 when auth fails on deleteGrid', async () => {
     const res = await deleteGrid('00000000-0000-0000-0000-000000000000');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(401);
     const body = await res.json();
-    expect(body.error.code).toBe('INTERNAL_ERROR');
+    expect(body.error.code).toBe('AUTHENTICATION_ERROR');
   });
 });
 
@@ -472,6 +472,64 @@ describe('Grid API — Detail', () => {
   it('GET /grids/[id] returns 400 for malformed UUID', async () => {
     const res = await getGrid('not-a-uuid');
     expect(res.status).toBe(400);
+  });
+
+  it('GET /grids/[id] excludes soft-deleted rows from detail', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Soft Delete Test' },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 1,
+      },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 1,
+        startMeasure: 9,
+        endMeasure: 16,
+        targetTempo: 120,
+        steps: 1,
+        deletedAt: new Date(),
+      },
+    });
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+    expect(body.rows).toHaveLength(1);
+    expect(body.rows[0].sortOrder).toBe(0);
+  });
+
+  it('GET /grids/[id] returns piece: null on rows without a piece', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Piece Null Test' },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 1,
+      },
+    });
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+    expect(body.rows[0].piece).toBeNull();
   });
 });
 

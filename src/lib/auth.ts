@@ -1,6 +1,13 @@
-// TODO(M1.8): Replace with real session auth.
+// TODO(M1.8): Replace with real session auth (NextAuth.js).
 // This is a placeholder that returns the dev seed user's ID.
 // Every controller must call this function — no hardcoded user IDs elsewhere.
+//
+// Auth failure contract (intentional, not accidental):
+//   - getCurrentUserId() throws AuthenticationError when no user can be resolved
+//   - Controllers catch AuthenticationError and return 401
+//   - This contract is permanent — M1.8 changes the mechanism, not the behavior
+
+import { AuthenticationError } from '@/lib/errors';
 
 let seedUserId: string | null = null;
 
@@ -14,7 +21,11 @@ export function resetAuthCache(): void {
 
 /**
  * Returns the current user's ID.
- * Before M1.8 (auth), this returns the dev seed user.
+ *
+ * Pre-M1.8: Returns the dev seed user. Throws AuthenticationError if seed
+ * user doesn't exist (deliberate 401, not accidental 500).
+ *
+ * Post-M1.8: Will resolve from session. Same AuthenticationError on failure.
  */
 export async function getCurrentUserId(): Promise<string> {
   if (seedUserId) return seedUserId;
@@ -26,8 +37,8 @@ export async function getCurrentUserId(): Promise<string> {
   });
 
   if (!user) {
-    throw new Error(
-      'Dev seed user not found. Run `npx prisma db seed` to create it.',
+    throw new AuthenticationError(
+      'Not authenticated. Dev seed user not found — run `npx prisma db seed` to create it.',
     );
   }
 

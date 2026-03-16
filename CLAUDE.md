@@ -90,3 +90,49 @@ All commits include: `Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anth
 - **No technical UI** — Users never see IDs, enums, ISO timestamps
 - **ACID transactions** — All writes are atomic
 - **REST API** — Resources are nouns, HTTP methods are verbs
+
+## Migration Safety — Mandatory
+
+- Never submit a migration that drops or rewrites existing user data without an explicit backfill plan.
+- Every destructive schema change (column drop, type change, table rename) must include SQL that preserves existing data.
+- If Prisma generates a destructive migration, rewrite it by hand.
+- Add migration-verification tests for any migration that moves data.
+- The `prisma/migrations/20260316004308_normalize_piece_entity/migration.sql` rewrite is the reference example.
+
+## CI Truthfulness
+
+- CI must run `npm run test:coverage`, not `npm run test`.
+- Vitest coverage config must not exclude files that contain application logic (e.g., route handlers, controllers).
+- If coverage drops below 95%, add tests — never widen exclude patterns.
+- The coverage number in CI must match what a developer sees locally.
+
+### Coverage Exclusions (justified)
+
+The following are excluded from coverage in `vitest.config.ts`. Each must have a reason here — no silent excludes.
+
+| Path | Reason |
+|------|--------|
+| `src/generated/**` | Prisma auto-generated client. Not our code; regenerated on every build. |
+| `src/components/**` | Empty directories (`.gitkeep` only). No code exists yet. Remove this exclusion when components are added (M2+). |
+| `src/app/globals.css` | CSS file, not executable code. |
+| `src/app/layout.tsx` | Next.js root layout — zero logic, pure JSX scaffolding (34 lines). Will gain tests when real UI work begins. |
+| `src/app/page.tsx` | Placeholder landing page — zero logic (10 lines). Will be replaced by real frontend. |
+
+**Rule:** When any excluded file gains application logic, it must be removed from the exclusion list and tested.
+
+## Temporary Auth Contract (pre-M1.8)
+
+- Before M1.8 (NextAuth), a placeholder `requireAuth()` in `src/lib/auth.ts` provides the dev seed user.
+- Auth failure throws `AuthenticationError` (from `src/lib/errors.ts`), which controllers catch and return as `401 AUTHENTICATION_ERROR`.
+- This is intentional behavior, not an accident — tests assert 401, not 500.
+- When M1.8 lands, replace the placeholder but keep the `AuthenticationError` → 401 contract.
+
+## Soft Delete Visibility Rules
+
+- **Rows, Cells, Completions:** Hidden when soft-deleted (`WHERE deleted_at IS NULL`).
+- **Pieces on Rows:** ALWAYS shown, even if the piece itself is soft-deleted. A row's piece reference is historical context — deleting a piece from the library must not erase what a user was practicing.
+- Every query that touches soft-deletable data must document which rule it follows.
+
+## Spec Mismatch Rule
+
+- If you notice the implementation differs from `docs/PRODUCT_SPEC.md`, flag it — do not silently conform and do not silently diverge. Willow decides.

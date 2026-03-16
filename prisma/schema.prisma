@@ -38,6 +38,7 @@ model User {
   deletedAt              DateTime?              @map("deleted_at") @db.Timestamptz
 
   practiceGrids PracticeGrid[]
+  pieces        Piece[]
 
   @@map("users")
 }
@@ -58,13 +59,28 @@ model PracticeGrid {
   @@map("practice_grids")
 }
 
+model Piece {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  title          String
+  composer       String?
+  part           String?
+  studyReference String?   @map("study_reference")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  user          User          @relation(fields: [userId], references: [id])
+  practiceRows  PracticeRow[]
+
+  @@map("pieces")
+}
+
 model PracticeRow {
   id             String    @id @default(uuid()) @db.Uuid
   practiceGridId String    @map("practice_grid_id") @db.Uuid
   sortOrder      Int       @map("sort_order")
-  songTitle      String?   @map("song_title")
-  composer       String?
-  part           String?
+  pieceId        String?   @map("piece_id") @db.Uuid
   passageLabel   String?   @map("passage_label")
   startMeasure   Int       @map("start_measure")
   endMeasure     Int       @map("end_measure")
@@ -76,6 +92,7 @@ model PracticeRow {
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
 
   practiceGrid  PracticeGrid   @relation(fields: [practiceGridId], references: [id])
+  piece         Piece?         @relation(fields: [pieceId], references: [id])
   practiceCells PracticeCell[]
 
   @@map("practice_rows")
