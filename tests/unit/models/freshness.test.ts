@@ -4,8 +4,11 @@ import {
   calculateNewInterval,
   isShielded,
   effectiveFreshnessState,
+  calculateCompletionPercentage,
+  calculateFreshnessSummary,
   type FreshnessState,
   type CellWithState,
+  type CellWithEffectiveState,
 } from '@/models/freshness';
 
 // ─── calculateFreshnessState ─────────────────────────────────────────────────
@@ -240,5 +243,100 @@ describe('effectiveFreshnessState', () => {
     expect(effectiveFreshnessState('aging', false, true)).toBe('aging');
     expect(effectiveFreshnessState('stale', false, true)).toBe('stale');
     expect(effectiveFreshnessState('decayed', false, true)).toBe('decayed');
+  });
+});
+
+// ─── calculateCompletionPercentage ───────────────────────────────────────────
+
+function makeEffCell(effectiveState: FreshnessState): CellWithEffectiveState {
+  return { effectiveState };
+}
+
+describe('calculateCompletionPercentage', () => {
+  it('returns 0 for empty cells array', () => {
+    expect(calculateCompletionPercentage([], true)).toBe(0);
+    expect(calculateCompletionPercentage([], false)).toBe(0);
+  });
+
+  it('returns 0 when all cells are incomplete', () => {
+    const cells = [makeEffCell('incomplete'), makeEffCell('incomplete')];
+    expect(calculateCompletionPercentage(cells, true)).toBe(0);
+    expect(calculateCompletionPercentage(cells, false)).toBe(0);
+  });
+
+  it('fade ON: fresh + aging + stale count, decayed + incomplete excluded', () => {
+    const cells = [
+      makeEffCell('fresh'),
+      makeEffCell('aging'),
+      makeEffCell('stale'),
+      makeEffCell('decayed'),
+      makeEffCell('incomplete'),
+    ];
+    expect(calculateCompletionPercentage(cells, true)).toBe(60);
+  });
+
+  it('fade OFF: all non-incomplete count', () => {
+    const cells = [
+      makeEffCell('fresh'),
+      makeEffCell('fresh'),
+      makeEffCell('fresh'),
+      makeEffCell('fresh'),
+      makeEffCell('incomplete'),
+    ];
+    expect(calculateCompletionPercentage(cells, false)).toBe(80);
+  });
+
+  it('fade OFF: non-fresh completed states also count (pure function contract)', () => {
+    const cells = [
+      makeEffCell('aging'),
+      makeEffCell('stale'),
+      makeEffCell('decayed'),
+      makeEffCell('incomplete'),
+    ];
+    expect(calculateCompletionPercentage(cells, false)).toBe(75);
+  });
+
+  it('returns 100 when all cells are fresh', () => {
+    const cells = [makeEffCell('fresh'), makeEffCell('fresh'), makeEffCell('fresh')];
+    expect(calculateCompletionPercentage(cells, true)).toBe(100);
+  });
+
+  it('returns unrounded floating-point value', () => {
+    const cells = [makeEffCell('fresh'), makeEffCell('incomplete'), makeEffCell('incomplete')];
+    const result = calculateCompletionPercentage(cells, true);
+    expect(result).toBeCloseTo(100 / 3, 10);
+  });
+});
+
+// ─── calculateFreshnessSummary ───────────────────────────────────────────────
+
+describe('calculateFreshnessSummary', () => {
+  it('counts cells by effective state', () => {
+    const cells = [
+      makeEffCell('fresh'),
+      makeEffCell('fresh'),
+      makeEffCell('aging'),
+      makeEffCell('stale'),
+      makeEffCell('decayed'),
+      makeEffCell('incomplete'),
+      makeEffCell('incomplete'),
+    ];
+    expect(calculateFreshnessSummary(cells)).toEqual({
+      fresh: 2,
+      aging: 1,
+      stale: 1,
+      decayed: 1,
+      incomplete: 2,
+    });
+  });
+
+  it('returns all zeros for empty array', () => {
+    expect(calculateFreshnessSummary([])).toEqual({
+      fresh: 0,
+      aging: 0,
+      stale: 0,
+      decayed: 0,
+      incomplete: 0,
+    });
   });
 });

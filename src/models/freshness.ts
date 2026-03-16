@@ -79,3 +79,37 @@ export function effectiveFreshnessState(
   if (isShieldedFlag) return 'fresh';
   return rawState;
 }
+
+// ─── Task 4: Completion Percentage + Summary ─────────────────────────────────
+
+export interface CellWithEffectiveState {
+  effectiveState: FreshnessState;
+}
+
+export function calculateCompletionPercentage(
+  cells: CellWithEffectiveState[],
+  fadeEnabled: boolean,
+): number {
+  if (cells.length === 0) return 0;
+
+  const countCompleted = fadeEnabled
+    ? cells.filter(
+        (c) =>
+          c.effectiveState === 'fresh' ||
+          c.effectiveState === 'aging' ||
+          c.effectiveState === 'stale',
+      ).length
+    : cells.filter((c) => c.effectiveState !== 'incomplete').length;
+
+  return (countCompleted / cells.length) * 100;
+}
+
+export function calculateFreshnessSummary(
+  cells: CellWithEffectiveState[],
+): { fresh: number; aging: number; stale: number; decayed: number; incomplete: number } {
+  const summary = { fresh: 0, aging: 0, stale: 0, decayed: 0, incomplete: 0 };
+  for (const cell of cells) {
+    summary[cell.effectiveState]++;
+  }
+  return summary;
+}
