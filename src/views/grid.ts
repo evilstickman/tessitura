@@ -1,8 +1,23 @@
+import { formatPieceInline } from '@/views/piece';
+
+interface GridPieceRecord {
+  id: string;
+  userId: string;
+  title: string;
+  composer: string | null;
+  part: string | null;
+  studyReference: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
 interface GridRow {
   id: string;
   practiceGridId: string;
   sortOrder: number;
   pieceId: string | null;
+  piece: GridPieceRecord | null;
   passageLabel: string | null;
   startMeasure: number;
   endMeasure: number;
@@ -76,6 +91,7 @@ function formatRow(row: GridRow) {
     id: row.id,
     sortOrder: row.sortOrder,
     pieceId: row.pieceId,
+    piece: formatPieceInline(row.piece),
     passageLabel: row.passageLabel,
     startMeasure: row.startMeasure,
     endMeasure: row.endMeasure,

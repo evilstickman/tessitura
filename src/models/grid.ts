@@ -71,6 +71,7 @@ export async function getGridById(gridId: string, userId: string) {
       practiceRows: {
         orderBy: { sortOrder: 'asc' },
         include: {
+          piece: true,
           practiceCells: {
             orderBy: { stepNumber: 'asc' },
             include: {

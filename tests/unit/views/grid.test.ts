@@ -20,6 +20,7 @@ const mockGridWithRows = {
       practiceGridId: 'grid-id',
       sortOrder: 0,
       pieceId: null,
+      piece: null,
       passageLabel: 'Letter A to B',
       startMeasure: 1,
       endMeasure: 8,
