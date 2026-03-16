@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateFreshnessState,
   calculateNewInterval,
+  isShielded,
+  effectiveFreshnessState,
   type FreshnessState,
+  type CellWithState,
 } from '@/models/freshness';
 
 // ─── calculateFreshnessState ─────────────────────────────────────────────────
@@ -112,5 +115,130 @@ describe('calculateNewInterval', () => {
       interval = calculateNewInterval(interval, 'fresh');
       expect(interval).toBe(exp);
     }
+  });
+});
+
+// ─── isShielded ──────────────────────────────────────────────────────────────
+
+function makeCell(rawState: FreshnessState, hasCompletions: boolean): CellWithState {
+  return { rawState, hasCompletions };
+}
+
+describe('isShielded', () => {
+  it('returns false when fade is disabled', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('fresh', true),
+    ];
+    expect(isShielded(0, cells, false)).toBe(false);
+  });
+
+  it('returns false for the highest completed cell (no higher neighbor)', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('aging', true),
+    ];
+    expect(isShielded(1, cells, true)).toBe(false);
+  });
+
+  it('returns true when next higher completed cell is not decayed', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('stale', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(true);
+  });
+
+  it('returns false when next higher completed cell is decayed', () => {
+    const cells = [
+      makeCell('aging', true),
+      makeCell('decayed', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(false);
+  });
+
+  it('skips incomplete cells when finding higher neighbor', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('incomplete', false),
+      makeCell('stale', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(true);
+  });
+
+  it('returns false for incomplete cell (never shielded)', () => {
+    const cells = [
+      makeCell('incomplete', false),
+      makeCell('fresh', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(false);
+  });
+
+  it('handles chain of 3 completed cells', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('aging', true),
+      makeCell('stale', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(true);
+    expect(isShielded(1, cells, true)).toBe(true);
+    expect(isShielded(2, cells, true)).toBe(false);
+  });
+
+  it('chain breaks when a cell decays', () => {
+    const cells = [
+      makeCell('fresh', true),
+      makeCell('stale', true),
+      makeCell('decayed', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(true);
+    expect(isShielded(1, cells, true)).toBe(false);
+    expect(isShielded(2, cells, true)).toBe(false);
+  });
+
+  it('single cell row — never shielded', () => {
+    const cells = [makeCell('fresh', true)];
+    expect(isShielded(0, cells, true)).toBe(false);
+  });
+
+  it('gap scenario: completed 0, incomplete 1+2, completed 3', () => {
+    const cells = [
+      makeCell('aging', true),
+      makeCell('incomplete', false),
+      makeCell('incomplete', false),
+      makeCell('stale', true),
+    ];
+    expect(isShielded(0, cells, true)).toBe(true);
+    expect(isShielded(3, cells, true)).toBe(false);
+  });
+});
+
+// ─── effectiveFreshnessState ─────────────────────────────────────────────────
+
+describe('effectiveFreshnessState', () => {
+  it('returns incomplete regardless of fade/shielding', () => {
+    expect(effectiveFreshnessState('incomplete', false, true)).toBe('incomplete');
+    expect(effectiveFreshnessState('incomplete', true, true)).toBe('incomplete');
+    expect(effectiveFreshnessState('incomplete', false, false)).toBe('incomplete');
+  });
+
+  it('returns fresh when fade is disabled (permanent green)', () => {
+    expect(effectiveFreshnessState('aging', false, false)).toBe('fresh');
+    expect(effectiveFreshnessState('stale', false, false)).toBe('fresh');
+    expect(effectiveFreshnessState('decayed', false, false)).toBe('fresh');
+    expect(effectiveFreshnessState('fresh', false, false)).toBe('fresh');
+  });
+
+  it('returns fresh when shielded', () => {
+    expect(effectiveFreshnessState('stale', true, true)).toBe('fresh');
+    expect(effectiveFreshnessState('aging', true, true)).toBe('fresh');
+    expect(effectiveFreshnessState('decayed', true, true)).toBe('fresh');
+  });
+
+  it('returns raw state when fade enabled and not shielded', () => {
+    expect(effectiveFreshnessState('fresh', false, true)).toBe('fresh');
+    expect(effectiveFreshnessState('aging', false, true)).toBe('aging');
+    expect(effectiveFreshnessState('stale', false, true)).toBe('stale');
+    expect(effectiveFreshnessState('decayed', false, true)).toBe('decayed');
   });
 });

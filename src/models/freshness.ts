@@ -40,3 +40,42 @@ export function calculateNewInterval(
       return 1;
   }
 }
+
+// ─── Task 3: Shielding + Effective State ────────────────────────────────────
+
+export interface CellWithState {
+  rawState: FreshnessState;
+  hasCompletions: boolean;
+}
+
+export function isShielded(
+  cellIndex: number,
+  cells: CellWithState[],
+  fadeEnabled: boolean,
+): boolean {
+  if (!fadeEnabled) return false;
+
+  const cell = cells[cellIndex];
+  if (!cell.hasCompletions) return false;
+
+  // Find next higher completed cell (skip incomplete cells)
+  for (let i = cellIndex + 1; i < cells.length; i++) {
+    if (cells[i].hasCompletions) {
+      return cells[i].rawState !== 'decayed';
+    }
+  }
+
+  // No higher completed cell — this is the highest, fades first
+  return false;
+}
+
+export function effectiveFreshnessState(
+  rawState: FreshnessState,
+  isShieldedFlag: boolean,
+  fadeEnabled: boolean,
+): FreshnessState {
+  if (rawState === 'incomplete') return 'incomplete';
+  if (!fadeEnabled) return 'fresh';
+  if (isShieldedFlag) return 'fresh';
+  return rawState;
+}
