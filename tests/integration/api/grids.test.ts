@@ -473,6 +473,64 @@ describe('Grid API — Detail', () => {
     const res = await getGrid('not-a-uuid');
     expect(res.status).toBe(400);
   });
+
+  it('GET /grids/[id] excludes soft-deleted rows from detail', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Soft Delete Test' },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 1,
+      },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 1,
+        startMeasure: 9,
+        endMeasure: 16,
+        targetTempo: 120,
+        steps: 1,
+        deletedAt: new Date(),
+      },
+    });
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+    expect(body.rows).toHaveLength(1);
+    expect(body.rows[0].sortOrder).toBe(0);
+  });
+
+  it('GET /grids/[id] returns piece: null on rows without a piece', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Piece Null Test' },
+    });
+    await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 1,
+      },
+    });
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+    expect(body.rows[0].piece).toBeNull();
+  });
 });
 
 // ─── Task 12: Delete Grid (tests 40–46) ──────────────────────────────────────
