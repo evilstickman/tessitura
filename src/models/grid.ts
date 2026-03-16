@@ -1,4 +1,7 @@
 import { prisma } from '@/lib/db';
+import { ValidationError } from '@/lib/errors';
+
+export { ValidationError } from '@/lib/errors';
 
 export interface GridInput {
   name: string;
@@ -8,13 +11,6 @@ export interface GridInput {
 export interface ValidatedGridInput {
   name: string;
   notes: string | null;
-}
-
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
 }
 
 /**

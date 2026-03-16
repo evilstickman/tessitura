@@ -5,15 +5,10 @@ import {
   listGrids as listGridsModel,
   getGridById,
   deleteGrid as deleteGridModel,
-  ValidationError,
 } from '@/models/grid';
+import { ValidationError } from '@/lib/errors';
+import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
 import { formatGrid, formatGridDetail, formatGridList } from '@/views/grid';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function errorResponse(message: string, code: string, status: number) {
-  return NextResponse.json({ error: { message, code } }, { status });
-}
 
 export async function createGrid(request: NextRequest) {
   try {
