@@ -751,3 +751,63 @@ describe('Cell API — Concurrent Same-Day Completion', () => {
     expect(statuses).toEqual([201, 409]);
   });
 });
+
+// ─── Cascading Fade ──────────────────────────────────────────────────────────
+
+describe('Cell API — Cascading Fade', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('fades highest cell first, then cascades down', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 6);
+
+    // Complete all 6 cells
+    for (const cell of cells) {
+      await completeCell(grid.id, row.id, cell.id);
+    }
+
+    // Fetch grid detail — verify only highest cell (index 5) is unshielded
+    let gridRes = await getGrid(grid.id);
+    let gridBody = await gridRes.json();
+    let rowData = gridBody.rows[0];
+    expect(rowData.cells[5].isShielded).toBe(false); // highest completed = unshielded
+    expect(rowData.cells[4].isShielded).toBe(true);  // shielded by cell 5
+    expect(rowData.cells[3].isShielded).toBe(true);
+    expect(rowData.cells[2].isShielded).toBe(true);
+    expect(rowData.cells[1].isShielded).toBe(true);
+    expect(rowData.cells[0].isShielded).toBe(true);
+
+    // Backdate highest cell's completion to make it decayed
+    // interval=1, decayed = daysSince > 2. Set completion to 5 days ago.
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setUTCDate(fiveDaysAgo.getUTCDate() - 5);
+    const fiveDaysAgoUTC = new Date(Date.UTC(
+      fiveDaysAgo.getUTCFullYear(), fiveDaysAgo.getUTCMonth(), fiveDaysAgo.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cells[5].id, deletedAt: null },
+      data: { completionDate: fiveDaysAgoUTC },
+    });
+
+    // Re-fetch — cell 5 is decayed, cell 4 is now unshielded, rest still shielded
+    gridRes = await getGrid(grid.id);
+    gridBody = await gridRes.json();
+    rowData = gridBody.rows[0];
+    expect(rowData.cells[5].freshnessState).toBe('decayed');
+    expect(rowData.cells[5].isShielded).toBe(false); // highest, never shielded
+    expect(rowData.cells[4].isShielded).toBe(false); // shield has fallen (cell 5 decayed)
+    expect(rowData.cells[3].isShielded).toBe(true);  // still shielded by cell 4
+    expect(rowData.cells[2].isShielded).toBe(true);
+    expect(rowData.cells[1].isShielded).toBe(true);
+    expect(rowData.cells[0].isShielded).toBe(true);
+
+    // Verify completion percentage changed: with fade ON, decayed cells excluded
+    // 5 fresh/aging/stale + 1 decayed = 5/6 * 100 = 83.33%
+    // But cell 4 is now unshielded and fresh (completed today), so still counts
+    expect(gridBody.completionPercentage).toBeCloseTo(500 / 6, 1);
+  });
+});
