@@ -6,7 +6,7 @@ import {
   undoCompletion,
   resetCell,
 } from '@/controllers/cell';
-import { updateFade } from '@/controllers/grid';
+import { updateFade, getGrid } from '@/controllers/grid';
 
 const prisma = getTestPrisma();
 
@@ -462,5 +462,292 @@ describe('Grid API — Update Fade Auth failure', () => {
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error.code).toBe('AUTHENTICATION_ERROR');
+  });
+});
+
+// ─── Interval Progression ────────────────────────────────────────────────────
+
+describe('Cell API — Interval Progression', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('complete fresh cell: interval doubles (1 → 2)', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+    const cell = cells[0];
+
+    // First completion: interval becomes 1 (incomplete → 1)
+    const first = await completeCell(grid.id, row.id, cell.id);
+    expect(first.status).toBe(201);
+    const firstBody = await first.json();
+    expect(firstBody.freshnessIntervalDays).toBe(1);
+
+    // Backdate completion to yesterday so we can complete again today
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yesterdayUTC = new Date(Date.UTC(
+      yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cell.id },
+      data: { completionDate: yesterdayUTC },
+    });
+
+    // Second completion: cell is fresh (daysSince=1 <= interval*0.5? No, 1 > 0.5, but <= 1 = aging)
+    // Actually with interval=1: daysSince=1 <= 1*0.5=0.5? No. daysSince=1 <= 1? Yes → aging.
+    // Aging → interval doubles: 1 * 2 = 2
+    const second = await completeCell(grid.id, row.id, cell.id);
+    expect(second.status).toBe(201);
+    const secondBody = await second.json();
+    expect(secondBody.freshnessIntervalDays).toBe(2);
+  });
+
+  it('complete stale cell: interval resets to 1', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+    const cell = cells[0];
+
+    // First completion: interval becomes 1
+    await completeCell(grid.id, row.id, cell.id);
+
+    // Directly set interval to 4 via DB (simulating built-up interval)
+    await prisma.practiceCell.update({
+      where: { id: cell.id },
+      data: { freshnessIntervalDays: 4 },
+    });
+
+    // Backdate completion to 5 days ago to make cell stale
+    // (daysSince=5 > interval=4 but <= interval*2=8 → stale)
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setUTCDate(fiveDaysAgo.getUTCDate() - 5);
+    const fiveDaysAgoUTC = new Date(Date.UTC(
+      fiveDaysAgo.getUTCFullYear(), fiveDaysAgo.getUTCMonth(), fiveDaysAgo.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cell.id, deletedAt: null },
+      data: { completionDate: fiveDaysAgoUTC },
+    });
+
+    // Complete again: stale → interval resets to 1
+    const res = await completeCell(grid.id, row.id, cell.id);
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.freshnessIntervalDays).toBe(1);
+  });
+
+  it('complete a shielded cell: interval uses raw state (stale), not effective state (fresh)', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    // Create 2 cells: cell[0] (lower tempo) and cell[1] (higher tempo)
+    const { grid, row, cells } = await createGridWithCells(user.id, 2);
+
+    // Complete both cells
+    await completeCell(grid.id, row.id, cells[0].id);
+    await completeCell(grid.id, row.id, cells[1].id);
+
+    // Set cell[0]'s interval to 4 (simulating built-up interval)
+    await prisma.practiceCell.update({
+      where: { id: cells[0].id },
+      data: { freshnessIntervalDays: 4 },
+    });
+
+    // Backdate cell[0]'s completion to 5 days ago → raw state = stale
+    // (daysSince=5 > interval=4 but <= interval*2=8 → stale)
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setUTCDate(fiveDaysAgo.getUTCDate() - 5);
+    const fiveDaysAgoUTC = new Date(Date.UTC(
+      fiveDaysAgo.getUTCFullYear(), fiveDaysAgo.getUTCMonth(), fiveDaysAgo.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cells[0].id, deletedAt: null },
+      data: { completionDate: fiveDaysAgoUTC },
+    });
+
+    // Cell[0] is shielded (cell[1] above it is fresh, NOT decayed),
+    // but raw state is stale (daysSince=5 > interval=4).
+    // Verify via grid detail that cell[0] is shielded with effective state 'fresh'
+    const gridRes = await getGrid(grid.id);
+    const gridBody = await gridRes.json();
+    const rowData = gridBody.rows[0];
+    expect(rowData.cells[0].isShielded).toBe(true);
+    expect(rowData.cells[0].freshnessState).toBe('fresh'); // effective (shielded)
+
+    // Now complete the shielded cell: should use RAW state (stale) → interval resets to 1
+    const res = await completeCell(grid.id, row.id, cells[0].id);
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.freshnessIntervalDays).toBe(1); // reset, not doubled
+  });
+});
+
+// ─── Fade Toggle Effects ─────────────────────────────────────────────────────
+
+describe('Cell API — Fade Toggle Effects', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  function makeFadeRequest(gridId: string, body: unknown): NextRequest {
+    return new NextRequest(`http://localhost:3000/api/grids/${gridId}/fade`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  it('fade OFF: all completed cells = 100% completion', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 3);
+
+    // Complete all 3 cells
+    for (const cell of cells) {
+      await completeCell(grid.id, row.id, cell.id);
+    }
+
+    // Turn fade off
+    const fadeRes = await updateFade(grid.id, makeFadeRequest(grid.id, { fadeEnabled: false }));
+    const fadeBody = await fadeRes.json();
+    expect(fadeBody.fadeEnabled).toBe(false);
+    expect(fadeBody.completionPercentage).toBe(100);
+
+    // All cells should show fresh state when fade is off
+    const rowData = fadeBody.rows[0];
+    for (const cell of rowData.cells) {
+      expect(cell.freshnessState).toBe('fresh');
+    }
+  });
+
+  it('fade ON: decayed cells excluded from completion percentage', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 2);
+
+    // Complete both cells
+    await completeCell(grid.id, row.id, cells[0].id);
+    await completeCell(grid.id, row.id, cells[1].id);
+
+    // Backdate both to make them decayed: interval=1, need daysSince > 2
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setUTCDate(fiveDaysAgo.getUTCDate() - 5);
+    const fiveDaysAgoUTC = new Date(Date.UTC(
+      fiveDaysAgo.getUTCFullYear(), fiveDaysAgo.getUTCMonth(), fiveDaysAgo.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: { in: [cells[0].id, cells[1].id] } },
+      data: { completionDate: fiveDaysAgoUTC },
+    });
+
+    // Grid has fade ON by default
+    const gridRes = await getGrid(grid.id);
+    const gridBody = await gridRes.json();
+    expect(gridBody.fadeEnabled).toBe(true);
+    // Both decayed → 0% (decayed cells excluded from completion percentage)
+    expect(gridBody.completionPercentage).toBe(0);
+  });
+});
+
+// ─── UTC Date-Boundary Tests ─────────────────────────────────────────────────
+
+describe('Cell API — UTC Date Boundaries', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('backdate completion to yesterday, complete again today → 201', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    // Complete today
+    const first = await completeCell(grid.id, row.id, cells[0].id);
+    expect(first.status).toBe(201);
+
+    // Backdate to yesterday
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    const yesterdayUTC = new Date(Date.UTC(
+      yesterday.getUTCFullYear(), yesterday.getUTCMonth(), yesterday.getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cells[0].id },
+      data: { completionDate: yesterdayUTC },
+    });
+
+    // Complete again today — different UTC date, should succeed
+    const second = await completeCell(grid.id, row.id, cells[0].id);
+    expect(second.status).toBe(201);
+  });
+
+  it('completionDate in response is YYYY-MM-DD format', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    const res = await completeCell(grid.id, row.id, cells[0].id);
+    const body = await res.json();
+
+    // lastCompletionDate should be YYYY-MM-DD
+    expect(body.lastCompletionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    // Completions array also uses YYYY-MM-DD
+    expect(body.completions[0].completionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('backdate to same UTC date, attempt again → 409', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    // Complete today
+    await completeCell(grid.id, row.id, cells[0].id);
+
+    // "Backdate" to same UTC date (today) — this is a no-op but simulates
+    // a scenario where the completion is still on today's date
+    const todayUTC = new Date(Date.UTC(
+      new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate(),
+    ));
+    await prisma.practiceCellCompletion.updateMany({
+      where: { practiceCellId: cells[0].id },
+      data: { completionDate: todayUTC },
+    });
+
+    // Attempt again → 409 (same UTC date)
+    const second = await completeCell(grid.id, row.id, cells[0].id);
+    expect(second.status).toBe(409);
+  });
+});
+
+// ─── Concurrent Same-Day Completion ──────────────────────────────────────────
+
+describe('Cell API — Concurrent Same-Day Completion', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('Promise.all: exactly one 201 and one 409', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    const [res1, res2] = await Promise.all([
+      completeCell(grid.id, row.id, cells[0].id),
+      completeCell(grid.id, row.id, cells[0].id),
+    ]);
+
+    const statuses = [res1.status, res2.status].sort();
+    expect(statuses).toEqual([201, 409]);
   });
 });

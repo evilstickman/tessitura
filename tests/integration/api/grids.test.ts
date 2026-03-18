@@ -7,6 +7,7 @@ import {
   getGrid,
   deleteGrid,
 } from '@/controllers/grid';
+import { completeCell } from '@/controllers/cell';
 
 const prisma = getTestPrisma();
 
@@ -655,5 +656,116 @@ describe('Grid API — Delete', () => {
     const afterRes = await listGrids();
     const afterBody = await afterRes.json();
     expect(afterBody).toHaveLength(0);
+  });
+});
+
+// ─── Grid Detail — Freshness Fields ─────────────────────────────────────────
+
+describe('Grid API — Detail Freshness Fields', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  async function createGridWithCells(userId: string, steps: number) {
+    const grid = await prisma.practiceGrid.create({
+      data: { userId, name: 'Freshness Grid', fadeEnabled: true },
+    });
+    const row = await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 4,
+        targetTempo: 120,
+        steps,
+      },
+    });
+    const percentages = Array.from({ length: steps }, (_, i) =>
+      steps === 1 ? 1.0 : 0.4 + (0.6 * i) / (steps - 1),
+    );
+    await prisma.practiceCell.createMany({
+      data: percentages.map((p, i) => ({
+        practiceRowId: row.id,
+        stepNumber: i,
+        targetTempoPercentage: p,
+      })),
+    });
+    const cells = await prisma.practiceCell.findMany({
+      where: { practiceRowId: row.id },
+      orderBy: { stepNumber: 'asc' },
+    });
+    return { grid, row, cells };
+  }
+
+  it('grid detail includes completionPercentage and freshnessSummary', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 3);
+
+    // Complete 1 of 3 cells
+    await completeCell(grid.id, row.id, cells[0].id);
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+
+    expect(body).toHaveProperty('completionPercentage');
+    expect(body).toHaveProperty('freshnessSummary');
+    expect(typeof body.completionPercentage).toBe('number');
+    expect(body.freshnessSummary).toHaveProperty('fresh');
+    expect(body.freshnessSummary).toHaveProperty('aging');
+    expect(body.freshnessSummary).toHaveProperty('stale');
+    expect(body.freshnessSummary).toHaveProperty('decayed');
+    expect(body.freshnessSummary).toHaveProperty('incomplete');
+
+    // 1 fresh, 2 incomplete → completionPercentage = 1/3 * 100
+    // With fade ON: fresh+aging+stale count → 1/3 * 100
+    expect(body.freshnessSummary.fresh).toBe(1);
+    expect(body.freshnessSummary.incomplete).toBe(2);
+    expect(body.completionPercentage).toBeCloseTo(100 / 3, 1);
+  });
+
+  it('row-level completionPercentage and freshnessSummary in grid detail', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 2);
+
+    // Complete 1 of 2 cells
+    await completeCell(grid.id, row.id, cells[0].id);
+
+    const res = await getGrid(grid.id);
+    const body = await res.json();
+
+    const rowData = body.rows[0];
+    expect(rowData).toHaveProperty('completionPercentage');
+    expect(rowData).toHaveProperty('freshnessSummary');
+    expect(rowData.completionPercentage).toBe(50);
+    expect(rowData.freshnessSummary.fresh).toBe(1);
+    expect(rowData.freshnessSummary.incomplete).toBe(1);
+  });
+
+  it('cell response includes freshnessState, lastCompletionDate, isShielded', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    // Before completion: incomplete
+    const beforeRes = await getGrid(grid.id);
+    const beforeBody = await beforeRes.json();
+    const beforeCell = beforeBody.rows[0].cells[0];
+    expect(beforeCell.freshnessState).toBe('incomplete');
+    expect(beforeCell.lastCompletionDate).toBeNull();
+    expect(beforeCell.isShielded).toBe(false);
+
+    // After completion: fresh
+    await completeCell(grid.id, row.id, cells[0].id);
+    const afterRes = await getGrid(grid.id);
+    const afterBody = await afterRes.json();
+    const afterCell = afterBody.rows[0].cells[0];
+    expect(afterCell.freshnessState).toBe('fresh');
+    expect(afterCell.lastCompletionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(typeof afterCell.isShielded).toBe('boolean');
   });
 });
