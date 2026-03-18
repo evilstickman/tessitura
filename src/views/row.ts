@@ -76,7 +76,7 @@ interface CellWithSiblings extends RowCell {
 function formatCompletion(completion: RowCompletion) {
   return {
     id: completion.id,
-    completionDate: completion.completionDate.toISOString(),
+    completionDate: completion.completionDate.toISOString().slice(0, 10),
     createdAt: completion.createdAt.toISOString(),
   };
 }

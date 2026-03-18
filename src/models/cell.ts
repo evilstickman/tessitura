@@ -121,8 +121,12 @@ export async function completeCell(gridId: string, rowId: string, cellId: string
       });
     }
 
-    // Calculate new interval: first completion → 'incomplete' state, otherwise use raw state
-    const rawState = calculateFreshnessState(today, cell.freshnessIntervalDays, now);
+    // Calculate new interval based on cell's state BEFORE this completion.
+    // Use the prior last completion date (not today) so stale/decayed cells get interval reset to 1.
+    const priorLastCompletion = cell.completions.length > 0
+      ? cell.completions[cell.completions.length - 1].completionDate
+      : null;
+    const rawState = calculateFreshnessState(priorLastCompletion, cell.freshnessIntervalDays, now);
     const stateForInterval = cell.completions.length === 0 ? 'incomplete' : rawState;
     const newInterval = calculateNewInterval(cell.freshnessIntervalDays, stateForInterval);
 
