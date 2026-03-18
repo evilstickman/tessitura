@@ -67,11 +67,11 @@ const CELL_RETURN_INCLUDE = {
 };
 
 /**
- * Returns midnight UTC today as a Date.
+ * Truncates a Date to midnight UTC (date-only).
  * Used for completionDate which is @db.Date in Prisma schema.
+ * Derives from the caller's `now` — never samples the clock itself.
  */
-function todayUTC(): Date {
-  const now = new Date();
+export function dateOnlyUTC(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
@@ -91,7 +91,7 @@ export async function completeCell(gridId: string, rowId: string, cellId: string
     const cell = await findOwnedCell(tx, gridId, rowId, cellId, userId);
     if (!cell) return null;
 
-    const today = todayUTC();
+    const today = dateOnlyUTC(now);
 
     // Check for existing completion today (including soft-deleted).
     // Explicit `deletedAt` key bypasses the soft-delete extension filter;
@@ -152,7 +152,7 @@ export async function completeCell(gridId: string, rowId: string, cellId: string
  *
  * Returns cell with CELL_RETURN_INCLUDE for formatCellResponse, or null if not found.
  */
-export async function undoCompletion(gridId: string, rowId: string, cellId: string, userId: string) {
+export async function undoCompletion(gridId: string, rowId: string, cellId: string, userId: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     const cell = await findOwnedCell(tx, gridId, rowId, cellId, userId);
     if (!cell) return null;
@@ -165,7 +165,7 @@ export async function undoCompletion(gridId: string, rowId: string, cellId: stri
     const mostRecent = cell.completions[cell.completions.length - 1];
     await tx.practiceCellCompletion.update({
       where: { id: mostRecent.id },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: now },
     });
 
     // Re-count INSIDE tx (not from pre-fetch) to ensure ACID correctness

@@ -46,7 +46,7 @@ export async function undoCompletion(gridId: string, rowId: string, cellId: stri
     }
     const now = new Date();
     const userId = await getCurrentUserId();
-    const cell = await undoCompletionModel(gridId, rowId, cellId, userId);
+    const cell = await undoCompletionModel(gridId, rowId, cellId, userId, now);
     if (!cell) {
       return errorResponse('Cell not found', 'NOT_FOUND', 404);
     }
