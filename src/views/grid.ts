@@ -31,8 +31,8 @@ export function formatGrid(grid: GridRecord) {
   };
 }
 
-export function formatGridDetail(grid: GridDetailRecord) {
-  const rows = grid.practiceRows.map((row) => formatRow(row, grid.fadeEnabled));
+export function formatGridDetail(grid: GridDetailRecord, now: Date) {
+  const rows = grid.practiceRows.map((row) => formatRow(row, grid.fadeEnabled, now));
 
   const allCellStates: CellWithEffectiveState[] = rows.flatMap((row) =>
     row.cells.map((cell) => ({ effectiveState: cell.freshnessState }))

@@ -55,7 +55,7 @@ describe('Row View — formatRow', () => {
   });
 
   it('strips internal fields', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result).not.toHaveProperty('practiceGridId');
     expect(result).not.toHaveProperty('pieceId');
     expect(result).not.toHaveProperty('deletedAt');
@@ -63,13 +63,13 @@ describe('Row View — formatRow', () => {
   });
 
   it('formats timestamps as ISO 8601', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result.createdAt).toBe('2026-03-15T10:00:00.000Z');
     expect(result.updatedAt).toBe('2026-03-15T11:00:00.000Z');
   });
 
   it('includes nested piece without userId or deletedAt', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result.piece).toBeDefined();
     expect(result.piece!.title).toBe('Firebird Suite');
     expect(result.piece).not.toHaveProperty('userId');
@@ -79,24 +79,24 @@ describe('Row View — formatRow', () => {
 
   it('returns null piece when row has no piece', () => {
     const row = { ...baseRow, piece: null, pieceId: null };
-    const result = formatRow(row, true);
+    const result = formatRow(row, true, new Date());
     expect(result.piece).toBeNull();
   });
 
   it('calculates targetTempoBpm on cells', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     // 0.4 * 168 = 67.2 → rounds to 67
     expect(result.cells[0].targetTempoBpm).toBe(67);
   });
 
   it('strips internal fields from cells', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result.cells[0]).not.toHaveProperty('practiceRowId');
     expect(result.cells[0]).not.toHaveProperty('deletedAt');
   });
 
   it('returns freshnessState "incomplete" and lastCompletionDate null for cell with no completions', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result.cells[0].freshnessState).toBe('incomplete');
     expect(result.cells[0].lastCompletionDate).toBeNull();
     expect(result.cells[0].isShielded).toBe(false);
@@ -116,7 +116,7 @@ describe('Row View — formatRow', () => {
       ],
     };
     const row = { ...baseRow, practiceCells: [cellWithCompletion] };
-    const result = formatRow(row, true);
+    const result = formatRow(row, true, new Date());
     expect(result.cells[0].lastCompletionDate).toBe('2026-03-15');
   });
 
@@ -136,12 +136,12 @@ describe('Row View — formatRow', () => {
       ],
     };
     const row = { ...baseRow, practiceCells: [cellWithCompletion] };
-    const result = formatRow(row, true);
+    const result = formatRow(row, true, new Date());
     expect(result.cells[0].freshnessState).toBe('fresh');
   });
 
   it('returns completionPercentage and freshnessSummary', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result).toHaveProperty('completionPercentage');
     expect(result).toHaveProperty('freshnessSummary');
     expect(typeof result.completionPercentage).toBe('number');
@@ -153,7 +153,7 @@ describe('Row View — formatRow', () => {
   });
 
   it('computes completionPercentage 0 when all cells are incomplete', () => {
-    const result = formatRow(baseRow, true);
+    const result = formatRow(baseRow, true, new Date());
     expect(result.completionPercentage).toBe(0);
     expect(result.freshnessSummary.incomplete).toBe(1);
   });
@@ -165,7 +165,7 @@ describe('Row View — formatRow', () => {
       { ...baseCell, id: 'cell-mid', stepNumber: 1, targetTempoPercentage: 0.7, completions: [] },
     ];
     const row = { ...baseRow, practiceCells: cells };
-    const result = formatRow(row, true);
+    const result = formatRow(row, true, new Date());
     // Cells should be sorted by targetTempoPercentage ascending in output
     expect(result.cells[0].targetTempoPercentage).toBe(0.4);
     expect(result.cells[1].targetTempoPercentage).toBe(0.7);
@@ -206,13 +206,13 @@ describe('Row View — formatRow', () => {
     const row = { ...baseRow, practiceCells: cells };
 
     // With fade enabled: lower cell is shielded by higher (stale, not decayed)
-    const resultFade = formatRow(row, true);
+    const resultFade = formatRow(row, true, new Date());
     expect(resultFade.cells[0].isShielded).toBe(true);
     expect(resultFade.cells[0].freshnessState).toBe('fresh'); // shielded → fresh
     expect(resultFade.cells[1].isShielded).toBe(false);
 
     // With fade disabled: no shielding
-    const resultNoFade = formatRow(row, false);
+    const resultNoFade = formatRow(row, false, new Date());
     expect(resultNoFade.cells[0].isShielded).toBe(false);
     expect(resultNoFade.cells[0].freshnessState).toBe('fresh'); // fade off → all completed = fresh
   });

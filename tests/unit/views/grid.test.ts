@@ -93,7 +93,7 @@ describe('Grid view — formatGridDetail', () => {
 
   // Test 13
   it('includes nested rows, cells, and completions with correct filtering', () => {
-    const result = formatGridDetail(mockGridWithRows);
+    const result = formatGridDetail(mockGridWithRows, new Date());
     expect(result.rows).toHaveLength(1);
     expect(result.rows[0].cells).toHaveLength(2);
     expect(result.rows[0].cells[0].completions).toHaveLength(1);
@@ -111,12 +111,12 @@ describe('Grid view — formatGridDetail', () => {
   // Test 14
   it('returns empty rows array when grid has no rows', () => {
     const emptyGrid = { ...mockGrid, practiceRows: [] };
-    const result = formatGridDetail(emptyGrid);
+    const result = formatGridDetail(emptyGrid, new Date());
     expect(result.rows).toEqual([]);
   });
 
   it('returns grid-level completionPercentage and freshnessSummary', () => {
-    const result = formatGridDetail(mockGridWithRows);
+    const result = formatGridDetail(mockGridWithRows, new Date());
     expect(result).toHaveProperty('completionPercentage');
     expect(result).toHaveProperty('freshnessSummary');
     expect(typeof result.completionPercentage).toBe('number');
@@ -131,7 +131,7 @@ describe('Grid view — formatGridDetail', () => {
     // mockGridWithRows has 2 cells: one with completion (aging at 1 day since), one incomplete
     // With fade enabled: cell-1 (completed, shielded by nothing higher completed → not shielded, aging)
     // cell-2 (incomplete)
-    const result = formatGridDetail(mockGridWithRows);
+    const result = formatGridDetail(mockGridWithRows, new Date());
     // cell-1: completed 2026-03-15, interval 1, now 2026-03-16 → 1 day since → aging (> 0.5*1, <= 1)
     // Not shielded: higher cell (cell-2) has no completions, skip it. cell-1 is highest completed → not shielded
     // effective: aging
@@ -144,7 +144,7 @@ describe('Grid view — formatGridDetail', () => {
 
   it('returns completionPercentage 0 for grid with empty rows', () => {
     const emptyGrid = { ...mockGrid, practiceRows: [] };
-    const result = formatGridDetail(emptyGrid);
+    const result = formatGridDetail(emptyGrid, new Date());
     expect(result.completionPercentage).toBe(0);
     expect(result.freshnessSummary).toEqual({
       fresh: 0,
@@ -187,7 +187,7 @@ describe('Grid view — tempo rounding', () => {
 
   // Test 17
   it('rounds cell tempo values to integers', () => {
-    const result = formatGridDetail(mockGridWithRows);
+    const result = formatGridDetail(mockGridWithRows, new Date());
     // 0.7333333 * 120 = 88.0 (but could be 87.99999...)
     // The view should round to the nearest integer
     const cell = result.rows[0].cells[1];

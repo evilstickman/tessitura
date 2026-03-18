@@ -2,7 +2,7 @@
  * Pure freshness calculation functions.
  * No database access — every function accepts a `now` parameter for testability.
  *
- * Design doc: docs/plans/2026-03-16-m1.5-cell-completion-freshness-design.md
+ * Design doc: docs/specs/2026-03-16-m1.5-cell-completion-freshness-design.md
  */
 
 export type FreshnessState = 'incomplete' | 'fresh' | 'aging' | 'stale' | 'decayed';

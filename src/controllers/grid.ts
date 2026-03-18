@@ -60,6 +60,7 @@ export async function getGrid(gridId: string) {
       return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const grid = await getGridById(gridId, userId);
 
@@ -67,7 +68,7 @@ export async function getGrid(gridId: string) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatGridDetail(grid));
+    return NextResponse.json(formatGridDetail(grid, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -103,6 +104,7 @@ export async function updateFade(gridId: string, request: NextRequest) {
     if (!UUID_REGEX.test(gridId)) {
       return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
     }
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
     if (!body || typeof body.fadeEnabled !== 'boolean') {
@@ -112,7 +114,7 @@ export async function updateFade(gridId: string, request: NextRequest) {
     if (!grid) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
     }
-    return NextResponse.json(formatGridDetail(grid));
+    return NextResponse.json(formatGridDetail(grid, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);

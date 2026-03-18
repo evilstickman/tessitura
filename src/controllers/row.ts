@@ -16,6 +16,7 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -51,7 +52,7 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(result.row, result.fadeEnabled), { status: 201 });
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now), { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -69,6 +70,7 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -97,7 +99,7 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
       return errorResponse('Row not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(result.row, result.fadeEnabled));
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -115,6 +117,7 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -128,7 +131,7 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
       return errorResponse('Row not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(result.row, result.fadeEnabled));
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);

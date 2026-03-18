@@ -14,12 +14,13 @@ export async function completeCell(gridId: string, rowId: string, cellId: string
     if (!UUID_REGEX.test(gridId) || !UUID_REGEX.test(rowId) || !UUID_REGEX.test(cellId)) {
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
+    const now = new Date();
     const userId = await getCurrentUserId();
-    const cell = await completeCellModel(gridId, rowId, cellId, userId);
+    const cell = await completeCellModel(gridId, rowId, cellId, userId, now);
     if (!cell) {
       return errorResponse('Cell not found', 'NOT_FOUND', 404);
     }
-    return NextResponse.json(formatCellResponse(cell), { status: 201 });
+    return NextResponse.json(formatCellResponse(cell, now), { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -43,12 +44,13 @@ export async function undoCompletion(gridId: string, rowId: string, cellId: stri
     if (!UUID_REGEX.test(gridId) || !UUID_REGEX.test(rowId) || !UUID_REGEX.test(cellId)) {
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
+    const now = new Date();
     const userId = await getCurrentUserId();
     const cell = await undoCompletionModel(gridId, rowId, cellId, userId);
     if (!cell) {
       return errorResponse('Cell not found', 'NOT_FOUND', 404);
     }
-    return NextResponse.json(formatCellResponse(cell));
+    return NextResponse.json(formatCellResponse(cell, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -65,12 +67,13 @@ export async function resetCell(gridId: string, rowId: string, cellId: string) {
     if (!UUID_REGEX.test(gridId) || !UUID_REGEX.test(rowId) || !UUID_REGEX.test(cellId)) {
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
+    const now = new Date();
     const userId = await getCurrentUserId();
     const cell = await resetCellModel(gridId, rowId, cellId, userId);
     if (!cell) {
       return errorResponse('Cell not found', 'NOT_FOUND', 404);
     }
-    return NextResponse.json(formatCellResponse(cell));
+    return NextResponse.json(formatCellResponse(cell, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);

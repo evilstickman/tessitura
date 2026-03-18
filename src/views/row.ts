@@ -97,8 +97,7 @@ function formatCell(cell: RowCell, rowTargetTempo: number, freshness: CellFreshn
   };
 }
 
-export function formatRow(row: RowRecord, fadeEnabled: boolean) {
-  const now = new Date();
+export function formatRow(row: RowRecord, fadeEnabled: boolean, now: Date) {
 
   // Sort cells by targetTempoPercentage ascending for shielding
   const sortedCells = [...row.practiceCells]
@@ -163,10 +162,9 @@ export function formatRow(row: RowRecord, fadeEnabled: boolean) {
  * Format a single cell response for cell action endpoints (complete/undo/reset).
  * Must use ALL sibling cells to compute shielding correctly.
  */
-export function formatCellResponse(cell: CellWithSiblings) {
+export function formatCellResponse(cell: CellWithSiblings, now: Date) {
   const fadeEnabled = cell.practiceRow.practiceGrid.fadeEnabled;
   const targetTempo = cell.practiceRow.targetTempo;
-  const now = new Date();
 
   const siblings = [...cell.practiceRow.practiceCells]
     .sort((a, b) => a.targetTempoPercentage - b.targetTempoPercentage);

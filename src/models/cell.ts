@@ -86,13 +86,12 @@ function todayUTC(): Date {
  *
  * Returns cell with CELL_RETURN_INCLUDE for formatCellResponse, or null if not found.
  */
-export async function completeCell(gridId: string, rowId: string, cellId: string, userId: string) {
+export async function completeCell(gridId: string, rowId: string, cellId: string, userId: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     const cell = await findOwnedCell(tx, gridId, rowId, cellId, userId);
     if (!cell) return null;
 
     const today = todayUTC();
-    const now = new Date();
 
     // Check for existing completion today (including soft-deleted).
     // Explicit `deletedAt` key bypasses the soft-delete extension filter;
