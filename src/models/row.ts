@@ -124,9 +124,12 @@ async function findOwnedRow(gridId: string, rowId: string, userId: string) {
   const grid = await findOwnedGrid(gridId, userId);
   if (!grid) return null;
 
-  return prisma.practiceRow.findFirst({
+  const row = await prisma.practiceRow.findFirst({
     where: { id: rowId, practiceGridId: gridId, deletedAt: null },
   });
+  if (!row) return null;
+
+  return { row, fadeEnabled: grid.fadeEnabled };
 }
 
 /**
@@ -154,7 +157,7 @@ export async function createRow(gridId: string, userId: string, input: RowInput)
 
   const percentages = generateCellPercentages(validated.steps);
 
-  return prisma.$transaction(async (tx) => {
+  const row = await prisma.$transaction(async (tx) => {
     // Atomic sortOrder assignment
     const maxResult = await tx.$queryRawUnsafe<[{ max: number | null }]>(
       `SELECT MAX(sort_order) as max FROM practice_rows WHERE practice_grid_id = $1 AND deleted_at IS NULL`,
@@ -208,12 +211,15 @@ export async function createRow(gridId: string, userId: string, input: RowInput)
       },
     });
   });
+
+  return { row, fadeEnabled: grid.fadeEnabled };
 }
 
 export async function updateRow(gridId: string, rowId: string, userId: string, input: RowUpdateInput) {
-  const existingRow = await findOwnedRow(gridId, rowId, userId);
-  if (!existingRow) return null;
+  const found = await findOwnedRow(gridId, rowId, userId);
+  if (!found) return null;
 
+  const { row: existingRow, fadeEnabled } = found;
   const validated = validateRowUpdate(input);
 
   // Cross-field validation with existing values
@@ -229,7 +235,7 @@ export async function updateRow(gridId: string, rowId: string, userId: string, i
 
   const stepsChanged = validated.steps != null && validated.steps !== existingRow.steps;
 
-  return prisma.$transaction(async (tx) => {
+  const row = await prisma.$transaction(async (tx) => {
     // Update row fields
     const rowData: Record<string, unknown> = {};
     if (validated.startMeasure !== undefined) rowData.startMeasure = validated.startMeasure;
@@ -297,6 +303,8 @@ export async function updateRow(gridId: string, rowId: string, userId: string, i
       },
     });
   });
+
+  return { row, fadeEnabled };
 }
 
 export async function updateRowPriority(
@@ -310,10 +318,12 @@ export async function updateRowPriority(
     throw new ValidationError(`Priority must be one of: ${validPriorities.join(', ')}`);
   }
 
-  const existingRow = await findOwnedRow(gridId, rowId, userId);
-  if (!existingRow) return null;
+  const found = await findOwnedRow(gridId, rowId, userId);
+  if (!found) return null;
 
-  return prisma.$transaction(async (tx) => {
+  const { fadeEnabled } = found;
+
+  const row = await prisma.$transaction(async (tx) => {
     await tx.practiceRow.update({
       where: { id: rowId },
       data: { priority: priority as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' },
@@ -342,11 +352,13 @@ export async function updateRowPriority(
       },
     });
   });
+
+  return { row, fadeEnabled };
 }
 
 export async function deleteRow(gridId: string, rowId: string, userId: string): Promise<boolean> {
-  const existingRow = await findOwnedRow(gridId, rowId, userId);
-  if (!existingRow) return false;
+  const found = await findOwnedRow(gridId, rowId, userId);
+  if (!found) return false;
 
   const now = new Date();
 

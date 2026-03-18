@@ -18,6 +18,7 @@ vi.mock('@/models/grid', () => ({
   listGrids: vi.fn(() => { throw new Error('db exploded'); }),
   getGridById: vi.fn(() => { throw new Error('db exploded'); }),
   deleteGrid: vi.fn(() => { throw new Error('db exploded'); }),
+  updateGridFade: vi.fn(() => { throw new Error('db exploded'); }),
 }));
 
 vi.mock('@/models/piece', () => ({
@@ -33,6 +34,12 @@ vi.mock('@/models/row', () => ({
   updateRow: vi.fn(() => { throw new Error('db exploded'); }),
   updateRowPriority: vi.fn(() => { throw new Error('db exploded'); }),
   deleteRow: vi.fn(() => { throw new Error('db exploded'); }),
+}));
+
+vi.mock('@/models/cell', () => ({
+  completeCell: vi.fn(() => { throw new Error('db exploded'); }),
+  undoCompletion: vi.fn(() => { throw new Error('db exploded'); }),
+  resetCell: vi.fn(() => { throw new Error('db exploded'); }),
 }));
 
 function jsonRequest(method: string, body: unknown): NextRequest {
@@ -80,6 +87,15 @@ describe('Grid controller — unexpected errors → 500', () => {
   it('deleteGrid returns 500 on unexpected error', async () => {
     const { deleteGrid } = await import('@/controllers/grid');
     const res = await deleteGrid(VALID_UUID);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('updateFade returns 500 on unexpected error', async () => {
+    const { updateFade } = await import('@/controllers/grid');
+    const req = jsonRequest('PUT', { fadeEnabled: true });
+    const res = await updateFade(VALID_UUID, req);
     expect(res.status).toBe(500);
     const data = await res.json();
     expect(data.error.code).toBe('INTERNAL_ERROR');
@@ -167,6 +183,34 @@ describe('Row controller — unexpected errors → 500', () => {
   it('deleteRow returns 500 on unexpected error', async () => {
     const { deleteRow } = await import('@/controllers/row');
     const res = await deleteRow(VALID_UUID, VALID_UUID);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error.code).toBe('INTERNAL_ERROR');
+  });
+});
+
+// ─── Cell controller ──────────────────────────────────────────────────────────
+
+describe('Cell controller — unexpected errors → 500', () => {
+  it('completeCell returns 500 on unexpected error', async () => {
+    const { completeCell } = await import('@/controllers/cell');
+    const res = await completeCell(VALID_UUID, VALID_UUID, VALID_UUID);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('undoCompletion returns 500 on unexpected error', async () => {
+    const { undoCompletion } = await import('@/controllers/cell');
+    const res = await undoCompletion(VALID_UUID, VALID_UUID, VALID_UUID);
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error.code).toBe('INTERNAL_ERROR');
+  });
+
+  it('resetCell returns 500 on unexpected error', async () => {
+    const { resetCell } = await import('@/controllers/cell');
+    const res = await resetCell(VALID_UUID, VALID_UUID, VALID_UUID);
     expect(res.status).toBe(500);
     const data = await res.json();
     expect(data.error.code).toBe('INTERNAL_ERROR');

@@ -15,6 +15,13 @@ vi.mock('@/controllers/grid', () => ({
   listGrids: vi.fn(() => NextResponse.json({ mock: 'listGrids' })),
   getGrid: vi.fn(() => NextResponse.json({ mock: 'getGrid' })),
   deleteGrid: vi.fn(() => new NextResponse(null, { status: 204 })),
+  updateFade: vi.fn(() => NextResponse.json({ mock: 'updateFade' })),
+}));
+
+vi.mock('@/controllers/cell', () => ({
+  completeCell: vi.fn(() => NextResponse.json({ mock: 'completeCell' }, { status: 201 })),
+  undoCompletion: vi.fn(() => NextResponse.json({ mock: 'undoCompletion' })),
+  resetCell: vi.fn(() => NextResponse.json({ mock: 'resetCell' })),
 }));
 
 vi.mock('@/controllers/piece', () => ({
@@ -187,5 +194,61 @@ describe('Row routes — /api/grids/[id]/rows/[rowId]/priority', () => {
 
     await PUT(req, params);
     expect(updatePriority).toHaveBeenCalledWith('grid-1', 'row-1', req);
+  });
+});
+
+// ─── Cell routes ──────────────────────────────────────────────────────────────
+
+describe('Cell routes — /api/grids/[id]/rows/[rowId]/cells/[cellId]/complete', () => {
+  it('POST extracts ids and delegates to completeCell', async () => {
+    const { POST } = await import('@/app/api/grids/[id]/rows/[rowId]/cells/[cellId]/complete/route');
+    const { completeCell } = await import('@/controllers/cell');
+    const req = makeRequest('POST');
+    const params = makeParams({ id: 'grid-1', rowId: 'row-1', cellId: 'cell-1' });
+
+    const res = await POST(req, params);
+    expect(completeCell).toHaveBeenCalledWith('grid-1', 'row-1', 'cell-1');
+    expect(res.status).toBe(201);
+  });
+});
+
+describe('Cell routes — /api/grids/[id]/rows/[rowId]/cells/[cellId]/undo', () => {
+  it('POST extracts ids and delegates to undoCompletion', async () => {
+    const { POST } = await import('@/app/api/grids/[id]/rows/[rowId]/cells/[cellId]/undo/route');
+    const { undoCompletion } = await import('@/controllers/cell');
+    const req = makeRequest('POST');
+    const params = makeParams({ id: 'grid-1', rowId: 'row-1', cellId: 'cell-1' });
+
+    const res = await POST(req, params);
+    expect(undoCompletion).toHaveBeenCalledWith('grid-1', 'row-1', 'cell-1');
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('Cell routes — /api/grids/[id]/rows/[rowId]/cells/[cellId]/reset', () => {
+  it('POST extracts ids and delegates to resetCell', async () => {
+    const { POST } = await import('@/app/api/grids/[id]/rows/[rowId]/cells/[cellId]/reset/route');
+    const { resetCell } = await import('@/controllers/cell');
+    const req = makeRequest('POST');
+    const params = makeParams({ id: 'grid-1', rowId: 'row-1', cellId: 'cell-1' });
+
+    const res = await POST(req, params);
+    expect(resetCell).toHaveBeenCalledWith('grid-1', 'row-1', 'cell-1');
+    expect(res.status).toBe(200);
+  });
+});
+
+// ─── Fade route ───────────────────────────────────────────────────────────────
+
+describe('Fade route — /api/grids/[id]/fade', () => {
+  it('PUT extracts id and delegates to updateFade', async () => {
+    const { PUT } = await import('@/app/api/grids/[id]/fade/route');
+    const { updateFade } = await import('@/controllers/grid');
+    const req = makeRequest('PUT');
+    const params = makeParams({ id: 'grid-1' });
+
+    const res = await PUT(req, params);
+    expect(updateFade).toHaveBeenCalledWith('grid-1', req);
+    expect(res.status).toBe(200);
   });
 });

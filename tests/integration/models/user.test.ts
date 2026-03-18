@@ -87,7 +87,6 @@ describe('User model', () => {
     expect(user.emailVerified).toBe(false);
     expect(user.timezone).toBe('UTC');
     expect(user.defaultFadeEnabled).toBe(true);
-    expect(user.freshnessResetStrategy).toBe('FULL');
     expect(user.deletedAt).toBeNull();
   });
 

@@ -1,4 +1,9 @@
 import { formatRow } from '@/views/row';
+import {
+  calculateCompletionPercentage,
+  calculateFreshnessSummary,
+  type CellWithEffectiveState,
+} from '@/models/freshness';
 
 interface GridRecord {
   id: string;
@@ -26,10 +31,18 @@ export function formatGrid(grid: GridRecord) {
   };
 }
 
-export function formatGridDetail(grid: GridDetailRecord) {
+export function formatGridDetail(grid: GridDetailRecord, now: Date) {
+  const rows = grid.practiceRows.map((row) => formatRow(row, grid.fadeEnabled, now));
+
+  const allCellStates: CellWithEffectiveState[] = rows.flatMap((row) =>
+    row.cells.map((cell) => ({ effectiveState: cell.freshnessState }))
+  );
+
   return {
     ...formatGrid(grid),
-    rows: grid.practiceRows.map(formatRow),
+    completionPercentage: calculateCompletionPercentage(allCellStates, grid.fadeEnabled),
+    freshnessSummary: calculateFreshnessSummary(allCellStates),
+    rows,
   };
 }
 

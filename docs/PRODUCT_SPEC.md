@@ -284,18 +284,33 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - Double-click creates duplicate completion records for the same cell on the same date
   - Completion percentage exceeds 100% or goes negative
 
-**UC-1.7: Uncomplete Practice Cell**
-- As a musician, I want to right-click or long-press a completed cell to undo the completion so that I can correct mistakes.
+**UC-1.7a: Undo Completion**
+- As a musician, I want to undo an accidental completion so that my practice data stays accurate.
 - Actor: Musician
 - Acceptance Criteria:
-  - Right-click or long-press on a completed cell removes its PracticeCellCompletion record
-  - Cell immediately transitions back to incomplete visual state
-  - Grid completion percentage recalculates
-  - If the cell had a freshness interval > 1 day (from prior spaced repetition), the interval resets to 1
+  - Soft-deletes the most recent PracticeCellCompletion record for the cell
+  - Cell immediately transitions back to its prior visual state
+  - Grid and row completion percentages recalculate
+  - Freshness interval is NOT restored to its prior value — the interval remains unchanged (undo corrects a misclick, not a practice history rewrite)
+  - If no active completions remain, cell returns to incomplete state with interval reset to 1
 - Rejection Criteria:
-  - Uncomplete leaves orphaned completion records in the database
-  - User can uncomplete a cell on a grid they don't own
-  - Grid completion percentage does not update after uncomplete
+  - Undo hard-deletes the completion record (must soft-delete)
+  - User can undo a completion on a grid they don't own
+  - Grid completion percentage does not update after undo
+  - Undo restores a prior freshness interval (interval is not rolled back)
+
+**UC-1.7b: Reset Cell**
+- As a musician, I want to reset a cell's freshness interval so that I can restart spaced repetition when I feel I've lost the skill.
+- Actor: Musician
+- Acceptance Criteria:
+  - Keeps all completion records intact (no deletions)
+  - Resets the cell's freshness_interval_days to 1
+  - Cell's freshness state recalculates based on new interval
+  - Grid and row completion percentages recalculate
+- Rejection Criteria:
+  - Reset deletes or soft-deletes any completion records
+  - User can reset a cell on a grid they don't own
+  - Grid completion percentage does not update after reset
 
 **UC-1.8: Freshness Decay (Spaced Repetition)**
 - As a musician, I expect my completed cells to gradually fade over time so that I'm reminded to maintain my skills, not just check boxes once and forget.
@@ -303,13 +318,13 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
 - Acceptance Criteria:
   - Each cell tracks a freshness interval (initial: 1 day after first completion)
   - Re-practicing a cell before it goes stale doubles the interval (1→2→4→8→16→... days, capped at 30)
-  - Missing the interval resets it (configurable per user: full reset to 1, or halve)
+  - Missing the interval resets it to 1 day (full reset)
   - Cell visual states based on time since last completion relative to interval:
     - **Fresh** (green): within the first 50% of the interval
     - **Aging** (yellow/fading green): 50%-100% through the interval
     - **Stale** (orange/red): past the interval but within 2x
     - **Decayed** (grey): more than 2x past the interval
-  - Decayed cells no longer count toward grid completion percentage
+  - Only decayed and incomplete cells do not count toward grid completion percentage (fresh, aging, and stale all count)
   - Freshness is calculated on read (derived from last completion date + current interval), not stored as separate state
 - Rejection Criteria:
   - Freshness interval stored incorrectly after re-practice (must exactly double, not approximate)
@@ -341,7 +356,7 @@ Solid foundation: real user accounts, modernized infrastructure, and a polished 
   - **Fade OFF:** completions are permanent — classic checkbox behavior, solid green stays green forever
   - Default for new grids: fade ON (configurable in user preferences)
   - Toggling fade off does NOT delete freshness data — toggling back on restores the decay view with current state
-  - Grid completion percentage calculation adjusts: fade ON = only fresh+aging count; fade OFF = all completions count
+  - Grid completion percentage calculation adjusts: fade ON = fresh+aging+stale count (stale is a warning, not failure); fade OFF = all completions count
 - Rejection Criteria:
   - Toggling fade off deletes or corrupts freshness interval data
   - Grid completion percentage doesn't recalculate when fade is toggled
@@ -1944,7 +1959,6 @@ The central identity. Every piece of data in the system is owned by or attribute
 | email_verified | boolean | System-set on verification | Default false. Set true when verification token consumed |
 | timezone | string | User-provided or detected | IANA timezone (e.g., "America/Chicago"). Used for streak/freshness calculations |
 | default_fade_enabled | boolean | User preference | Default true. Applied to new grids |
-| freshness_reset_strategy | enum(full, halve) | User preference | Default: full. When a cell's freshness interval expires: 'full' resets to 1 day, 'halve' cuts interval in half |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated on any field change |
 | stripe_customer_id | string, nullable | System-set on first Stripe interaction (V4) | Immutable once set |
@@ -1993,7 +2007,7 @@ A structured practice plan for a piece of music or collection of technical studi
 | deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
 
 **Derived values (never stored):**
-- `completion_percentage`: count of fresh+aging cells / total cells (fade on) OR completed cells / total cells (fade off)
+- `completion_percentage`: count of fresh+aging+stale cells / total cells (fade on) OR completed cells / total cells (fade off). Rationale: stale is a warning state, not a failure — the musician practiced the material and it hasn't fully decayed yet
 - `total_cells`: sum of all cells across all rows
 - `stale_cell_count`: count of cells in stale or decayed state
 - `last_practiced_at`: max(completion_date) across all cells in this grid
@@ -2045,7 +2059,7 @@ A segment of music within a grid — a specific passage, measure range, or techn
 **Derived values:**
 - `completion_percentage`: computed from child cells' freshness state
 - `max_fresh_tempo_percentage`: highest target_tempo_percentage among fresh/aging cells
-- `freshness_summary`: { fresh: N, aging: N, stale: N, decayed: N }
+- `freshness_summary`: { fresh: N, aging: N, stale: N, decayed: N, incomplete: N }
 
 **Research value:** Row-level data enables per-passage analysis: which measure ranges are hardest (most re-practices), how tempo progression correlates with mastery, priority vs actual practice frequency.
 
@@ -2060,7 +2074,7 @@ A single tempo step within a row. Represents "practice this passage at this perc
 | practice_row_id | FK→PracticeRow | System-set at creation | Immutable. Cascading delete |
 | step_number | integer | System-set at creation | 0-indexed position. Used for tempo calculation |
 | target_tempo_percentage | float | System-calculated at creation | Formula: 0.4 + (0.6 * step_number / (total_steps - 1)). Calculated at cell creation. Stored. Only recalculated if steps change (which regenerates all cells) |
-| freshness_interval_days | integer | System-managed | Default: 1. Doubles on re-practice (cap 30). Resets on uncomplete |
+| freshness_interval_days | integer | System-managed | Default: 1. Doubles on re-practice (cap 30). Resets to 1 on cell reset (UC-1.7b). Unchanged on undo (UC-1.7a) |
 | created_at | timestamptz | System-generated | Immutable |
 | updated_at | timestamptz | System-generated | Auto-updated (interval changes) |
 | deleted_at | timestamptz, nullable | System-set on soft delete | Null = active. Non-null = soft-deleted |
@@ -2640,7 +2654,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Write and run database migrations
 - Task: Write unit tests for domain model constraints (required fields, enums, FK integrity)
 - Task: Document domain model in auto-generated schema docs
-- Maps to: UC-1.3, UC-1.4 (data layer), UC-1.7, UC-1.8, UC-1.9, UC-1.10
+- Maps to: UC-1.3, UC-1.4 (data layer), UC-1.7a, UC-1.7b, UC-1.8, UC-1.9, UC-1.10
 
 **M1.3: Grid CRUD API**
 - Task: Create grid endpoint (POST) — validates name, sets user_id, defaults
@@ -2662,14 +2676,15 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 
 **M1.5: Cell Completion & Freshness API**
 - Task: Complete cell endpoint (POST) — creates PracticeCellCompletion, updates freshness interval
-- Task: Uncomplete cell endpoint (DELETE) — removes completion, resets interval
+- Task: Undo completion endpoint (DELETE) — soft-deletes most recent completion
+- Task: Reset cell endpoint (POST) — resets freshness interval to 1
 - Task: Write freshness calculation logic (pure function: last_completion_date + interval → state)
 - Task: Write cascading fade logic (pure function: within a row, highest tempo fades first)
 - Task: Configure fade toggle endpoint (PUT on PracticeGrid.fade_enabled)
 - Task: Write grid completion percentage calculation (respects fade on/off)
 - Task: Unit tests for: interval doubling, interval cap (30 days), cascade ordering, completion % with/without fade
 - Task: Integration tests for completion lifecycle
-- Maps to: UC-1.6, UC-1.7, UC-1.8, UC-1.9, UC-1.10
+- Maps to: UC-1.6, UC-1.7a, UC-1.7b, UC-1.8, UC-1.9, UC-1.10
 
 **M1.6: Grid View UI**
 - Task: Build grid view component — rows, cells, tempo display
@@ -2681,7 +2696,7 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Progress bar showing grid completion %
 - Task: Responsive layout (320px+ viewports, adapts to large step counts)
 - Task: Playwright e2e tests with screenshots for each visual state
-- Maps to: UC-1.6, UC-1.7, UC-1.11, UC-1.12
+- Maps to: UC-1.6, UC-1.7a, UC-1.7b, UC-1.11, UC-1.12
 
 **M1.7: Dashboard UI**
 - Task: Build 4-quadrant dashboard layout (responsive: 2x2 desktop, stacked mobile)
@@ -3153,3 +3168,17 @@ At the end of each milestone's final task, verify the milestone as a whole:
 - Export integrity: CSV opens correctly in Excel and Google Sheets
 - PDF export: renders correctly with Unicode characters, long names, empty data
 - Challenge manipulation: attempt to backdate practice entries during active challenge
+
+---
+
+## Future Enhancements
+
+The following features are explicitly deferred and not part of any current milestone. They are recorded here to prevent re-discovery and to guide future design decisions.
+
+**Configurable Practice Enforcement**
+- Allow users to choose their interval reset strategy when a cell's freshness expires: full reset to 1 day (current default), halve the interval, or a custom reset factor.
+- This was considered for V1 (M1.5) but deferred to keep the initial implementation simple. The `freshness_interval_days` field on PracticeCell is already designed to support alternative strategies — only the reset logic needs to change.
+
+**User-Local Practice Days**
+- Allow users to set their timezone so that "today" reflects their local date instead of UTC for freshness calculations and streak tracking.
+- The User entity already includes a `timezone` field (IANA format). The infrastructure is in place but freshness calculations currently use UTC dates. A future milestone should wire the user's timezone into all date-sensitive operations (freshness state computation, completion date assignment, streak boundaries).

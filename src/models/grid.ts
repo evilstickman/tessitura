@@ -114,6 +114,22 @@ export async function getGridById(gridId: string, userId: string) {
 }
 
 /**
+ * Updates the fadeEnabled flag on a grid.
+ * Returns the full grid detail (via getGridById), or null if not found/not owned.
+ */
+export async function updateGridFade(gridId: string, userId: string, fadeEnabled: boolean) {
+  const grid = await findOwnedGrid(gridId, userId);
+  if (!grid) return null;
+
+  await prisma.practiceGrid.update({
+    where: { id: gridId },
+    data: { fadeEnabled },
+  });
+
+  return getGridById(gridId, userId);
+}
+
+/**
  * Soft-deletes a grid and all children in a single transaction.
  * Returns true if deleted, false if not found/not owned.
  */

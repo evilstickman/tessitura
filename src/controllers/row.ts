@@ -16,6 +16,7 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -38,7 +39,7 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('passageLabel must be a string', 'VALIDATION_ERROR', 400);
     }
 
-    const row = await createRowModel(gridId, userId, {
+    const result = await createRowModel(gridId, userId, {
       startMeasure: body.startMeasure,
       endMeasure: body.endMeasure,
       targetTempo: body.targetTempo,
@@ -47,11 +48,11 @@ export async function createRow(gridId: string, request: NextRequest) {
       passageLabel: body.passageLabel ?? null,
     });
 
-    if (!row) {
+    if (!result) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(row), { status: 201 });
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now), { status: 201 });
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -69,6 +70,7 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -91,13 +93,13 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
       return errorResponse('passageLabel must be a string', 'VALIDATION_ERROR', 400);
     }
 
-    const row = await updateRowModel(gridId, rowId, userId, body);
+    const result = await updateRowModel(gridId, rowId, userId, body);
 
-    if (!row) {
+    if (!result) {
       return errorResponse('Row not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(row));
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
@@ -115,6 +117,7 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
     const body = await request.json().catch(() => null);
 
@@ -122,13 +125,13 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
       return errorResponse('Priority is required', 'VALIDATION_ERROR', 400);
     }
 
-    const row = await updateRowPriorityModel(gridId, rowId, userId, body.priority);
+    const result = await updateRowPriorityModel(gridId, rowId, userId, body.priority);
 
-    if (!row) {
+    if (!result) {
       return errorResponse('Row not found', 'NOT_FOUND', 404);
     }
 
-    return NextResponse.json(formatRow(row));
+    return NextResponse.json(formatRow(result.row, result.fadeEnabled, now));
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
