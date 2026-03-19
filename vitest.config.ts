@@ -5,16 +5,13 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
+    environment: 'node',
     include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}'],
     env: {
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://localhost:5432/tessitura_test',
     },
     setupFiles: ['tests/setup.ts'],
     fileParallelism: false,
-    environmentMatchGlobs: [
-      ['tests/unit/components/**', 'jsdom'],
-      ['tests/integration/components/**', 'jsdom'],
-    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
