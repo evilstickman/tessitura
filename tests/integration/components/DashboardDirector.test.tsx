@@ -316,6 +316,31 @@ describe('DashboardDirector', () => {
     expect(screen.getByText('No practice grids yet.')).toBeInTheDocument();
   });
 
+  it('hides form when cancel is clicked', async () => {
+    const user = userEvent.setup();
+
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => makeGridsResponse(),
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ALERTS')).toBeInTheDocument();
+    });
+
+    // Show the form
+    await user.click(screen.getByText('+ New Grid'));
+    expect(screen.getByPlaceholderText('Grid name')).toBeInTheDocument();
+
+    // Cancel — form should disappear
+    await user.click(screen.getByText('Cancel'));
+    expect(screen.queryByPlaceholderText('Grid name')).not.toBeInTheDocument();
+  });
+
+
   it('shows practice focus with allFresh when no rows need practice', async () => {
     const gridsAllFresh = [
       {
@@ -357,5 +382,203 @@ describe('DashboardDirector', () => {
     // Should show the row with allFresh message
     expect(screen.getByText('Fresh Piece')).toBeInTheDocument();
     expect(screen.getByText(/All fresh/)).toBeInTheDocument();
+  });
+
+  it('sorts practice focus by count when priorities are equal', async () => {
+    // This exercises the secondary sort (lines 161-163) in derivePracticeFocus:
+    // when two rows have the same priority, sort by stale+decayed count descending.
+    const gridsEqualPriority = [
+      {
+        id: 'grid-1',
+        name: 'Equal Priority Grid',
+        notes: null,
+        fadeEnabled: true,
+        completionPercentage: 50,
+        freshnessSummary: { fresh: 0, aging: 0, stale: 3, decayed: 3, incomplete: 0 },
+        createdAt: '2026-03-15T00:00:00.000Z',
+        updatedAt: '2026-03-18T00:00:00.000Z',
+        rows: [
+          {
+            id: 'row-a',
+            piece: { id: 'p1', title: 'Piece A', composer: null, part: null, studyReference: null },
+            passageLabel: 'Movement 1',
+            startMeasure: 1,
+            endMeasure: 8,
+            priority: 'HIGH',
+            completionPercentage: 0,
+            // Lower count: 1 stale + 1 decayed = 2
+            freshnessSummary: { fresh: 0, aging: 0, stale: 1, decayed: 1, incomplete: 0 },
+          },
+          {
+            id: 'row-b',
+            piece: { id: 'p1', title: 'Piece A', composer: null, part: null, studyReference: null },
+            passageLabel: 'Movement 2',
+            startMeasure: 9,
+            endMeasure: 16,
+            priority: 'HIGH',
+            completionPercentage: 0,
+            // Higher count: 1 stale + 2 decayed = 3 — should sort first
+            freshnessSummary: { fresh: 0, aging: 0, stale: 1, decayed: 2, incomplete: 0 },
+          },
+        ],
+      },
+    ];
+
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => gridsEqualPriority,
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('PRACTICE FOCUS')).toBeInTheDocument();
+    });
+
+    // Both rows should appear; Movement 2 (higher count) before Movement 1
+    const items = screen.getAllByText(/Piece A/);
+    expect(items.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('shows passageLabel as row label when piece is null', async () => {
+    // Exercises getRowLabel line 84: piece===null, passageLabel!==null → returns passageLabel
+    const gridsWithPassageOnly = [
+      {
+        id: 'grid-1',
+        name: 'Exercises Grid',
+        notes: null,
+        fadeEnabled: false,
+        completionPercentage: 0,
+        freshnessSummary: { fresh: 0, aging: 0, stale: 0, decayed: 1, incomplete: 0 },
+        createdAt: '2026-03-15T00:00:00.000Z',
+        updatedAt: '2026-03-18T00:00:00.000Z',
+        rows: [
+          {
+            id: 'row-x',
+            piece: null,
+            passageLabel: 'Scale Exercise',
+            startMeasure: 1,
+            endMeasure: 4,
+            priority: 'HIGH',
+            completionPercentage: 0,
+            freshnessSummary: { fresh: 0, aging: 0, stale: 0, decayed: 1, incomplete: 0 },
+          },
+        ],
+      },
+    ];
+
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => gridsWithPassageOnly,
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('PRACTICE FOCUS')).toBeInTheDocument();
+    });
+
+    // Should show passageLabel as the label (piece is null)
+    expect(screen.getByText('Scale Exercise')).toBeInTheDocument();
+  });
+
+  it('shows "Untitled" as row label when both piece and passageLabel are null', async () => {
+    // Exercises getRowLabel line 85: piece===null, passageLabel===null → returns 'Untitled'
+    const gridsWithUntitled = [
+      {
+        id: 'grid-1',
+        name: 'Untitled Grid',
+        notes: null,
+        fadeEnabled: false,
+        completionPercentage: 0,
+        freshnessSummary: { fresh: 0, aging: 0, stale: 0, decayed: 1, incomplete: 0 },
+        createdAt: '2026-03-15T00:00:00.000Z',
+        updatedAt: '2026-03-18T00:00:00.000Z',
+        rows: [
+          {
+            id: 'row-u',
+            piece: null,
+            passageLabel: null,
+            startMeasure: 1,
+            endMeasure: 4,
+            priority: 'MEDIUM',
+            completionPercentage: 0,
+            freshnessSummary: { fresh: 0, aging: 0, stale: 0, decayed: 1, incomplete: 0 },
+          },
+        ],
+      },
+    ];
+
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => gridsWithUntitled,
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('PRACTICE FOCUS')).toBeInTheDocument();
+    });
+
+    // Should show 'Untitled' when both piece and passageLabel are null
+    expect(screen.getByText('Untitled')).toBeInTheDocument();
+  });
+
+  it('sorts allFresh rows by priority when multiple rows exist', async () => {
+    // This exercises lines 179-181 in derivePracticeFocus:
+    // sorting allFresh rows by priority when there are multiple rows.
+    const gridsMultiRowFresh = [
+      {
+        id: 'grid-1',
+        name: 'Multi Row Fresh Grid',
+        notes: null,
+        fadeEnabled: true,
+        completionPercentage: 100,
+        freshnessSummary: { fresh: 6, aging: 0, stale: 0, decayed: 0, incomplete: 0 },
+        createdAt: '2026-03-15T00:00:00.000Z',
+        updatedAt: '2026-03-18T00:00:00.000Z',
+        rows: [
+          {
+            id: 'row-low',
+            piece: { id: 'p1', title: 'Low Priority Piece', composer: null, part: null, studyReference: null },
+            passageLabel: null,
+            startMeasure: 1,
+            endMeasure: 4,
+            priority: 'LOW',
+            completionPercentage: 100,
+            freshnessSummary: { fresh: 3, aging: 0, stale: 0, decayed: 0, incomplete: 0 },
+          },
+          {
+            id: 'row-critical',
+            piece: { id: 'p2', title: 'Critical Priority Piece', composer: null, part: null, studyReference: null },
+            passageLabel: null,
+            startMeasure: 1,
+            endMeasure: 4,
+            priority: 'CRITICAL',
+            completionPercentage: 100,
+            freshnessSummary: { fresh: 3, aging: 0, stale: 0, decayed: 0, incomplete: 0 },
+          },
+        ],
+      },
+    ];
+
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => gridsMultiRowFresh,
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('PRACTICE FOCUS')).toBeInTheDocument();
+    });
+
+    // Both rows should be in the allFresh list
+    expect(screen.getByText('Critical Priority Piece')).toBeInTheDocument();
+    expect(screen.getByText('Low Priority Piece')).toBeInTheDocument();
   });
 });

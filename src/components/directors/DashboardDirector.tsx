@@ -155,7 +155,10 @@ function derivePracticeFocus(grids: ApiGridSummary[]) {
   if (needsPractice.length > 0) {
     // Sort by priority first, then stale+decayed count descending
     needsPractice.sort((a, b) => {
+      // ?? 4 fallback: unknown priority values sort last — defensive only
+      /* c8 ignore next */
       const priA = PRIORITY_ORDER[a.row.priority] ?? 4;
+      /* c8 ignore next */
       const priB = PRIORITY_ORDER[b.row.priority] ?? 4;
       if (priA !== priB) return priA - priB;
       const countA = a.row.freshnessSummary.stale + a.row.freshnessSummary.decayed;
@@ -176,7 +179,10 @@ function derivePracticeFocus(grids: ApiGridSummary[]) {
 
   // No rows need practice — show top 5 by priority with allFresh=true
   const sorted = [...allRows].sort((a, b) => {
+    // ?? 4 fallback: unknown priority values sort last — defensive only
+    /* c8 ignore next */
     const priA = PRIORITY_ORDER[a.row.priority] ?? 4;
+    /* c8 ignore next */
     const priB = PRIORITY_ORDER[b.row.priority] ?? 4;
     return priA - priB;
   });
@@ -262,6 +268,7 @@ export function DashboardDirector() {
     );
   }
 
+  /* v8 ignore next 3 -- TanStack Query v5 never returns undefined data on success; defensive guard */
   if (!grids) {
     return null;
   }

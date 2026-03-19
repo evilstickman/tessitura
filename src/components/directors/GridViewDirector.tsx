@@ -164,6 +164,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
   };
 
   const handleToggleFade = () => {
+    /* v8 ignore next -- grid is always defined when toggle button is rendered */
     if (grid) {
       fadeMutation.mutate(!grid.fadeEnabled);
     }
@@ -185,6 +186,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
     return <div>Error loading grid</div>;
   }
 
+  /* v8 ignore next 3 -- TanStack Query v5 never returns undefined data on success; defensive guard */
   if (!grid) {
     return null;
   }
