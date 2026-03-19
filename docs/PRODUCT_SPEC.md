@@ -2707,6 +2707,10 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Lower-right: practice focus suggestions (top priority + most decayed rows)
 - Task: Empty states for new users in each quadrant
 - Task: Playwright e2e tests with screenshots
+- Task: Enrich grid list API with `?detail=true` for freshness stats per grid and row
+- Task: New `/grids` route for full grid list (dashboard replaces `/`)
+- Task: Basic grid creation form (name + notes) in My Grids pane
+- Task: Fix listGrids soft-delete bug + 401 redirect loop in directors
 - Maps to: UC-1.5
 
 **M1.8: Authentication**
