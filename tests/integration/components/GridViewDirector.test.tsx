@@ -157,13 +157,7 @@ describe('GridViewDirector', () => {
     });
   });
 
-  it('redirects to / on 401', async () => {
-    Object.defineProperty(window, 'location', {
-      value: { href: '' },
-      writable: true,
-      configurable: true,
-    });
-
+  it('shows "Authentication required" on 401', async () => {
     fetchSpy.mockResolvedValue({
       ok: false,
       status: 401,
@@ -173,7 +167,7 @@ describe('GridViewDirector', () => {
     renderWithQuery(<GridViewDirector gridId={GRID_ID} />);
 
     await waitFor(() => {
-      expect(window.location.href).toBe('/');
+      expect(screen.getByText('Authentication required')).toBeInTheDocument();
     });
   });
 

@@ -70,4 +70,17 @@ describe('GridListDirector', () => {
       expect(screen.getByText('Failed to load grids.')).toBeInTheDocument();
     });
   });
+
+  it('shows "Authentication required" on 401 instead of redirecting', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+    }) as unknown as typeof fetch;
+
+    render(<GridListDirector />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText('Authentication required')).toBeInTheDocument();
+    });
+  });
 });
