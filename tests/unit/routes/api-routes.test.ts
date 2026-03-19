@@ -67,9 +67,10 @@ describe('Grid routes — /api/grids', () => {
   it('GET delegates to listGrids', async () => {
     const { GET } = await import('@/app/api/grids/route');
     const { listGrids } = await import('@/controllers/grid');
+    const req = makeRequest('GET', 'http://localhost:3000/api/grids');
 
-    const res = await GET();
-    expect(listGrids).toHaveBeenCalled();
+    const res = await GET(req);
+    expect(listGrids).toHaveBeenCalledWith(req);
     expect(res.status).toBe(200);
   });
 });

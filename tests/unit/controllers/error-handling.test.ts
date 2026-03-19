@@ -70,7 +70,8 @@ describe('Grid controller — unexpected errors → 500', () => {
 
   it('listGrids returns 500 on unexpected error', async () => {
     const { listGrids } = await import('@/controllers/grid');
-    const res = await listGrids();
+    const req = new NextRequest('http://localhost:3000/api/grids');
+    const res = await listGrids(req);
     expect(res.status).toBe(500);
     const data = await res.json();
     expect(data.error.code).toBe('INTERNAL_ERROR');
