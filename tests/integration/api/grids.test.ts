@@ -19,6 +19,16 @@ function makeRequest(body: unknown): NextRequest {
   });
 }
 
+function makeListRequest(params?: Record<string, string>): NextRequest {
+  const url = new URL('http://localhost:3000/api/grids');
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+  }
+  return new NextRequest(url);
+}
+
 async function createSeedUser() {
   return prisma.user.upsert({
     where: { email: 'dev-placeholder@tessitura.local' },
@@ -55,7 +65,7 @@ describe('Grid API — Auth failure (placeholder auth, pre-M1.8)', () => {
   });
 
   it('returns 401 when auth fails on listGrids', async () => {
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error.code).toBe('AUTHENTICATION_ERROR');
@@ -196,7 +206,7 @@ describe('Grid API — List', () => {
 
   // Test 27
   it('GET returns 200 with empty array when user has no grids', async () => {
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual([]);
@@ -216,7 +226,7 @@ describe('Grid API — List', () => {
       data: { userId: otherUser.id, name: 'Other Grid' },
     });
 
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     const body = await res.json();
     expect(body).toHaveLength(1);
     expect(body[0].name).toBe('My Grid');
@@ -235,7 +245,7 @@ describe('Grid API — List', () => {
       data: { userId: seedUser.id, name: 'Deleted Grid', deletedAt: new Date() },
     });
 
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     const body = await res.json();
     expect(body).toHaveLength(1);
     expect(body[0].name).toBe('Active Grid');
@@ -264,7 +274,7 @@ describe('Grid API — List', () => {
       data: { notes: 'updated', updatedAt: now },
     });
 
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     const body = await res.json();
     expect(body).toHaveLength(3);
     expect(body[0].name).toBe('Second'); // most recently updated
@@ -281,10 +291,124 @@ describe('Grid API — List', () => {
       data: { userId: seedUser.id, name: 'Format Test' },
     });
 
-    const res = await listGrids();
+    const res = await listGrids(makeListRequest());
     const body = await res.json();
     expect(body[0]).not.toHaveProperty('deletedAt');
     expect(body[0]).not.toHaveProperty('userId');
+  });
+});
+
+// ─── List with detail=true ────────────────────────────────────────────────────
+
+describe('Grid API — List with detail', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('GET ?detail=true returns grids with completionPercentage and freshnessSummary', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const grid = await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Detail Grid' },
+    });
+    const row = await prisma.practiceRow.create({
+      data: {
+        practiceGridId: grid.id,
+        sortOrder: 0,
+        startMeasure: 1,
+        endMeasure: 8,
+        targetTempo: 120,
+        steps: 2,
+      },
+    });
+    await prisma.practiceCell.createMany({
+      data: [
+        { practiceRowId: row.id, stepNumber: 0, targetTempoPercentage: 0.5 },
+        { practiceRowId: row.id, stepNumber: 1, targetTempoPercentage: 1.0 },
+      ],
+    });
+    const cells = await prisma.practiceCell.findMany({
+      where: { practiceRowId: row.id },
+      orderBy: { stepNumber: 'asc' },
+    });
+    await prisma.practiceCellCompletion.create({
+      data: { practiceCellId: cells[0].id, completionDate: new Date() },
+    });
+
+    const res = await listGrids(makeListRequest({ detail: 'true' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0]).toHaveProperty('completionPercentage');
+    expect(body[0]).toHaveProperty('freshnessSummary');
+    expect(body[0].freshnessSummary).toHaveProperty('fresh');
+    expect(body[0].freshnessSummary).toHaveProperty('incomplete');
+  });
+
+  it('GET ?detail=true returns rows without cells', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    await prisma.practiceGrid.create({
+      data: {
+        userId: seedUser.id,
+        name: 'Row Shape Grid',
+        practiceRows: {
+          create: {
+            sortOrder: 0,
+            startMeasure: 1,
+            endMeasure: 4,
+            targetTempo: 100,
+            steps: 1,
+          },
+        },
+      },
+    });
+
+    const res = await listGrids(makeListRequest({ detail: 'true' }));
+    const body = await res.json();
+    const row = body[0].rows[0];
+    expect(row).toHaveProperty('id');
+    expect(row).toHaveProperty('completionPercentage');
+    expect(row).toHaveProperty('freshnessSummary');
+    expect(row).not.toHaveProperty('cells');
+    expect(row).not.toHaveProperty('sortOrder');
+    expect(row).not.toHaveProperty('targetTempo');
+  });
+
+  it('GET ?detail=true excludes soft-deleted grids', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Active' },
+    });
+    await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Deleted', deletedAt: new Date() },
+    });
+
+    const res = await listGrids(makeListRequest({ detail: 'true' }));
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].name).toBe('Active');
+  });
+
+  it('GET without detail param returns lightweight response (no completionPercentage)', async () => {
+    const seedUser = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    await prisma.practiceGrid.create({
+      data: { userId: seedUser.id, name: 'Lightweight' },
+    });
+
+    const res = await listGrids(makeListRequest());
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].name).toBe('Lightweight');
+    expect(body[0]).not.toHaveProperty('completionPercentage');
+    expect(body[0]).not.toHaveProperty('freshnessSummary');
+    expect(body[0]).not.toHaveProperty('rows');
   });
 });
 
@@ -645,7 +769,7 @@ describe('Grid API — Delete', () => {
     });
 
     // Verify it appears first
-    const beforeRes = await listGrids();
+    const beforeRes = await listGrids(makeListRequest());
     const beforeBody = await beforeRes.json();
     expect(beforeBody).toHaveLength(1);
 
@@ -653,7 +777,7 @@ describe('Grid API — Delete', () => {
     await deleteGrid(grid.id);
 
     // Verify it's gone
-    const afterRes = await listGrids();
+    const afterRes = await listGrids(makeListRequest());
     const afterBody = await afterRes.json();
     expect(afterBody).toHaveLength(0);
   });

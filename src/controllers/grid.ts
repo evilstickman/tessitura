@@ -3,13 +3,14 @@ import { getCurrentUserId } from '@/lib/auth';
 import {
   createGrid as createGridModel,
   listGrids as listGridsModel,
+  listGridsWithDetail,
   getGridById,
   deleteGrid as deleteGridModel,
   updateGridFade,
 } from '@/models/grid';
 import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { UUID_REGEX, errorResponse } from '@/lib/api-helpers';
-import { formatGrid, formatGridDetail, formatGridList } from '@/views/grid';
+import { formatGrid, formatGridDetail, formatGridList, formatGridSummaryList } from '@/views/grid';
 
 export async function createGrid(request: NextRequest) {
   try {
@@ -41,9 +42,17 @@ export async function createGrid(request: NextRequest) {
   }
 }
 
-export async function listGrids() {
+export async function listGrids(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
+    const detail = request.nextUrl.searchParams.get('detail') === 'true';
+
+    if (detail) {
+      const now = new Date();
+      const grids = await listGridsWithDetail(userId);
+      return NextResponse.json(formatGridSummaryList(grids, now));
+    }
+
     const grids = await listGridsModel(userId);
     return NextResponse.json(formatGridList(grids));
   } catch (error) {
