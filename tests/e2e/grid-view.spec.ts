@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+// ─── Functional tests (use real API, no screenshots with dates) ─────────────
+
 test.describe('Grid View', () => {
   test('landing page shows grid list', async ({ page }) => {
     await page.goto('/');
@@ -15,7 +17,6 @@ test.describe('Grid View', () => {
   test('grid shows cells with BPM for incomplete cells', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    // First cell should show BPM (48 = round(0.4 * 120))
     await expect(page.getByRole('button', { name: /48 BPM/ })).toBeVisible();
   });
 
@@ -23,20 +24,16 @@ test.describe('Grid View', () => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
     const cell = page.getByRole('button', { name: /Complete step 1 at 48 BPM/ });
     await cell.click();
-    // After completion, the cell should show a date-based aria-label
     await expect(page.getByRole('button', { name: /Undo step 1/ })).toBeVisible();
   });
 
   test('right-click completed cell to undo', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    // Complete a cell first
     const cell = page.getByRole('button', { name: /Complete step 1 at 48 BPM/ });
     await cell.click();
     await expect(page.getByRole('button', { name: /Undo step 1/ })).toBeVisible();
-    // Right-click to undo
     const undoCell = page.getByRole('button', { name: /Undo step 1/ });
     await undoCell.click({ button: 'right' });
-    // Should revert to BPM display
     await expect(page.getByRole('button', { name: /Complete step 1 at 48 BPM/ })).toBeVisible();
   });
 
@@ -59,6 +56,68 @@ test.describe('Grid View', () => {
   });
 });
 
+// ─── Visual regression screenshots (mocked API for deterministic dates) ─────
+
+/**
+ * Fixed grid response for screenshot tests. Dates are pinned so screenshots
+ * don't drift when run on different days. Includes a mix of freshness states:
+ * - Cell 1: fresh (completed 2026-03-15)
+ * - Cell 2: fresh (completed 2026-03-15, shielded)
+ * - Cell 3: incomplete
+ * - Cell 4: incomplete
+ * - Cell 5: incomplete
+ */
+const MOCK_GRID_RESPONSE = {
+  id: '00000000-0000-0000-0000-000000000001',
+  name: 'Audition Prep — Week 1',
+  notes: 'Focus on Firebird excerpts and Clarke fundamentals',
+  fadeEnabled: true,
+  completionPercentage: 40,
+  freshnessSummary: { fresh: 2, aging: 0, stale: 0, decayed: 0, incomplete: 3 },
+  createdAt: '2026-03-10T00:00:00.000Z',
+  updatedAt: '2026-03-15T00:00:00.000Z',
+  rows: [
+    {
+      id: '00000000-0000-0000-0000-000000000100',
+      sortOrder: 0,
+      piece: { id: '00000000-0000-0000-0000-000000000010', title: 'Clarke #3 in Eb', composer: 'Herbert L. Clarke' },
+      passageLabel: null,
+      startMeasure: 1,
+      endMeasure: 16,
+      targetTempo: 120,
+      steps: 5,
+      priority: 'HIGH',
+      completionPercentage: 40,
+      freshnessSummary: { fresh: 2, aging: 0, stale: 0, decayed: 0, incomplete: 3 },
+      createdAt: '2026-03-10T00:00:00.000Z',
+      updatedAt: '2026-03-15T00:00:00.000Z',
+      cells: [
+        { id: 'c0', stepNumber: 0, targetTempoPercentage: 0.4, targetTempoBpm: 48, freshnessIntervalDays: 2, freshnessState: 'fresh', lastCompletionDate: '2026-03-15', isShielded: true, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-15T00:00:00.000Z', completions: [{ id: 'comp-0', completionDate: '2026-03-15', createdAt: '2026-03-15T10:00:00.000Z' }] },
+        { id: 'c1', stepNumber: 1, targetTempoPercentage: 0.55, targetTempoBpm: 66, freshnessIntervalDays: 1, freshnessState: 'fresh', lastCompletionDate: '2026-03-15', isShielded: false, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-15T00:00:00.000Z', completions: [{ id: 'comp-1', completionDate: '2026-03-15', createdAt: '2026-03-15T10:00:00.000Z' }] },
+        { id: 'c2', stepNumber: 2, targetTempoPercentage: 0.7, targetTempoBpm: 84, freshnessIntervalDays: 1, freshnessState: 'incomplete', lastCompletionDate: null, isShielded: false, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-10T00:00:00.000Z', completions: [] },
+        { id: 'c3', stepNumber: 3, targetTempoPercentage: 0.85, targetTempoBpm: 102, freshnessIntervalDays: 1, freshnessState: 'incomplete', lastCompletionDate: null, isShielded: false, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-10T00:00:00.000Z', completions: [] },
+        { id: 'c4', stepNumber: 4, targetTempoPercentage: 1.0, targetTempoBpm: 120, freshnessIntervalDays: 1, freshnessState: 'incomplete', lastCompletionDate: null, isShielded: false, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-10T00:00:00.000Z', completions: [] },
+      ],
+    },
+  ],
+};
+
+/** Same grid but with fadeEnabled=false — all completed cells show as 'fresh' */
+const MOCK_GRID_FADE_OFF = {
+  ...MOCK_GRID_RESPONSE,
+  fadeEnabled: false,
+  completionPercentage: 40,
+  rows: MOCK_GRID_RESPONSE.rows.map((row) => ({
+    ...row,
+    cells: row.cells.map((cell) => ({
+      ...cell,
+      // With fade off, completed cells all show 'fresh', incomplete stay 'incomplete'
+      freshnessState: cell.freshnessState === 'incomplete' ? 'incomplete' : 'fresh',
+      isShielded: false,
+    })),
+  })),
+};
+
 test.describe('Grid View — Visual Regression Screenshots', () => {
   test('landing page grid list', async ({ page }) => {
     await page.goto('/');
@@ -67,27 +126,47 @@ test.describe('Grid View — Visual Regression Screenshots', () => {
   });
 
   test('grid detail with freshness states', async ({ page }) => {
+    // Mock the API to return fixed dates — no real completions created
+    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MOCK_GRID_RESPONSE),
+      });
+    });
+
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    // Complete first two cells to create a mix of states
-    const cell1 = page.getByRole('button', { name: /Complete step 1/ });
-    await cell1.click();
-    await expect(page.getByRole('button', { name: /Undo step 1/ })).toBeVisible();
-    const cell2 = page.getByRole('button', { name: /Complete step 2/ });
-    await cell2.click();
-    await expect(page.getByRole('button', { name: /Undo step 2/ })).toBeVisible();
+    // Cells should show fixed dates (3-15) not today's date
+    await expect(page.getByRole('button', { name: /Undo step 1, completed 3-15/ })).toBeVisible();
     await expect(page).toHaveScreenshot('grid-detail-freshness-states.png');
   });
 
-  test('grid detail with fade disabled vs enabled', async ({ page }) => {
+  test('grid detail fade disabled', async ({ page }) => {
+    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MOCK_GRID_FADE_OFF),
+      });
+    });
+
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    const fadeToggle = page.getByRole('switch', { name: 'Toggle fade' });
-    await fadeToggle.click();
-    await page.waitForTimeout(500);
     await expect(page).toHaveScreenshot('grid-detail-fade-disabled.png');
-    await fadeToggle.click();
-    await page.waitForTimeout(500);
+  });
+
+  test('grid detail fade enabled', async ({ page }) => {
+    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MOCK_GRID_RESPONSE),
+      });
+    });
+
+    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
     await expect(page).toHaveScreenshot('grid-detail-fade-enabled.png');
   });
 });
