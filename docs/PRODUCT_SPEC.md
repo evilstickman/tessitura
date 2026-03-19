@@ -2696,7 +2696,8 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Task: Progress bar showing grid completion %
 - Task: Responsive layout (320px+ viewports, adapts to large step counts)
 - Task: Playwright e2e tests with screenshots for each visual state
-- Maps to: UC-1.6, UC-1.7a, UC-1.7b, UC-1.11, UC-1.12
+- Maps to: UC-1.6, UC-1.7a, UC-1.11, UC-1.12
+- Note: UC-1.7b (Reset Cell) deferred to M1.9 — API exists, UI not yet needed
 
 **M1.7: Dashboard UI**
 - Task: Build 4-quadrant dashboard layout (responsive: 2x2 desktop, stacked mobile)
