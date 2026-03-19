@@ -5,13 +5,16 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'node',
-    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+    include: ['tests/unit/**/*.test.{ts,tsx}', 'tests/integration/**/*.test.{ts,tsx}'],
     env: {
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://localhost:5432/tessitura_test',
     },
     setupFiles: ['tests/setup.ts'],
     fileParallelism: false,
+    environmentMatchGlobs: [
+      ['tests/unit/components/**', 'jsdom'],
+      ['tests/integration/components/**', 'jsdom'],
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -23,13 +26,8 @@ export default defineConfig({
       },
       include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: [
-        // Framework scaffolding — zero logic, pure JSX. Will gain tests when
-        // real UI work begins (M2+). Justified in CLAUDE.md § Coverage Exclusions.
-        'src/app/layout.tsx',
-        'src/app/page.tsx',
+        // CSS file, not executable code.
         'src/app/globals.css',
-        // Empty directories (only .gitkeep) — no code to cover yet.
-        'src/components/**',
         // Prisma auto-generated client — not our code, regenerated on every build.
         'src/generated/**',
       ],
