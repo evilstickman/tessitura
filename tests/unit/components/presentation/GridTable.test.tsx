@@ -53,7 +53,7 @@ describe('GridTable', () => {
   it('renders helper legend text', () => {
     render(<GridTable {...makeTable()} />);
     expect(screen.getByText(/Click to complete/)).toBeInTheDocument();
-    expect(screen.getByText(/Right-click to undo/)).toBeInTheDocument();
+    expect(screen.getByText(/Right-click or Delete key to undo/)).toBeInTheDocument();
   });
 
   it('scrollable container has overflow-x: auto', () => {
@@ -70,6 +70,11 @@ describe('GridTable', () => {
     const buttons = screen.getAllByRole('button');
     await user.click(buttons[0]);
     expect(onComplete).toHaveBeenCalledWith('row-1', 'row-1-c1');
+  });
+
+  it('table has aria-label for accessibility', () => {
+    render(<GridTable {...makeTable()} />);
+    expect(screen.getByRole('table')).toHaveAttribute('aria-label', 'Practice grid');
   });
 
   it('renders with zero rows', () => {

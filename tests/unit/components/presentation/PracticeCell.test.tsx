@@ -79,7 +79,7 @@ describe('PracticeCell', () => {
 
     it('strips leading zeros from day', () => {
       renderInTable(makeCell({ freshnessState: 'fresh', lastCompletionDate: '2026-09-05' }));
-      expect(screen.getByRole('button')).toHaveTextContent('9-05');
+      expect(screen.getByRole('button')).toHaveTextContent('9-5');
     });
 
     it('formats double-digit month and day correctly', () => {
@@ -140,11 +140,11 @@ describe('PracticeCell', () => {
       );
     });
 
-    it('has correct aria-label for decayed cell (shows undo label)', () => {
-      renderInTable(makeCell({ stepNumber: 4, freshnessState: 'decayed', lastCompletionDate: '2026-01-01' }));
+    it('has correct aria-label for decayed cell (shows complete label, same as incomplete)', () => {
+      renderInTable(makeCell({ stepNumber: 4, freshnessState: 'decayed', targetTempoBpm: 96, lastCompletionDate: '2026-01-01' }));
       expect(screen.getByRole('button')).toHaveAttribute(
         'aria-label',
-        'Undo step 4, completed 1-01',
+        'Complete step 4 at 96 BPM',
       );
     });
 
@@ -163,6 +163,16 @@ describe('PracticeCell', () => {
       button.focus();
       await user.keyboard('{Enter}');
       expect(onComplete).toHaveBeenCalledWith('cell-99');
+    });
+
+    it('triggers undo on Delete key', async () => {
+      const user = userEvent.setup();
+      const onUndo = vi.fn();
+      renderInTable(makeCell({ onUndo, cellId: 'cell-99' }));
+      const button = screen.getByRole('button');
+      button.focus();
+      await user.keyboard('{Delete}');
+      expect(onUndo).toHaveBeenCalledWith('cell-99');
     });
 
     it('does not suppress visible focus indicator', () => {

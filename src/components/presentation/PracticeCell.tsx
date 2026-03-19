@@ -21,7 +21,7 @@ const FRESHNESS_COLORS: Record<FreshnessState, { backgroundColor: string; color:
 function formatDate(isoDate: string): string {
   const parts = isoDate.split('-');
   const month = String(Number(parts[1]));
-  const day = parts[2];
+  const day = String(Number(parts[2]));
   return `${month}-${day}`;
 }
 
@@ -39,12 +39,11 @@ export function PracticeCell({
   onUndo,
 }: PracticeCellProps) {
   const colors = FRESHNESS_COLORS[freshnessState];
-  const isIncomplete = freshnessState === 'incomplete';
   const displayText = showsBpm(freshnessState)
     ? String(targetTempoBpm)
     : formatDate(lastCompletionDate!);
 
-  const ariaLabel = isIncomplete
+  const ariaLabel = showsBpm(freshnessState)
     ? `Complete step ${stepNumber} at ${targetTempoBpm} BPM`
     : `Undo step ${stepNumber}, completed ${formatDate(lastCompletionDate!)}`;
 
@@ -66,6 +65,12 @@ export function PracticeCell({
         onContextMenu={(e) => {
           e.preventDefault();
           onUndo(cellId);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Delete' || e.key === 'Backspace') {
+            e.preventDefault();
+            onUndo(cellId);
+          }
         }}
       >
         {displayText}

@@ -28,7 +28,7 @@ export interface GridTableProps {
 export function GridTable({ rows, onComplete, onUndo }: GridTableProps) {
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table>
+      <table aria-label="Practice grid">
         <tbody>
           {rows.map((row) => (
             <GridRow
@@ -47,7 +47,7 @@ export function GridTable({ rows, onComplete, onUndo }: GridTableProps) {
         </tbody>
       </table>
       <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '8px' }}>
-        Click to complete · Right-click to undo
+        Click to complete · Right-click or Delete key to undo
       </div>
     </div>
   );
