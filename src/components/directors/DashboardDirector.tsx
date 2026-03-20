@@ -216,7 +216,7 @@ export function DashboardDirector() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data: grids, isLoading, error } = useQuery({
-    queryKey: ['grids'],
+    queryKey: ['grids', 'detail'],
     queryFn: fetchGrids,
   });
 

@@ -23,7 +23,7 @@ const MAX_GRIDS = 5;
 function formatDate(iso: string): string {
   const datePart = iso.split('T')[0];
   const [, month, day] = datePart.split('-');
-  return `${parseInt(month, 10)}/${parseInt(day, 10).toString().padStart(2, '0')}`;
+  return `${parseInt(month, 10)}/${parseInt(day, 10)}`;
 }
 
 export function MyGridsPane({

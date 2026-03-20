@@ -31,7 +31,7 @@ async function fetchGrids(): Promise<ApiGrid[]> {
 
 export function GridListDirector() {
   const { data: grids, isLoading, error } = useQuery({
-    queryKey: ['grids'],
+    queryKey: ['grids', 'summary'],
     queryFn: fetchGrids,
   });
 

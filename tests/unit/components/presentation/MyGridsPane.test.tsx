@@ -37,9 +37,14 @@ describe('MyGridsPane', () => {
     expect(screen.getByText('65%')).toBeInTheDocument();
   });
 
-  it('renders formatted date as M/DD (strips leading zeros)', () => {
+  it('renders formatted date as M/D (strips leading zeros from month and day)', () => {
     render(<MyGridsPane {...defaultProps} />);
     expect(screen.getByText('Updated 3/15')).toBeInTheDocument();
+  });
+
+  it('strips leading zero from single-digit day', () => {
+    render(<MyGridsPane {...defaultProps} grids={[makeGrid({ updatedAt: '2026-09-05T00:00:00.000Z' })]} />);
+    expect(screen.getByText('Updated 9/5')).toBeInTheDocument();
   });
 
   it('renders attention count when > 0', () => {
