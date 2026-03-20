@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { formatGrid, formatGridDetail, formatGridList } from '@/views/grid';
+import { formatGrid, formatGridDetail, formatGridList, formatGridSummaryList } from '@/views/grid';
 
 const mockGrid = {
   id: '123e4567-e89b-12d3-a456-426614174000',
@@ -172,6 +172,81 @@ describe('Grid view — formatGridList', () => {
     expect(result).toHaveLength(2);
     expect(result[0]).not.toHaveProperty('userId');
     expect(result[1]).not.toHaveProperty('userId');
+  });
+});
+
+describe('Grid view — formatGridSummaryList', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-16T00:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('returns grid-level fields with completionPercentage and freshnessSummary', () => {
+    const result = formatGridSummaryList([mockGridWithRows], new Date());
+    expect(result).toHaveLength(1);
+    const grid = result[0];
+    expect(grid).toHaveProperty('id');
+    expect(grid).toHaveProperty('name');
+    expect(grid).toHaveProperty('notes');
+    expect(grid).toHaveProperty('fadeEnabled');
+    expect(grid).toHaveProperty('createdAt');
+    expect(grid).toHaveProperty('updatedAt');
+    expect(grid).toHaveProperty('completionPercentage');
+    expect(grid).toHaveProperty('freshnessSummary');
+    expect(grid).not.toHaveProperty('userId');
+    expect(grid).not.toHaveProperty('deletedAt');
+  });
+
+  it('strips cell data from rows, keeping only summary fields', () => {
+    const result = formatGridSummaryList([mockGridWithRows], new Date());
+    const row = result[0].rows[0];
+    expect(row).toHaveProperty('id');
+    expect(row).toHaveProperty('piece');
+    expect(row).toHaveProperty('passageLabel');
+    expect(row).toHaveProperty('startMeasure');
+    expect(row).toHaveProperty('endMeasure');
+    expect(row).toHaveProperty('priority');
+    expect(row).toHaveProperty('completionPercentage');
+    expect(row).toHaveProperty('freshnessSummary');
+    // Stripped fields:
+    expect(row).not.toHaveProperty('cells');
+    expect(row).not.toHaveProperty('sortOrder');
+    expect(row).not.toHaveProperty('targetTempo');
+    expect(row).not.toHaveProperty('steps');
+    expect(row).not.toHaveProperty('createdAt');
+    expect(row).not.toHaveProperty('updatedAt');
+  });
+
+  it('computes correct completionPercentage for grid and rows', () => {
+    const result = formatGridSummaryList([mockGridWithRows], new Date());
+    // mockGridWithRows: 2 cells, 1 completed (aging), 1 incomplete
+    // With fade ON: aging counts → 1/2 = 50%
+    expect(result[0].completionPercentage).toBe(50);
+    expect(result[0].rows[0].completionPercentage).toBe(50);
+  });
+
+  it('handles empty grid list', () => {
+    const result = formatGridSummaryList([], new Date());
+    expect(result).toEqual([]);
+  });
+
+  it('handles grid with no rows', () => {
+    const emptyGrid = { ...mockGrid, practiceRows: [] };
+    const result = formatGridSummaryList([emptyGrid], new Date());
+    expect(result[0].completionPercentage).toBe(0);
+    expect(result[0].rows).toEqual([]);
+  });
+
+  it('handles multiple grids', () => {
+    const grid2 = { ...mockGridWithRows, id: 'other-id', name: 'Second Grid' };
+    const result = formatGridSummaryList([mockGridWithRows, grid2], new Date());
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('Test Grid');
+    expect(result[1].name).toBe('Second Grid');
   });
 });
 

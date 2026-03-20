@@ -8,12 +8,18 @@ interface ApiGrid {
   name: string;
 }
 
+class AuthError extends Error {
+  constructor() {
+    super('Authentication required');
+    this.name = 'AuthError';
+  }
+}
+
 async function fetchGrids(): Promise<ApiGrid[]> {
   const response = await fetch('/api/grids');
 
   if (response.status === 401) {
-    window.location.href = '/';
-    throw new Error('Unauthorized');
+    throw new AuthError();
   }
 
   if (!response.ok) {
@@ -25,12 +31,16 @@ async function fetchGrids(): Promise<ApiGrid[]> {
 
 export function GridListDirector() {
   const { data: grids, isLoading, error } = useQuery({
-    queryKey: ['grids'],
+    queryKey: ['grids', 'summary'],
     queryFn: fetchGrids,
   });
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (error instanceof AuthError) {
+    return <div>Authentication required</div>;
   }
 
   if (error) {

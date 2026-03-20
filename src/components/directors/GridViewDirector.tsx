@@ -40,12 +40,25 @@ interface ApiGridDetail {
   rows: ApiRow[];
 }
 
+class AuthError extends Error {
+  constructor() {
+    super('Authentication required');
+    this.name = 'AuthError';
+  }
+}
+
+class NotFoundError extends Error {
+  constructor() {
+    super('Grid not found');
+    this.name = 'NotFoundError';
+  }
+}
+
 async function fetchGrid(gridId: string): Promise<ApiGridDetail> {
   const response = await fetch(`/api/grids/${gridId}`);
 
   if (response.status === 401) {
-    window.location.href = '/';
-    throw new Error('Unauthorized');
+    throw new AuthError();
   }
 
   if (response.status === 404) {
@@ -57,13 +70,6 @@ async function fetchGrid(gridId: string): Promise<ApiGridDetail> {
   }
 
   return response.json();
-}
-
-class NotFoundError extends Error {
-  constructor() {
-    super('Grid not found');
-    this.name = 'NotFoundError';
-  }
 }
 
 function mapRows(rows: ApiRow[]) {
@@ -158,6 +164,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
   };
 
   const handleToggleFade = () => {
+    /* v8 ignore next -- grid is always defined when toggle button is rendered */
     if (grid) {
       fadeMutation.mutate(!grid.fadeEnabled);
     }
@@ -165,6 +172,10 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (error instanceof AuthError) {
+    return <div>Authentication required</div>;
   }
 
   if (error instanceof NotFoundError) {
@@ -175,6 +186,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
     return <div>Error loading grid</div>;
   }
 
+  /* v8 ignore next 3 -- TanStack Query v5 never returns undefined data on success; defensive guard */
   if (!grid) {
     return null;
   }

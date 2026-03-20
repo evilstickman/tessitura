@@ -49,3 +49,29 @@ export function formatGridDetail(grid: GridDetailRecord, now: Date) {
 export function formatGridList(grids: GridRecord[]) {
   return grids.map(formatGrid);
 }
+
+export function formatGridSummaryList(grids: GridDetailRecord[], now: Date) {
+  return grids.map((grid) => {
+    const rows = grid.practiceRows.map((row) => formatRow(row, grid.fadeEnabled, now));
+
+    const allCellStates: CellWithEffectiveState[] = rows.flatMap((row) =>
+      row.cells.map((cell) => ({ effectiveState: cell.freshnessState }))
+    );
+
+    return {
+      ...formatGrid(grid),
+      completionPercentage: calculateCompletionPercentage(allCellStates, grid.fadeEnabled),
+      freshnessSummary: calculateFreshnessSummary(allCellStates),
+      rows: rows.map((row) => ({
+        id: row.id,
+        piece: row.piece,
+        passageLabel: row.passageLabel,
+        startMeasure: row.startMeasure,
+        endMeasure: row.endMeasure,
+        priority: row.priority,
+        completionPercentage: row.completionPercentage,
+        freshnessSummary: row.freshnessSummary,
+      })),
+    };
+  });
+}

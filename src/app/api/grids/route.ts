@@ -5,6 +5,6 @@ export async function POST(request: NextRequest) {
   return createGrid(request);
 }
 
-export async function GET() {
-  return listGrids();
+export async function GET(request: NextRequest) {
+  return listGrids(request);
 }

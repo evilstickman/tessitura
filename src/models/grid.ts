@@ -56,8 +56,45 @@ export async function createGrid(userId: string, input: GridInput) {
  */
 export async function listGrids(userId: string) {
   return prisma.practiceGrid.findMany({
-    where: { userId },
+    where: { userId, deletedAt: null },
     orderBy: { updatedAt: 'desc' },
+  });
+}
+
+/**
+ * Lists all grids for a user with full nested data (rows, cells, completions).
+ * Same includes as getGridById but for all grids at once in a single query.
+ *
+ * Soft-delete visibility rules:
+ * - Grids: hidden when soft-deleted (filtered out)
+ * - Rows: hidden when soft-deleted (filtered out)
+ * - Cells: hidden when soft-deleted (filtered out)
+ * - Completions: hidden when soft-deleted (filtered out)
+ * - Piece: ALWAYS shown, even if the piece itself is soft-deleted.
+ */
+export async function listGridsWithDetail(userId: string) {
+  return prisma.practiceGrid.findMany({
+    where: { userId, deletedAt: null },
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      practiceRows: {
+        where: { deletedAt: null },
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          piece: true,
+          practiceCells: {
+            where: { deletedAt: null },
+            orderBy: { stepNumber: 'asc' },
+            include: {
+              completions: {
+                where: { deletedAt: null },
+                orderBy: { completionDate: 'asc' },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 }
 
