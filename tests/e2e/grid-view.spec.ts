@@ -66,7 +66,9 @@ test.describe('Grid View', () => {
 
   test('grid not found shows message', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-999999999999');
-    await expect(page.getByText('Grid not found')).toBeVisible();
+    // TanStack Query retries 3 times with exponential backoff before surfacing the error.
+    // Allow up to 15 seconds for the error message to appear.
+    await expect(page.getByText('Grid not found')).toBeVisible({ timeout: 15000 });
   });
 });
 
