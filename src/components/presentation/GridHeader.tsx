@@ -94,6 +94,7 @@ export function GridHeader({
           type="button"
           role="switch"
           aria-checked={fadeEnabled}
+          aria-label="Toggle fade"
           onClick={onToggleFade}
           style={{
             width: '36px',
