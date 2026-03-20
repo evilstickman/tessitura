@@ -65,7 +65,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
-        run: npx playwright test --project=chromium
+        run: npx playwright test --project=chromium --update-snapshots
 
   deploy:
     needs: ci

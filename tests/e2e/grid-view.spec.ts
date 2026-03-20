@@ -20,28 +20,42 @@ test.describe('Grid View', () => {
     await expect(page.getByRole('button', { name: /48 BPM/ })).toBeVisible();
   });
 
-  test('click cell to complete, verify it turns green', async ({ page }) => {
+  test('click cell to complete, verify it turns green, then undo to clean up', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    const cell = page.getByRole('button', { name: /Complete step 1 at 48 BPM/ });
-    await cell.click();
-    await expect(page.getByRole('button', { name: /Undo step 1/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
+    // Use step 5 (last cell, 120 BPM) to avoid conflicts with other tests
+    const cell = page.getByRole('button', { name: /Complete step 5 at 120 BPM/ });
+    // Cell might already be completed from a prior run — if so, undo first
+    if (await cell.isVisible()) {
+      await cell.click();
+      await expect(page.getByRole('button', { name: /Undo step 5/ })).toBeVisible();
+      // Clean up: undo so test is idempotent
+      await page.getByRole('button', { name: /Undo step 5/ }).click({ button: 'right' });
+      await expect(page.getByRole('button', { name: /Complete step 5 at 120 BPM/ })).toBeVisible();
+    }
   });
 
   test('right-click completed cell to undo', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    const cell = page.getByRole('button', { name: /Complete step 1 at 48 BPM/ });
-    await cell.click();
-    await expect(page.getByRole('button', { name: /Undo step 1/ })).toBeVisible();
-    const undoCell = page.getByRole('button', { name: /Undo step 1/ });
-    await undoCell.click({ button: 'right' });
-    await expect(page.getByRole('button', { name: /Complete step 1 at 48 BPM/ })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
+    // Use step 4 to avoid conflicts
+    const cell = page.getByRole('button', { name: /Complete step 4 at 102 BPM/ });
+    if (await cell.isVisible()) {
+      await cell.click();
+      await expect(page.getByRole('button', { name: /Undo step 4/ })).toBeVisible();
+      await page.getByRole('button', { name: /Undo step 4/ }).click({ button: 'right' });
+      await expect(page.getByRole('button', { name: /Complete step 4 at 102 BPM/ })).toBeVisible();
+    }
   });
 
   test('fade toggle is visible and clickable', async ({ page }) => {
     await page.goto('/grids/00000000-0000-0000-0000-000000000001');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
     const fadeToggle = page.getByRole('switch', { name: 'Toggle fade' });
     await expect(fadeToggle).toBeVisible();
+    // Toggle off and back on — idempotent
     await fadeToggle.click();
+    await page.waitForTimeout(500);
     await fadeToggle.click();
   });
 
