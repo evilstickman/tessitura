@@ -43,6 +43,8 @@ export default defineConfig({
         'src/app/grids/page.tsx',
         'src/app/grids/[id]/page.tsx',
         'src/app/auth/signin/page.tsx',
+        // NavBarDirector — pure wiring (useSession + signOut), tested via NavBar unit tests + E2E.
+        'src/components/directors/NavBarDirector.tsx',
       ],
     },
   },
