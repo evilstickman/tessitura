@@ -12,12 +12,13 @@ describe('middleware', () => {
     expect(typeof config.matcher[0]).toBe('string');
   });
 
-  it('matcher excludes api/auth, _next/static, _next/image, favicon.ico, and auth/ paths', async () => {
+  it('matcher excludes all api/ routes, _next/static, _next/image, favicon.ico, and auth/ paths', async () => {
     const { config } = await import('@/middleware');
     const matcher = config.matcher[0];
 
     // Next.js negative-lookahead matcher pattern should contain these exclusions
-    expect(matcher).toContain('api/auth');
+    // All /api/* routes excluded — controllers own auth via getCurrentUserId()
+    expect(matcher).toContain('api/');
     expect(matcher).toContain('_next/static');
     expect(matcher).toContain('_next/image');
     expect(matcher).toContain('favicon');
