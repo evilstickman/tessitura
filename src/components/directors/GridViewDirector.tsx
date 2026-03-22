@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GridHeader } from '@/components/presentation/GridHeader';
 import { GridTable } from '@/components/presentation/GridTable';
+import { RowCreateForm } from '@/components/presentation/RowCreateForm';
 import type { FreshnessState } from '@/models/freshness';
 
 interface ApiCell {
@@ -97,6 +99,8 @@ interface GridViewDirectorProps {
 export function GridViewDirector({ gridId }: GridViewDirectorProps) {
   const queryClient = useQueryClient();
   const queryKey = ['grid', gridId];
+  const [showRowForm, setShowRowForm] = useState(false);
+  const [rowFormError, setRowFormError] = useState<string | null>(null);
 
   const { data: grid, isLoading, error } = useQuery({
     queryKey,
@@ -155,6 +159,29 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
     },
   });
 
+  const createRowMutation = useMutation({
+    mutationFn: async (data: { passageLabel: string; startMeasure: number; endMeasure: number; targetTempo: number; steps: number }) => {
+      const response = await fetch(`/api/grids/${gridId}/rows`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error?.message ?? 'Failed to add row');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      setShowRowForm(false);
+      setRowFormError(null);
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err: Error) => {
+      setRowFormError(err.message);
+    },
+  });
+
   const handleComplete = (rowId: string, cellId: string) => {
     completeMutation.mutate({ rowId, cellId });
   };
@@ -201,6 +228,25 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
         freshnessSummary={grid.freshnessSummary}
         onToggleFade={handleToggleFade}
       />
+      {showRowForm ? (
+        <div style={{ padding: '0 12px' }}>
+          <RowCreateForm
+            onSubmit={(data) => createRowMutation.mutate(data)}
+            onCancel={() => { setShowRowForm(false); setRowFormError(null); }}
+            error={rowFormError}
+          />
+        </div>
+      ) : (
+        <div style={{ padding: '8px 12px' }}>
+          <button
+            type="button"
+            onClick={() => { setShowRowForm(true); setRowFormError(null); }}
+            style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
+          >
+            + Add Row
+          </button>
+        </div>
+      )}
       <GridTable
         rows={mapRows(grid.rows)}
         onComplete={handleComplete}
