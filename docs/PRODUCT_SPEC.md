@@ -2714,17 +2714,16 @@ A milestone is complete when all its tasks pass their mapped acceptance criteria
 - Maps to: UC-1.5
 
 **M1.8: Authentication**
-- Task: Prisma schema for auth fields (email, password_hash, email_verified, etc.)
-- Task: Registration endpoint with email/password validation
-- Task: Email verification flow (token generation, verification endpoint)
-- Task: Login endpoint with JWT/session token
-- Task: Logout endpoint with session invalidation
-- Task: Forgot password flow
-- Task: Account lockout after 5 failed attempts
-- Task: Auth middleware — protect all API endpoints
-- Task: Retrofit existing grid/row/cell endpoints to require auth and scope to user
-- Task: Integration tests for all auth flows (including negative: wrong password, expired token, locked account)
+- V1 scope: Google OAuth only via Auth.js v5. Email/password + Apple OAuth deferred to future milestone.
+- Task: Schema migration for Auth.js compatibility (Account, VerificationToken tables, User field changes)
+- Task: Auth.js v5 config with Google provider + Prisma adapter
+- Task: Replace getCurrentUserId() with Auth.js JWT reading (dev fallback preserved)
+- Task: SessionProvider + route protection middleware
+- Task: Custom sign-in page with Google button (dark theme)
+- Task: Sign-out button + dynamic user name in dashboard
+- Task: E2E tests for auth flows
 - Maps to: UC-1.1, UC-1.2
+- Note: Email/password registration, email verification, forgot password, account lockout deferred to future milestone
 
 **M1.9: V1 Polish & System Verification**
 - Task: Cross-browser testing (Chrome, Firefox, Safari, Edge — latest 2 versions)
