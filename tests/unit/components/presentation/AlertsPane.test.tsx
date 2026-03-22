@@ -18,9 +18,14 @@ function makeAlert(overrides: Partial<AlertsPaneProps['alerts'][number]> = {}) {
 }
 
 describe('AlertsPane', () => {
-  it('renders the greeting', () => {
+  it('renders the greeting with default fallback', () => {
     render(<AlertsPane alerts={[]} />);
-    expect(screen.getByText('Welcome back, Dev User')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back, there')).toBeInTheDocument();
+  });
+
+  it('renders the greeting with a custom userName', () => {
+    render(<AlertsPane alerts={[]} userName="Willow" />);
+    expect(screen.getByText('Welcome back, Willow')).toBeInTheDocument();
   });
 
   it('renders the ALERTS header', () => {
@@ -87,7 +92,7 @@ describe('AlertsPane', () => {
 
   it('shows greeting only when hasGrids=true and no alerts', () => {
     render(<AlertsPane alerts={[]} hasGrids={true} />);
-    expect(screen.getByText('Welcome back, Dev User')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back, there')).toBeInTheDocument();
     expect(
       screen.queryByText('Create your first practice grid to get started')
     ).not.toBeInTheDocument();

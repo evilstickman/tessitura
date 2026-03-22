@@ -4,6 +4,13 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Mock next-auth/react before importing the component
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: { user: { name: 'Test User' } }, status: 'authenticated' }),
+  signOut: vi.fn(),
+}));
+
 import { DashboardDirector } from '@/components/directors/DashboardDirector';
 
 afterEach(() => cleanup());
@@ -525,6 +532,36 @@ describe('DashboardDirector', () => {
 
     // Should show 'Untitled' when both piece and passageLabel are null
     expect(screen.getByText('Untitled')).toBeInTheDocument();
+  });
+
+  it('renders the sign-out button', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => makeGridsResponse(),
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ALERTS')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+
+  it('passes session user name to AlertsPane greeting', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => makeGridsResponse(),
+    });
+
+    renderWithQuery(<DashboardDirector />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome back, Test User')).toBeInTheDocument();
+    });
   });
 
   it('sorts allFresh rows by priority when multiple rows exist', async () => {

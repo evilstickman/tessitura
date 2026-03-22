@@ -11,11 +11,12 @@ interface Alert {
 export interface AlertsPaneProps {
   alerts: Alert[];
   hasGrids?: boolean;
+  userName?: string;
 }
 
 const MAX_ALERTS = 5;
 
-export function AlertsPane({ alerts, hasGrids = true }: AlertsPaneProps) {
+export function AlertsPane({ alerts, hasGrids = true, userName }: AlertsPaneProps) {
   const visibleAlerts = alerts.slice(0, MAX_ALERTS);
   const hasMore = alerts.length > MAX_ALERTS;
 
@@ -34,7 +35,7 @@ export function AlertsPane({ alerts, hasGrids = true }: AlertsPaneProps) {
       </div>
 
       <div style={{ fontSize: '15px', color: '#f9fafb', fontWeight: 600, marginBottom: '12px' }}>
-        Welcome back, Dev User
+        Welcome back, {userName ?? 'there'}
       </div>
 
       {!hasGrids && (
