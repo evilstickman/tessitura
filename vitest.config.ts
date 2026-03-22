@@ -30,6 +30,8 @@ export default defineConfig({
         // Auth.js v5 config — pure wiring, no custom logic. Tested via integration tests
         // that mock auth() and verify getCurrentUserId behavior.
         'src/lib/auth.config.ts',
+        // Auth.js edge-safe config — providers + callbacks only, used by middleware.
+        'src/lib/auth.edge.ts',
         // Auth.js route handler — re-exports handlers from auth.config, zero custom code.
         'src/app/api/auth/**',
         // Next.js middleware — Auth.js wiring, tested via E2E redirect tests.
