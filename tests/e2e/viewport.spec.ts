@@ -26,9 +26,13 @@ for (const vp of VIEWPORTS) {
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1); // 1px tolerance
     });
 
-    test('grid detail renders without breaking', async ({ page }) => {
+    test('grid detail renders without horizontal overflow', async ({ page }) => {
       await page.goto('/grids/00000000-0000-0000-0000-000000000001');
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      // Same no-overflow check as dashboard
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
     });
   });
 }
