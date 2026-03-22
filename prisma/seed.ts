@@ -11,7 +11,7 @@ async function main() {
     create: {
       email: 'dev-placeholder@tessitura.local',
       passwordHash: 'not-a-real-hash',
-      displayName: 'Dev User',
+      name: 'Dev User',
       instruments: [],
     },
   });

@@ -9,7 +9,7 @@ async function createTestUser() {
     data: {
       email: 'soft-delete-test@example.com',
       passwordHash: 'hash',
-      displayName: 'Test User',
+      name: 'Test User',
       instruments: [],
     },
   });

@@ -114,15 +114,20 @@ The following are excluded from coverage in `vitest.config.ts`. Each must have a
 |------|--------|
 | `src/generated/**` | Prisma auto-generated client. Not our code; regenerated on every build. |
 | `src/app/globals.css` | CSS file, not executable code. |
+| `src/lib/auth.config.ts` | Auth.js v5 config — pure wiring, no custom logic. Tested via integration tests. |
+| `src/app/api/auth/**` | Auth.js route handler — re-exports handlers, zero custom code. |
+| `src/middleware.ts` | Auth.js middleware wiring. Tested via E2E redirect tests. |
 
 **Rule:** When any excluded file gains application logic, it must be removed from the exclusion list and tested.
 
-## Temporary Auth Contract (pre-M1.8)
+## Auth Contract (M1.8+)
 
-- Before M1.8 (NextAuth), a placeholder `requireAuth()` in `src/lib/auth.ts` provides the dev seed user.
+- `getCurrentUserId()` in `src/lib/auth.ts` resolves the current user.
+- **Production** (`AUTH_SECRET` set): reads Auth.js v5 JWT via `auth()` helper.
+- **Development** (no `AUTH_SECRET`): falls back to dev seed user.
 - Auth failure throws `AuthenticationError` (from `src/lib/errors.ts`), which controllers catch and return as `401 AUTHENTICATION_ERROR`.
-- This is intentional behavior, not an accident — tests assert 401, not 500.
-- When M1.8 lands, replace the placeholder but keep the `AuthenticationError` → 401 contract.
+- This contract is permanent — the mechanism may change, the behavior never does.
+- Google OAuth is the only provider in V1. Apple + email/password planned for future milestones.
 
 ## Soft Delete Visibility Rules
 

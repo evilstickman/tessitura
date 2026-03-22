@@ -25,7 +25,7 @@ async function createSeedUser() {
     create: {
       email: 'dev-placeholder@tessitura.local',
       passwordHash: 'not-a-real-hash',
-      displayName: 'Dev User',
+      name: 'Dev User',
       instruments: [],
     },
   });
@@ -36,7 +36,7 @@ async function createOtherUser() {
     data: {
       email: `other-${Date.now()}@example.com`,
       passwordHash: 'hash',
-      displayName: 'Other User',
+      name: 'Other User',
       instruments: [],
     },
   });

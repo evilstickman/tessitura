@@ -72,7 +72,7 @@ async function createTestUser() {
     data: {
       email: `soft-${Date.now()}-${Math.random()}@example.com`,
       passwordHash: 'hash',
-      displayName: 'Soft Delete Test',
+      name: 'Soft Delete Test',
       instruments: [],
     },
   });
@@ -176,7 +176,7 @@ describe('Soft delete behavior', () => {
       data: {
         email: `soft-many-${Date.now()}@example.com`,
         passwordHash: 'hash',
-        displayName: 'Soft Delete Many',
+        name: 'Soft Delete Many',
         instruments: [],
       },
     });

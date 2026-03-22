@@ -21,10 +21,11 @@ enum Priority {
 model User {
   id                     String                 @id @default(uuid()) @db.Uuid
   email                  String                 @unique
-  passwordHash           String                 @map("password_hash")
-  displayName            String                 @map("display_name")
-  instruments            String[]
-  emailVerified          Boolean                @default(false) @map("email_verified")
+  passwordHash           String?                @map("password_hash")
+  name                   String?                @map("display_name")
+  instruments            String[]               @default([])
+  emailVerified          DateTime?              @map("email_verified") @db.Timestamptz
+  image                  String?
   timezone               String                 @default("UTC")
   defaultFadeEnabled     Boolean                @default(true) @map("default_fade_enabled")
   createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz
@@ -33,6 +34,7 @@ model User {
 
   practiceGrids PracticeGrid[]
   pieces        Piece[]
+  accounts      Account[]
 
   @@map("users")
 }
@@ -119,4 +121,33 @@ model PracticeCellCompletion {
 
   @@unique([practiceCellId, completionDate])
   @@map("practice_cell_completions")
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }

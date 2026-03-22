@@ -8,14 +8,14 @@ describe('User model', () => {
       data: {
         email: 'test@example.com',
         passwordHash: 'hashed_password_123',
-        displayName: 'Test User',
+        name: 'Test User',
         instruments: ['violin', 'piano'],
       },
     });
 
     expect(user.email).toBe('test@example.com');
     expect(user.passwordHash).toBe('hashed_password_123');
-    expect(user.displayName).toBe('Test User');
+    expect(user.name).toBe('Test User');
     expect(user.instruments).toEqual(['violin', 'piano']);
   });
 
@@ -25,7 +25,7 @@ describe('User model', () => {
       data: {
         email: 'uuid@example.com',
         passwordHash: 'hash',
-        displayName: 'UUID Test',
+        name: 'UUID Test',
         instruments: [],
       },
     });
@@ -40,7 +40,7 @@ describe('User model', () => {
       data: {
         email: 'duplicate@example.com',
         passwordHash: 'hash',
-        displayName: 'First',
+        name: 'First',
         instruments: [],
       },
     });
@@ -50,7 +50,7 @@ describe('User model', () => {
         data: {
           email: 'duplicate@example.com',
           passwordHash: 'hash2',
-          displayName: 'Second',
+          name: 'Second',
           instruments: [],
         },
       }),
@@ -64,7 +64,7 @@ describe('User model', () => {
       data: {
         email: 'instruments@example.com',
         passwordHash: 'hash',
-        displayName: 'Multi',
+        name: 'Multi',
         instruments,
       },
     });
@@ -79,12 +79,12 @@ describe('User model', () => {
       data: {
         email: 'defaults@example.com',
         passwordHash: 'hash',
-        displayName: 'Defaults',
+        name: 'Defaults',
         instruments: [],
       },
     });
 
-    expect(user.emailVerified).toBe(false);
+    expect(user.emailVerified).toBeNull();
     expect(user.timezone).toBe('UTC');
     expect(user.defaultFadeEnabled).toBe(true);
     expect(user.deletedAt).toBeNull();
@@ -97,7 +97,7 @@ describe('User model', () => {
       data: {
         email: 'timestamps@example.com',
         passwordHash: 'hash',
-        displayName: 'Timestamps',
+        name: 'Timestamps',
         instruments: [],
       },
     });

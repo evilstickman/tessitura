@@ -27,6 +27,13 @@ export default defineConfig({
         'src/app/globals.css',
         // Prisma auto-generated client — not our code, regenerated on every build.
         'src/generated/**',
+        // Auth.js v5 config — pure wiring, no custom logic. Tested via integration tests
+        // that mock auth() and verify getCurrentUserId behavior.
+        'src/lib/auth.config.ts',
+        // Auth.js route handler — re-exports handlers from auth.config, zero custom code.
+        'src/app/api/auth/**',
+        // Next.js middleware — Auth.js wiring, tested via E2E redirect tests.
+        'src/middleware.ts',
       ],
     },
   },
