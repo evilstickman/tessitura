@@ -5,7 +5,6 @@ export interface DashboardLayoutProps {
   grids: React.ReactNode;
   stats: React.ReactNode;
   focus: React.ReactNode;
-  topRight?: React.ReactNode;
 }
 
 const cardStyle: React.CSSProperties = {
@@ -16,23 +15,10 @@ const cardStyle: React.CSSProperties = {
 
 const GRID_CLASS = 'dashboard-grid';
 
-export function DashboardLayout({ alerts, grids, stats, focus, topRight }: DashboardLayoutProps) {
+export function DashboardLayout({ alerts, grids, stats, focus }: DashboardLayoutProps) {
   return (
     <>
       <style>{`@media (max-width: 768px) { .${GRID_CLASS} { grid-template-columns: 1fr !important; } }`}</style>
-      {topRight && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            padding: '8px 12px',
-            maxWidth: '1200px',
-            margin: '0 auto',
-          }}
-        >
-          {topRight}
-        </div>
-      )}
       <div
         className={GRID_CLASS}
         style={{

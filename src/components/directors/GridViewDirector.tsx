@@ -160,7 +160,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
   });
 
   const createRowMutation = useMutation({
-    mutationFn: async (data: { passageLabel: string; startMeasure: number; endMeasure: number; targetTempo: number; steps: number }) => {
+    mutationFn: async (data: { passageLabel: string; startMeasure: number; endMeasure: number; targetTempo: number; steps: number; priority: string }) => {
       const response = await fetch(`/api/grids/${gridId}/rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,7 +173,7 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
       return response.json();
     },
     onSuccess: () => {
-      setShowRowForm(false);
+      // Keep form open so user can add multiple rows
       setRowFormError(null);
       queryClient.invalidateQueries({ queryKey });
     },

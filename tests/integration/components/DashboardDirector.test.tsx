@@ -534,22 +534,6 @@ describe('DashboardDirector', () => {
     expect(screen.getByText('Untitled')).toBeInTheDocument();
   });
 
-  it('renders the sign-out button', async () => {
-    fetchSpy.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => makeGridsResponse(),
-    });
-
-    renderWithQuery(<DashboardDirector />);
-
-    await waitFor(() => {
-      expect(screen.getByText('ALERTS')).toBeInTheDocument();
-    });
-
-    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
-  });
-
   it('passes session user name to AlertsPane greeting', async () => {
     fetchSpy.mockResolvedValue({
       ok: true,

@@ -60,35 +60,6 @@ describe('DashboardLayout', () => {
     expect(alertsCard).toHaveStyle({ padding: '16px' });
   });
 
-  it('does not render topRight bar when prop is not provided', () => {
-    const { container } = render(
-      <DashboardLayout
-        alerts={<div>A</div>}
-        grids={<div>G</div>}
-        stats={<div>S</div>}
-        focus={<div>F</div>}
-      />
-    );
-
-    // The topRight bar should not exist
-    const flexBars = container.querySelectorAll('div[style*="flex-end"]');
-    expect(flexBars).toHaveLength(0);
-  });
-
-  it('renders topRight content when provided', () => {
-    render(
-      <DashboardLayout
-        alerts={<div>A</div>}
-        grids={<div>G</div>}
-        stats={<div>S</div>}
-        focus={<div>F</div>}
-        topRight={<button data-testid="sign-out">Sign out</button>}
-      />
-    );
-
-    expect(screen.getByTestId('sign-out')).toBeInTheDocument();
-  });
-
   it('includes responsive style tag for single column at <768px', () => {
     const { container } = render(
       <DashboardLayout

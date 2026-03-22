@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '@/components/presentation/DashboardLayout';
 import { AlertsPane } from '@/components/presentation/AlertsPane';
-import { SignOutButton } from '@/components/presentation/SignOutButton';
 import { MyGridsPane } from '@/components/presentation/MyGridsPane';
 import { StatisticsPane } from '@/components/presentation/StatisticsPane';
 import { PracticeFocusPane } from '@/components/presentation/PracticeFocusPane';
@@ -215,7 +214,7 @@ function deriveGridCards(grids: ApiGridSummary[]) {
 export function DashboardDirector() {
   const { data: session } = useSession();
   const userName = session?.user?.name ?? undefined;
-  const handleSignOut = () => signOut({ callbackUrl: '/auth/signin' });
+
 
   const queryClient = useQueryClient();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -287,7 +286,6 @@ export function DashboardDirector() {
 
   return (
     <DashboardLayout
-      topRight={<SignOutButton onSignOut={handleSignOut} />}
       alerts={<AlertsPane alerts={alerts} hasGrids={hasGrids} userName={userName} />}
       grids={
         <MyGridsPane

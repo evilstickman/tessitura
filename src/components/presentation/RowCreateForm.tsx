@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 
+const PRIORITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const;
+
 interface RowCreateFormProps {
-  onSubmit: (data: { passageLabel: string; startMeasure: number; endMeasure: number; targetTempo: number; steps: number }) => void;
+  onSubmit: (data: { passageLabel: string; startMeasure: number; endMeasure: number; targetTempo: number; steps: number; priority: string }) => void;
   onCancel: () => void;
   error?: string | null;
 }
@@ -14,6 +16,7 @@ export function RowCreateForm({ onSubmit, onCancel, error }: RowCreateFormProps)
   const [endMeasure, setEndMeasure] = useState('');
   const [targetTempo, setTargetTempo] = useState('');
   const [steps, setSteps] = useState('');
+  const [priority, setPriority] = useState('MEDIUM');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +32,15 @@ export function RowCreateForm({ onSubmit, onCancel, error }: RowCreateFormProps)
       endMeasure: end,
       targetTempo: tempo,
       steps: stepCount,
+      priority,
     });
+    // Clear fields so user can add another row
+    setPassageLabel('');
+    setStartMeasure('');
+    setEndMeasure('');
+    setTargetTempo('');
+    setSteps('');
+    setPriority('MEDIUM');
   }
 
   const inputStyle: React.CSSProperties = {
@@ -53,6 +64,11 @@ export function RowCreateForm({ onSubmit, onCancel, error }: RowCreateFormProps)
         <input type="number" placeholder="End measure" value={endMeasure} onChange={(e) => setEndMeasure(e.target.value)} style={inputStyle} min={1} required />
         <input type="number" placeholder="Target tempo (BPM)" value={targetTempo} onChange={(e) => setTargetTempo(e.target.value)} style={inputStyle} min={1} max={999} required />
         <input type="number" placeholder="Steps (1-50)" value={steps} onChange={(e) => setSteps(e.target.value)} style={inputStyle} min={1} max={50} required />
+        <select value={priority} onChange={(e) => setPriority(e.target.value)} style={{ ...inputStyle, gridColumn: '1 / -1' }} aria-label="Priority">
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+          ))}
+        </select>
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
         <button type="submit" style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>

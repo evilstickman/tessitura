@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthSessionProvider } from "@/lib/session-provider";
 import { QueryProvider } from "@/lib/query-client";
+import { NavBarDirector } from "@/components/directors/NavBarDirector";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,6 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthSessionProvider>
+          <NavBarDirector />
           <QueryProvider>{children}</QueryProvider>
         </AuthSessionProvider>
       </body>

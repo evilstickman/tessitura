@@ -48,6 +48,7 @@ describe('RowCreateForm', () => {
       endMeasure: 16,
       targetTempo: 120,
       steps: 5,
+      priority: 'MEDIUM',
     });
   });
 
