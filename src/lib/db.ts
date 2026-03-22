@@ -10,22 +10,30 @@ function createExtendedClient() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   const base = new PrismaClient({ adapter });
 
+  // Models that have a deletedAt field and use soft-delete.
+  // Account and VerificationToken (Auth.js tables) do NOT have deletedAt.
+  const SOFT_DELETE_MODELS = new Set([
+    'User', 'PracticeGrid', 'PracticeRow', 'PracticeCell',
+    'PracticeCellCompletion', 'Piece',
+  ]);
+
   return base.$extends({
     query: {
       $allModels: {
-        async findMany({ args, query }) {
-          return query(addSoftDeleteFilter(args));
+        async findMany({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },
-        async findFirst({ args, query }) {
-          return query(addSoftDeleteFilter(args));
+        async findFirst({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },
-        async findUnique({ args, query }) {
-          return query(addSoftDeleteFilter(args));
+        async findUnique({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },
-        async count({ args, query }) {
-          return query(addSoftDeleteFilter(args));
+        async count({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },
-        async delete({ args, model }) {
+        async delete({ args, model, query }) {
+          if (!SOFT_DELETE_MODELS.has(model)) return query(args);
           // Convert delete to soft-delete (update setting deletedAt)
           const client = prisma as unknown as Record<
             string,
@@ -37,7 +45,8 @@ function createExtendedClient() {
             data: { deletedAt: new Date() },
           });
         },
-        async deleteMany({ args, model }) {
+        async deleteMany({ args, model, query }) {
+          if (!SOFT_DELETE_MODELS.has(model)) return query(args);
           // Convert deleteMany to soft-delete (updateMany setting deletedAt)
           const client = prisma as unknown as Record<
             string,
