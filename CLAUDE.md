@@ -10,6 +10,7 @@ npm run test         # Run unit + integration tests (Vitest)
 npm run test:e2e     # Run e2e tests (Playwright)
 npm run lint         # Lint (zero errors, zero warnings)
 npx tsc --noEmit     # Type check
+npm run verify       # All of the above in sequence
 ```
 
 ## Architecture: MCV + Director Pattern

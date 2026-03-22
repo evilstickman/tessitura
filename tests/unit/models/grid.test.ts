@@ -69,9 +69,16 @@ describe('Grid model — validateGridInput', () => {
   });
 
   // Test 11
-  it('accepts notes with 10,000+ characters', () => {
-    const longNotes = 'x'.repeat(10_001);
-    const result = validateGridInput({ name: 'Grid', notes: longNotes });
-    expect(result.notes).toBe(longNotes);
+  it('accepts notes up to 2000 characters', () => {
+    const notes = 'x'.repeat(2000);
+    const result = validateGridInput({ name: 'Grid', notes });
+    expect(result.notes).toBe(notes);
+  });
+
+  // Test 11a
+  it('rejects notes exceeding 2000 characters', () => {
+    const longNotes = 'x'.repeat(2001);
+    expect(() => validateGridInput({ name: 'Grid', notes: longNotes }))
+      .toThrow('Grid notes must be 2000 characters or less');
   });
 });

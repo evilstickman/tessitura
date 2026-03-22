@@ -23,21 +23,19 @@ export function GridCreateForm({ onSubmit, onCancel, error }: GridCreateFormProp
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
 
-  function handleSubmit() {
+  function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     if (name.trim() === '') return;
     onSubmit(name, notes);
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <input
         type="text"
         placeholder="Grid name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') handleSubmit();
-        }}
         style={inputStyle}
       />
       <input
@@ -49,8 +47,7 @@ export function GridCreateForm({ onSubmit, onCancel, error }: GridCreateFormProp
       />
       <div style={{ display: 'flex', gap: '8px' }}>
         <button
-          type="button"
-          onClick={handleSubmit}
+          type="submit"
           style={{
             backgroundColor: '#10b981',
             color: '#ffffff',
@@ -83,6 +80,6 @@ export function GridCreateForm({ onSubmit, onCancel, error }: GridCreateFormProp
       {error && (
         <div style={{ color: '#ef4444', fontSize: '12px' }}>{error}</div>
       )}
-    </div>
+    </form>
   );
 }

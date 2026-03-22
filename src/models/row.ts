@@ -35,9 +35,20 @@ export function generateCellPercentages(steps: number): number[] {
   });
 }
 
+const UPPER_BOUNDS: Record<string, number> = {
+  'Steps': 50,
+  'Target tempo': 999,
+  'Start measure': 99999,
+  'End measure': 99999,
+};
+
 function validatePositiveInteger(value: unknown, fieldName: string): number {
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
     throw new ValidationError(`${fieldName} must be a positive integer`);
+  }
+  const max = UPPER_BOUNDS[fieldName];
+  if (max && value > max) {
+    throw new ValidationError(`${fieldName} must be ${max} or less`);
   }
   return value;
 }

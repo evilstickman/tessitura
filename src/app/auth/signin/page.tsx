@@ -41,7 +41,7 @@ function SignInContent() {
         <p
           style={{
             fontSize: '14px',
-            color: '#6b7280',
+            color: '#9ca3af',
             margin: '0 0 24px 0',
           }}
         >
