@@ -39,7 +39,7 @@ describe('Piece normalization migration — data preservation', () => {
       create: {
         email: 'migration-test@tessitura.local',
         passwordHash: 'not-a-real-hash',
-        displayName: 'Migration Test User',
+        name: 'Migration Test User',
         instruments: [],
       },
     });
@@ -209,7 +209,7 @@ describe('Piece normalization migration — data preservation', () => {
       data: {
         email: `migration-other-${Date.now()}@tessitura.local`,
         passwordHash: 'hash',
-        displayName: 'Other User',
+        name: 'Other User',
         instruments: [],
       },
     });
@@ -357,7 +357,7 @@ describe('Piece normalization migration — SQL logic verification', () => {
       create: {
         email: 'dedup-test@tessitura.local',
         passwordHash: 'hash',
-        displayName: 'Dedup Test',
+        name: 'Dedup Test',
         instruments: [],
       },
     });

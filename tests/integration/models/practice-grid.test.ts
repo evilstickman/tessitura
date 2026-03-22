@@ -7,7 +7,7 @@ async function createTestUser() {
     data: {
       email: `user-${Date.now()}@example.com`,
       passwordHash: 'hash',
-      displayName: 'Test User',
+      name: 'Test User',
       instruments: ['violin'],
     },
   });

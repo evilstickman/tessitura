@@ -17,7 +17,7 @@ async function createSeedUser() {
     create: {
       email: 'dev-placeholder@tessitura.local',
       passwordHash: 'not-a-real-hash',
-      displayName: 'Dev User',
+      name: 'Dev User',
       instruments: [],
     },
   });
@@ -185,7 +185,7 @@ describe('Cell API — Complete', () => {
       data: {
         email: `other-${Date.now()}@example.com`,
         passwordHash: 'hash',
-        displayName: 'Other',
+        name: 'Other',
         instruments: [],
       },
     });
@@ -436,7 +436,7 @@ describe('Grid API — Update Fade', () => {
       data: {
         email: `other-${Date.now()}@example.com`,
         passwordHash: 'hash',
-        displayName: 'Other',
+        name: 'Other',
         instruments: [],
       },
     });

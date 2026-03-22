@@ -8,7 +8,7 @@ async function createFullChain() {
     data: {
       email: `chain-${Date.now()}@example.com`,
       passwordHash: 'hash',
-      displayName: 'Chain User',
+      name: 'Chain User',
       instruments: ['piano'],
     },
   });
