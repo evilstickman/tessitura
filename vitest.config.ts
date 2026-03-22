@@ -36,6 +36,13 @@ export default defineConfig({
         'src/app/api/auth/**',
         // Next.js middleware — Auth.js wiring, tested via E2E redirect tests.
         'src/middleware.ts',
+        // Next.js page/layout wrappers — thin components that render directors/providers.
+        // Zero logic, tested via E2E. Individual directors/components have full unit test coverage.
+        'src/app/layout.tsx',
+        'src/app/page.tsx',
+        'src/app/grids/page.tsx',
+        'src/app/grids/[id]/page.tsx',
+        'src/app/auth/signin/page.tsx',
       ],
     },
   },

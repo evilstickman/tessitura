@@ -579,4 +579,56 @@ describe('GridViewDirector', () => {
     // Grid should still be visible (no error state)
     expect(screen.getByText('Bach Partita Practice')).toBeInTheDocument();
   });
+
+  it('shows Add Row button and opens form on click', async () => {
+    const user = userEvent.setup();
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => makeGridResponse(),
+    });
+
+    renderWithQuery(<GridViewDirector gridId={GRID_ID} />);
+    await waitFor(() => {
+      expect(screen.getByText('+ Add Row')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('+ Add Row'));
+    expect(screen.getByPlaceholderText('Start measure')).toBeInTheDocument();
+  });
+
+  it('creates row via form and refetches grid', async () => {
+    const user = userEvent.setup();
+    const gridResponse = makeGridResponse();
+    fetchSpy
+      .mockResolvedValueOnce({ ok: true, json: async () => gridResponse }) // initial fetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'new-row' }) }) // POST create
+      .mockResolvedValueOnce({ ok: true, json: async () => gridResponse }); // refetch
+
+    renderWithQuery(<GridViewDirector gridId={GRID_ID} />);
+    await waitFor(() => {
+      expect(screen.getByText('+ Add Row')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('+ Add Row'));
+
+    const { fireEvent } = await import('@testing-library/react');
+    const startInput = screen.getByPlaceholderText('Start measure');
+    await user.clear(startInput);
+    await user.type(startInput, '1');
+    await user.clear(screen.getByPlaceholderText('End measure'));
+    await user.type(screen.getByPlaceholderText('End measure'), '8');
+    await user.clear(screen.getByPlaceholderText('Target tempo (BPM)'));
+    await user.type(screen.getByPlaceholderText('Target tempo (BPM)'), '120');
+    await user.clear(screen.getByPlaceholderText('Steps (1-50)'));
+    await user.type(screen.getByPlaceholderText('Steps (1-50)'), '5');
+
+    fireEvent.submit(startInput.closest('form')!);
+
+    await waitFor(() => {
+      const postCall = fetchSpy.mock.calls.find(
+        (c) => c[0] === `/api/grids/${GRID_ID}/rows` && c[1]?.method === 'POST',
+      );
+      expect(postCall).toBeTruthy();
+    });
+  });
 });
