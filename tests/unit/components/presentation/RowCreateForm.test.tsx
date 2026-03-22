@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import { RowCreateForm } from '@/components/presentation/RowCreateForm';
@@ -78,7 +78,6 @@ describe('RowCreateForm', () => {
     render(<RowCreateForm onSubmit={onSubmit} onCancel={vi.fn()} />);
 
     // Submit with empty fields — parseInt returns NaN, form handler returns early
-    const { fireEvent } = require('@testing-library/react');
     const form = screen.getByPlaceholderText('Start measure').closest('form')!;
     fireEvent.submit(form);
     expect(onSubmit).not.toHaveBeenCalled();
