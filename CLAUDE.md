@@ -114,6 +114,9 @@ The following are excluded from coverage in `vitest.config.ts`. Each must have a
 |------|--------|
 | `src/generated/**` | Prisma auto-generated client. Not our code; regenerated on every build. |
 | `src/app/globals.css` | CSS file, not executable code. |
+| `src/lib/auth.config.ts` | Auth.js v5 config — pure wiring, no custom logic. Tested via integration tests. |
+| `src/app/api/auth/**` | Auth.js route handler — re-exports handlers, zero custom code. |
+| `src/middleware.ts` | Auth.js middleware wiring. Tested via E2E redirect tests. |
 
 **Rule:** When any excluded file gains application logic, it must be removed from the exclusion list and tested.
 
