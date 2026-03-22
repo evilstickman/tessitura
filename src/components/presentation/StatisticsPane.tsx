@@ -10,7 +10,7 @@ export function StatisticsPane({ avgCompletion, cellsCompleted, hasGrids }: Stat
       <div
         style={{
           fontSize: '11px',
-          color: '#6b7280',
+          color: '#9ca3af',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           marginBottom: '10px',

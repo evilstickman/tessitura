@@ -35,6 +35,10 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('pieceId must be a string', 'VALIDATION_ERROR', 400);
     }
 
+    if (body.pieceId != null && !UUID_REGEX.test(body.pieceId)) {
+      return errorResponse('Invalid pieceId format', 'VALIDATION_ERROR', 400);
+    }
+
     if (body.passageLabel != null && typeof body.passageLabel !== 'string') {
       return errorResponse('passageLabel must be a string', 'VALIDATION_ERROR', 400);
     }
@@ -87,6 +91,10 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
 
     if ('pieceId' in body && body.pieceId != null && typeof body.pieceId !== 'string') {
       return errorResponse('pieceId must be a string', 'VALIDATION_ERROR', 400);
+    }
+
+    if ('pieceId' in body && body.pieceId != null && !UUID_REGEX.test(body.pieceId)) {
+      return errorResponse('Invalid pieceId format', 'VALIDATION_ERROR', 400);
     }
 
     if ('passageLabel' in body && body.passageLabel != null && typeof body.passageLabel !== 'string') {

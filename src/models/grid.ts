@@ -32,6 +32,10 @@ export function validateGridInput(input: GridInput): ValidatedGridInput {
   // Whitespace-only notes normalize to null (not empty string)
   const notes = trimmedNotes === '' ? null : trimmedNotes;
 
+  if (notes && notes.length > 2000) {
+    throw new ValidationError('Grid notes must be 2000 characters or less');
+  }
+
   return { name, notes };
 }
 
