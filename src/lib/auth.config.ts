@@ -1,23 +1,14 @@
+/**
+ * Full Auth.js config — used by route handler and auth() helper (Node.js runtime).
+ * Imports Prisma adapter for user/account persistence.
+ * Extends the edge-safe config with the adapter.
+ */
 import NextAuth from 'next-auth';
-import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
+import { authConfig } from '@/lib/auth.edge';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  providers: [Google],
-  session: { strategy: 'jwt' },
-  pages: { signIn: '/auth/signin' },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
-      return token;
-    },
-    session({ session, token }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
-  },
 });

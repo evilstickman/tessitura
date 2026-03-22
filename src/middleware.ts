@@ -1,4 +1,7 @@
-import { auth } from '@/lib/auth.config';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/lib/auth.edge';
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   if (!req.auth && req.nextUrl.pathname !== '/auth/signin') {
