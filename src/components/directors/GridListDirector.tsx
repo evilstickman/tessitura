@@ -2,17 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { GridList } from '@/components/presentation/GridList';
+import { AuthError } from '@/lib/api-errors';
 
 interface ApiGrid {
   id: string;
   name: string;
-}
-
-class AuthError extends Error {
-  constructor() {
-    super('Authentication required');
-    this.name = 'AuthError';
-  }
 }
 
 async function fetchGrids(): Promise<ApiGrid[]> {

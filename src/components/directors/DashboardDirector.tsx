@@ -8,16 +8,10 @@ import { AlertsPane } from '@/components/presentation/AlertsPane';
 import { MyGridsPane } from '@/components/presentation/MyGridsPane';
 import { StatisticsPane } from '@/components/presentation/StatisticsPane';
 import { PracticeFocusPane } from '@/components/presentation/PracticeFocusPane';
+import { AuthError } from '@/lib/api-errors';
+import { type FreshnessSummary, getRowLabel } from '@/lib/api-types';
 
 // --- API types ---
-
-interface FreshnessSummary {
-  fresh: number;
-  aging: number;
-  stale: number;
-  decayed: number;
-  incomplete: number;
-}
 
 interface ApiRowSummary {
   id: string;
@@ -40,15 +34,6 @@ interface ApiGridSummary {
   createdAt: string;
   updatedAt: string;
   rows: ApiRowSummary[];
-}
-
-// --- Error classes ---
-
-class AuthError extends Error {
-  constructor() {
-    super('Authentication required');
-    this.name = 'AuthError';
-  }
 }
 
 // --- Fetch ---
@@ -75,16 +60,6 @@ const PRIORITY_ORDER: Record<string, number> = {
   MEDIUM: 2,
   LOW: 3,
 };
-
-function getRowLabel(
-  piece: { title: string } | null,
-  passageLabel: string | null,
-): string {
-  if (piece && passageLabel) return `${piece.title} — ${passageLabel}`;
-  if (piece) return piece.title;
-  if (passageLabel) return passageLabel;
-  return 'Untitled';
-}
 
 // --- Derivation functions ---
 

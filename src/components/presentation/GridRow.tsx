@@ -1,5 +1,6 @@
 import { PracticeCell } from '@/components/presentation/PracticeCell';
 import type { FreshnessState } from '@/models/freshness';
+import { getRowLabel } from '@/lib/api-types';
 
 interface CellData {
   cellId: string;
@@ -28,16 +29,6 @@ const PRIORITY_COLORS: Record<string, string> = {
   LOW: '#9ca3af',
 };
 
-function getLabel(
-  piece: { title: string } | null,
-  passageLabel: string | null,
-): string {
-  if (piece && passageLabel) return `${piece.title} — ${passageLabel}`;
-  if (piece) return piece.title;
-  if (passageLabel) return passageLabel;
-  return 'Untitled';
-}
-
 export function GridRow({
   rowId,
   piece,
@@ -49,7 +40,7 @@ export function GridRow({
   onComplete,
   onUndo,
 }: GridRowProps) {
-  const label = getLabel(piece, passageLabel);
+  const label = getRowLabel(piece, passageLabel);
   const priorityColor = PRIORITY_COLORS[priority] || '#9ca3af';
 
   return (

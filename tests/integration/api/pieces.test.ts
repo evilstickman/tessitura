@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { getTestPrisma } from '../../helpers/db';
 import {
+  createSeedUser as createSeedUserWith,
+  createOtherUser as createOtherUserWith,
+} from '../../helpers/fixtures';
+import {
   createPiece,
   listPieces,
   getPiece,
@@ -10,36 +14,14 @@ import {
 } from '@/controllers/piece';
 
 const prisma = getTestPrisma();
+const createSeedUser = () => createSeedUserWith(prisma);
+const createOtherUser = () => createOtherUserWith(prisma);
 
 function makeRequest(body: unknown, url = 'http://localhost:3000/api/pieces'): NextRequest {
   return new NextRequest(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  });
-}
-
-async function createSeedUser() {
-  return prisma.user.upsert({
-    where: { email: 'dev-placeholder@tessitura.local' },
-    update: {},
-    create: {
-      email: 'dev-placeholder@tessitura.local',
-      passwordHash: 'not-a-real-hash',
-      name: 'Dev User',
-      instruments: [],
-    },
-  });
-}
-
-async function createOtherUser() {
-  return prisma.user.create({
-    data: {
-      email: `other-${Date.now()}@example.com`,
-      passwordHash: 'hash',
-      name: 'Other User',
-      instruments: [],
-    },
   });
 }
 

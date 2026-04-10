@@ -1,14 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-
-interface FreshnessSummary {
-  fresh: number;
-  aging: number;
-  stale: number;
-  decayed: number;
-  incomplete: number;
-}
+import type { FreshnessSummary } from '@/lib/api-types';
 
 export interface GridHeaderProps {
   name: string;

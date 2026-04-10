@@ -6,6 +6,8 @@ import { GridHeader } from '@/components/presentation/GridHeader';
 import { GridTable } from '@/components/presentation/GridTable';
 import { RowCreateForm } from '@/components/presentation/RowCreateForm';
 import type { FreshnessState } from '@/models/freshness';
+import { AuthError, NotFoundError } from '@/lib/api-errors';
+import type { FreshnessSummary } from '@/lib/api-types';
 
 interface ApiCell {
   id: string;
@@ -32,28 +34,8 @@ interface ApiGridDetail {
   notes: string | null;
   fadeEnabled: boolean;
   completionPercentage: number;
-  freshnessSummary: {
-    fresh: number;
-    aging: number;
-    stale: number;
-    decayed: number;
-    incomplete: number;
-  };
+  freshnessSummary: FreshnessSummary;
   rows: ApiRow[];
-}
-
-class AuthError extends Error {
-  constructor() {
-    super('Authentication required');
-    this.name = 'AuthError';
-  }
-}
-
-class NotFoundError extends Error {
-  constructor() {
-    super('Grid not found');
-    this.name = 'NotFoundError';
-  }
 }
 
 async function fetchGrid(gridId: string): Promise<ApiGridDetail> {
@@ -64,7 +46,7 @@ async function fetchGrid(gridId: string): Promise<ApiGridDetail> {
   }
 
   if (response.status === 404) {
-    throw new NotFoundError();
+    throw new NotFoundError('Grid not found');
   }
 
   if (!response.ok) {
