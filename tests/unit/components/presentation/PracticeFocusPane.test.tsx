@@ -86,14 +86,15 @@ describe('PracticeFocusPane', () => {
     expect(screen.getByText(/All fresh/)).toBeInTheDocument();
   });
 
-  it('truncates to max 5 suggestions', () => {
-    const suggestions = Array.from({ length: 7 }, (_, i) =>
+  it('renders exactly the suggestions it receives — director owns the limit', () => {
+    // The presentation layer is pure render; the director enforces MAX_PRACTICE_FOCUS.
+    const suggestions = Array.from({ length: 3 }, (_, i) =>
       makeSuggestion({ rowId: `r${i}`, label: `Piece ${i}` })
     );
     render(<PracticeFocusPane suggestions={suggestions} />);
 
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(5);
+    expect(links).toHaveLength(3);
   });
 
   it('renders empty state', () => {

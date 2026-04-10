@@ -45,13 +45,13 @@ export function GridRow({
 
   return (
     <tr>
-      <td style={{ whiteSpace: 'nowrap', padding: '4px 8px' }}>
+      <th scope="row" style={{ whiteSpace: 'nowrap', padding: '4px 8px', textAlign: 'left', fontWeight: 'normal' }}>
         <div>{label}</div>
         <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
           mm. {startMeasure}–{endMeasure} ·{' '}
           <span style={{ color: priorityColor }}>{priority}</span>
         </div>
-      </td>
+      </th>
       {cells.map((cell) => (
         <PracticeCell
           key={cell.cellId}

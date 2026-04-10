@@ -23,7 +23,9 @@ describe('DashboardLayout', () => {
     expect(screen.getByTestId('focus')).toBeInTheDocument();
   });
 
-  it('uses CSS grid layout on the container', () => {
+  it('applies the .dashboard-grid class for responsive layout via globals.css', () => {
+    // Layout + responsive breakpoint live in src/app/globals.css under .dashboard-grid.
+    // This test just asserts the class wiring; the CSS itself is static and not JS-testable.
     const { container } = render(
       <DashboardLayout
         alerts={<div>A</div>}
@@ -33,15 +35,9 @@ describe('DashboardLayout', () => {
       />
     );
 
-    // The first child is the <style> tag, the second is the grid container
     const grid = container.querySelector('.dashboard-grid') as HTMLElement;
     expect(grid).not.toBeNull();
-    expect(grid.style.display).toBe('grid');
-    expect(grid.style.gridTemplateColumns).toBe('repeat(2, 1fr)');
-    expect(grid.style.gap).toBe('12px');
-    expect(grid.style.padding).toBe('12px');
-    expect(grid.style.maxWidth).toBe('1200px');
-    expect(grid.style.margin).toBe('0px auto');
+    expect(grid.children).toHaveLength(4);
   });
 
   it('wraps each child in a card with correct styling', () => {
@@ -60,19 +56,4 @@ describe('DashboardLayout', () => {
     expect(alertsCard).toHaveStyle({ padding: '16px' });
   });
 
-  it('includes responsive style tag for single column at <768px', () => {
-    const { container } = render(
-      <DashboardLayout
-        alerts={<div>A</div>}
-        grids={<div>G</div>}
-        stats={<div>S</div>}
-        focus={<div>F</div>}
-      />
-    );
-
-    const styleTag = container.querySelector('style');
-    expect(styleTag).not.toBeNull();
-    expect(styleTag!.textContent).toContain('768px');
-    expect(styleTag!.textContent).toContain('1fr');
-  });
 });

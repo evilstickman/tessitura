@@ -63,11 +63,13 @@ describe('AlertsPane', () => {
     expect(link).toHaveStyle({ borderLeftColor: '#fbbf24' });
   });
 
-  it('shows max 5 alerts and "See all" link when more than 5', () => {
-    const alerts = Array.from({ length: 7 }, (_, i) =>
+  it('renders "See all" link when hasMore=true', () => {
+    // The director is responsible for slicing; the pane renders whatever it receives
+    // plus the hasMore flag to show the "See all" hint.
+    const alerts = Array.from({ length: 5 }, (_, i) =>
       makeAlert({ id: `a${i}`, gridName: `Grid ${i}`, count: i + 1 })
     );
-    render(<AlertsPane alerts={alerts} />);
+    render(<AlertsPane alerts={alerts} hasMore />);
 
     // 5 alert links + 1 "See all" link = 6 total links
     const links = screen.getAllByRole('link');
@@ -75,7 +77,7 @@ describe('AlertsPane', () => {
     expect(screen.getByText(/See all/)).toBeInTheDocument();
   });
 
-  it('does not show "See all" when 5 or fewer alerts', () => {
+  it('does not show "See all" when hasMore is absent or false', () => {
     const alerts = Array.from({ length: 5 }, (_, i) =>
       makeAlert({ id: `a${i}`, gridName: `Grid ${i}` })
     );
@@ -107,10 +109,10 @@ describe('AlertsPane', () => {
   });
 
   it('"See all" links to /grids', () => {
-    const alerts = Array.from({ length: 6 }, (_, i) =>
+    const alerts = Array.from({ length: 5 }, (_, i) =>
       makeAlert({ id: `a${i}`, gridName: `Grid ${i}` })
     );
-    render(<AlertsPane alerts={alerts} />);
+    render(<AlertsPane alerts={alerts} hasMore />);
     const seeAll = screen.getByText(/See all/);
     expect(seeAll.closest('a')).toHaveAttribute('href', '/grids');
   });

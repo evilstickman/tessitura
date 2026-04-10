@@ -61,9 +61,16 @@ const PRIORITY_ORDER: Record<string, number> = {
   LOW: 3,
 };
 
+// Business-rule limits — owned by the director, not the presentation layer.
+const MAX_ALERTS = 5;
+const MAX_PRACTICE_FOCUS = 5;
+
 // --- Derivation functions ---
 
-function deriveAlerts(grids: ApiGridSummary[]) {
+function deriveAlerts(grids: ApiGridSummary[]): {
+  alerts: { id: string; gridName: string; count: number; type: 'decayed' | 'stale'; href: string }[];
+  hasMore: boolean;
+} {
   const decayedAlerts: { id: string; gridName: string; count: number; type: 'decayed'; href: string }[] = [];
   const staleAlerts: { id: string; gridName: string; count: number; type: 'stale'; href: string }[] = [];
 
@@ -92,7 +99,11 @@ function deriveAlerts(grids: ApiGridSummary[]) {
   decayedAlerts.sort((a, b) => b.count - a.count);
   staleAlerts.sort((a, b) => b.count - a.count);
 
-  return [...decayedAlerts, ...staleAlerts];
+  const all = [...decayedAlerts, ...staleAlerts];
+  return {
+    alerts: all.slice(0, MAX_ALERTS),
+    hasMore: all.length > MAX_ALERTS,
+  };
 }
 
 function deriveStats(grids: ApiGridSummary[]) {
@@ -142,7 +153,7 @@ function derivePracticeFocus(grids: ApiGridSummary[]) {
       return countB - countA;
     });
 
-    return needsPractice.slice(0, 5).map(({ row, gridName, gridId }) => ({
+    return needsPractice.slice(0, MAX_PRACTICE_FOCUS).map(({ row, gridName, gridId }) => ({
       rowId: row.id,
       label: getRowLabel(row.piece, row.passageLabel),
       gridName,
@@ -153,7 +164,7 @@ function derivePracticeFocus(grids: ApiGridSummary[]) {
     }));
   }
 
-  // No rows need practice — show top 5 by priority with allFresh=true
+  // No rows need practice — show top N by priority with allFresh=true
   const sorted = [...allRows].sort((a, b) => {
     // ?? 4 fallback: unknown priority values sort last — defensive only
     /* c8 ignore next */
@@ -163,7 +174,7 @@ function derivePracticeFocus(grids: ApiGridSummary[]) {
     return priA - priB;
   });
 
-  return sorted.slice(0, 5).map(({ row, gridName, gridId }) => ({
+  return sorted.slice(0, MAX_PRACTICE_FOCUS).map(({ row, gridName, gridId }) => ({
     rowId: row.id,
     label: getRowLabel(row.piece, row.passageLabel),
     gridName,
@@ -253,7 +264,7 @@ export function DashboardDirector() {
     return null;
   }
 
-  const alerts = deriveAlerts(grids);
+  const { alerts, hasMore: alertsHasMore } = deriveAlerts(grids);
   const stats = deriveStats(grids);
   const suggestions = derivePracticeFocus(grids);
   const gridCards = deriveGridCards(grids);
@@ -261,7 +272,7 @@ export function DashboardDirector() {
 
   return (
     <DashboardLayout
-      alerts={<AlertsPane alerts={alerts} hasGrids={hasGrids} userName={userName} />}
+      alerts={<AlertsPane alerts={alerts} hasMore={alertsHasMore} hasGrids={hasGrids} userName={userName} />}
       grids={
         <MyGridsPane
           grids={gridCards}

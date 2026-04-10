@@ -10,16 +10,14 @@ interface Alert {
 
 export interface AlertsPaneProps {
   alerts: Alert[];
+  hasMore?: boolean;
   hasGrids?: boolean;
   userName?: string;
 }
 
-const MAX_ALERTS = 5;
-
-export function AlertsPane({ alerts, hasGrids = true, userName }: AlertsPaneProps) {
-  const visibleAlerts = alerts.slice(0, MAX_ALERTS);
-  const hasMore = alerts.length > MAX_ALERTS;
-
+// The director (DashboardDirector.deriveAlerts) owns the business-rule limit
+// and passes pre-sliced alerts + a `hasMore` flag to drive the "See all" link.
+export function AlertsPane({ alerts, hasMore = false, hasGrids = true, userName }: AlertsPaneProps) {
   return (
     <div>
       <div
@@ -44,9 +42,9 @@ export function AlertsPane({ alerts, hasGrids = true, userName }: AlertsPaneProp
         </div>
       )}
 
-      {hasGrids && visibleAlerts.length > 0 && (
+      {hasGrids && alerts.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {visibleAlerts.map((alert) => (
+          {alerts.map((alert) => (
             <Link
               key={alert.id}
               href={alert.href}

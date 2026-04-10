@@ -13,28 +13,15 @@ const cardStyle: React.CSSProperties = {
   padding: '16px',
 };
 
-const GRID_CLASS = 'dashboard-grid';
-
+// Grid layout + responsive breakpoint live in `src/app/globals.css`
+// under the `.dashboard-grid` class.
 export function DashboardLayout({ alerts, grids, stats, focus }: DashboardLayoutProps) {
   return (
-    <>
-      <style>{`@media (max-width: 768px) { .${GRID_CLASS} { grid-template-columns: 1fr !important; } }`}</style>
-      <div
-        className={GRID_CLASS}
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '12px',
-          padding: '12px',
-          maxWidth: '1200px',
-          margin: '0 auto',
-        }}
-      >
-        <div style={cardStyle}>{alerts}</div>
-        <div style={cardStyle}>{grids}</div>
-        <div style={cardStyle}>{stats}</div>
-        <div style={cardStyle}>{focus}</div>
-      </div>
-    </>
+    <div className="dashboard-grid">
+      <div style={cardStyle}>{alerts}</div>
+      <div style={cardStyle}>{grids}</div>
+      <div style={cardStyle}>{stats}</div>
+      <div style={cardStyle}>{focus}</div>
+    </div>
   );
 }

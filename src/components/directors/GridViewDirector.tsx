@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GridHeader } from '@/components/presentation/GridHeader';
 import { GridTable } from '@/components/presentation/GridTable';
-import { RowCreateForm } from '@/components/presentation/RowCreateForm';
+import { AddRowToggle } from '@/components/presentation/AddRowToggle';
 import type { FreshnessState } from '@/lib/freshness';
 import { AuthError, NotFoundError } from '@/lib/api-errors';
 import type { FreshnessSummary } from '@/lib/api-types';
@@ -157,10 +157,14 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
     onSuccess: () => {
       // Keep form open so user can add multiple rows
       setRowFormError(null);
-      queryClient.invalidateQueries({ queryKey });
     },
     onError: (err: Error) => {
       setRowFormError(err.message);
+    },
+    onSettled: () => {
+      // Refetch on both success and error — matches the "server is truth" pattern
+      // used by completeMutation / undoMutation / fadeMutation.
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -210,25 +214,13 @@ export function GridViewDirector({ gridId }: GridViewDirectorProps) {
         freshnessSummary={grid.freshnessSummary}
         onToggleFade={handleToggleFade}
       />
-      {showRowForm ? (
-        <div style={{ padding: '0 12px' }}>
-          <RowCreateForm
-            onSubmit={(data) => createRowMutation.mutate(data)}
-            onCancel={() => { setShowRowForm(false); setRowFormError(null); }}
-            error={rowFormError}
-          />
-        </div>
-      ) : (
-        <div style={{ padding: '8px 12px' }}>
-          <button
-            type="button"
-            onClick={() => { setShowRowForm(true); setRowFormError(null); }}
-            style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}
-          >
-            + Add Row
-          </button>
-        </div>
-      )}
+      <AddRowToggle
+        showForm={showRowForm}
+        onShowForm={() => { setShowRowForm(true); setRowFormError(null); }}
+        onCancelForm={() => { setShowRowForm(false); setRowFormError(null); }}
+        onSubmitRow={(data) => createRowMutation.mutate(data)}
+        error={rowFormError}
+      />
       <GridTable
         rows={mapRows(grid.rows)}
         onComplete={handleComplete}
