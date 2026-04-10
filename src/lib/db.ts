@@ -29,6 +29,12 @@ function createExtendedClient() {
         async findUnique({ args, query, model }) {
           return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },
+        async findFirstOrThrow({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
+        },
+        async findUniqueOrThrow({ args, query, model }) {
+          return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
+        },
         async count({ args, query, model }) {
           return query(SOFT_DELETE_MODELS.has(model) ? addSoftDeleteFilter(args) : args);
         },

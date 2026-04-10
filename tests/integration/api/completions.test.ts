@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { getTestPrisma } from '../../helpers/db';
 import {
+  createSeedUser as createSeedUserWith,
+  createGridWithCells as createGridWithCellsWith,
+} from '../../helpers/fixtures';
+import {
   completeCell,
   undoCompletion,
   resetCell,
@@ -9,50 +13,9 @@ import {
 import { updateFade, getGrid } from '@/controllers/grid';
 
 const prisma = getTestPrisma();
-
-async function createSeedUser() {
-  return prisma.user.upsert({
-    where: { email: 'dev-placeholder@tessitura.local' },
-    update: {},
-    create: {
-      email: 'dev-placeholder@tessitura.local',
-      passwordHash: 'not-a-real-hash',
-      name: 'Dev User',
-      instruments: [],
-    },
-  });
-}
-
-async function createGridWithCells(userId: string, steps = 5) {
-  const grid = await prisma.practiceGrid.create({
-    data: { userId, name: 'Test Grid', fadeEnabled: true },
-  });
-  const row = await prisma.practiceRow.create({
-    data: {
-      practiceGridId: grid.id,
-      sortOrder: 0,
-      startMeasure: 1,
-      endMeasure: 4,
-      targetTempo: 120,
-      steps,
-    },
-  });
-  const percentages = Array.from({ length: steps }, (_, i) =>
-    steps === 1 ? 1.0 : 0.4 + (0.6 * i) / (steps - 1),
-  );
-  await prisma.practiceCell.createMany({
-    data: percentages.map((p, i) => ({
-      practiceRowId: row.id,
-      stepNumber: i,
-      targetTempoPercentage: p,
-    })),
-  });
-  const cells = await prisma.practiceCell.findMany({
-    where: { practiceRowId: row.id },
-    orderBy: { stepNumber: 'asc' },
-  });
-  return { grid, row, cells };
-}
+const createSeedUser = () => createSeedUserWith(prisma);
+const createGridWithCells = (userId: string, steps = 5) =>
+  createGridWithCellsWith(prisma, userId, steps);
 
 // ─── Auth failure tests ──────────────────────────────────────────────────────
 
@@ -274,6 +237,45 @@ describe('Cell API — Undo', () => {
 
     const body = await second.json();
     expect(body.completions).toHaveLength(1);
+  });
+
+  // This test locks in the `deletedAt: undefined` soft-delete extension bypass
+  // in completeCell (src/models/cell.ts:99-105). It reads the raw DB to verify
+  // the soft-deleted completion row is re-used (un-soft-deleted) rather than
+  // re-created. If Prisma ever strips undefined from where clauses, this test
+  // will catch it — the same (practiceCellId, completionDate) row will become
+  // orphaned and a new row will be created instead.
+  it('undo then re-complete same day un-soft-deletes the original row (bypass regression)', async () => {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    const { grid, row, cells } = await createGridWithCells(user.id, 1);
+
+    // Complete — capture original completion ID (raw query bypasses extension)
+    await completeCell(grid.id, row.id, cells[0].id);
+    const original = await prisma.practiceCellCompletion.findFirstOrThrow({
+      where: { practiceCellId: cells[0].id },
+    });
+    const originalId = original.id;
+    expect(original.deletedAt).toBeNull();
+
+    // Undo — should soft-delete that same row
+    await undoCompletion(grid.id, row.id, cells[0].id);
+    const afterUndo = await prisma.practiceCellCompletion.findMany({
+      where: { practiceCellId: cells[0].id },
+    });
+    expect(afterUndo).toHaveLength(1);
+    expect(afterUndo[0].id).toBe(originalId);
+    expect(afterUndo[0].deletedAt).not.toBeNull();
+
+    // Re-complete — the bypass MUST find the soft-deleted row and un-delete it
+    await completeCell(grid.id, row.id, cells[0].id);
+    const afterRedo = await prisma.practiceCellCompletion.findMany({
+      where: { practiceCellId: cells[0].id },
+    });
+    expect(afterRedo).toHaveLength(1); // NOT two rows — single row reused
+    expect(afterRedo[0].id).toBe(originalId); // Same PK — confirms un-soft-delete
+    expect(afterRedo[0].deletedAt).toBeNull(); // Un-deleted
   });
 
   it('returns 404 for non-existent cell', async () => {

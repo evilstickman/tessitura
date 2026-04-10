@@ -16,8 +16,6 @@ export interface PracticeFocusPaneProps {
   suggestions: Suggestion[];
 }
 
-const MAX_SUGGESTIONS = 5;
-
 const BADGE_CONFIG: Record<Priority, { bg: string; color: string; label: string }> = {
   CRITICAL: { bg: '#7f1d1d', color: '#fca5a5', label: 'CRIT' },
   HIGH: { bg: '#78350f', color: '#fbbf24', label: 'HIGH' },
@@ -25,9 +23,9 @@ const BADGE_CONFIG: Record<Priority, { bg: string; color: string; label: string 
   LOW: { bg: '#374151', color: '#9ca3af', label: 'LOW' },
 };
 
+// The director (DashboardDirector.derivePracticeFocus) owns the business-rule
+// limit and always passes at most 5 suggestions. Render whatever we receive.
 export function PracticeFocusPane({ suggestions }: PracticeFocusPaneProps) {
-  const visible = suggestions.slice(0, MAX_SUGGESTIONS);
-
   return (
     <div>
       <div
@@ -48,7 +46,7 @@ export function PracticeFocusPane({ suggestions }: PracticeFocusPaneProps) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {visible.map((s) => {
+          {suggestions.map((s) => {
             const badge = BADGE_CONFIG[s.priority];
             return (
               <Link

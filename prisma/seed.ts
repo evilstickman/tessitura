@@ -5,12 +5,12 @@ async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   const prisma = new PrismaClient({ adapter });
 
+  // Seed user is a Google-OAuth user in production (passwordHash is nullable).
   const seedUser = await prisma.user.upsert({
     where: { email: 'dev-placeholder@tessitura.local' },
     update: {},
     create: {
       email: 'dev-placeholder@tessitura.local',
-      passwordHash: 'not-a-real-hash',
       name: 'Dev User',
       instruments: [],
     },

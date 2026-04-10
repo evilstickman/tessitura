@@ -1,90 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-// ─── Functional tests (use real API, no screenshots with dates) ─────────────
+// All grid-view E2E tests mock the API via page.route() rather than relying on
+// seed data in the running dev server. This keeps tests deterministic and
+// runnable against any environment.
 
-test.describe('Grid View', () => {
-  test('landing page shows grid list', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByText('Audition Prep — Week 1')).toBeVisible();
-  });
-
-  test('navigate to grid detail page', async ({ page }) => {
-    await page.goto('/');
-    await page.getByText('Audition Prep — Week 1').click();
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-  });
-
-  test('grid shows cells with BPM for incomplete cells', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    await expect(page.getByRole('button', { name: /48 BPM/ })).toBeVisible();
-  });
-
-  test('click cell to complete, verify it turns green, then undo to clean up', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    // Use step 5 (last cell, 120 BPM) to avoid conflicts with other tests
-    const cell = page.getByRole('button', { name: /Complete step 5 at 120 BPM/ });
-    // Cell might already be completed from a prior run — if so, undo first
-    if (await cell.isVisible()) {
-      await cell.click();
-      await expect(page.getByRole('button', { name: /Undo step 5/ })).toBeVisible();
-      // Clean up: undo so test is idempotent
-      await page.getByRole('button', { name: /Undo step 5/ }).click({ button: 'right' });
-      await expect(page.getByRole('button', { name: /Complete step 5 at 120 BPM/ })).toBeVisible();
-    }
-  });
-
-  test('right-click completed cell to undo', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    // Use step 4 to avoid conflicts
-    const cell = page.getByRole('button', { name: /Complete step 4 at 102 BPM/ });
-    if (await cell.isVisible()) {
-      await cell.click();
-      await expect(page.getByRole('button', { name: /Undo step 4/ })).toBeVisible();
-      await page.getByRole('button', { name: /Undo step 4/ }).click({ button: 'right' });
-      await expect(page.getByRole('button', { name: /Complete step 4 at 102 BPM/ })).toBeVisible();
-    }
-  });
-
-  test('fade toggle is visible and clickable', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
-    const fadeToggle = page.getByRole('switch', { name: 'Toggle fade' });
-    await expect(fadeToggle).toBeVisible();
-    // Toggle off and back on — idempotent
-    await fadeToggle.click();
-    await page.waitForTimeout(500);
-    await fadeToggle.click();
-  });
-
-  test('helper legend is visible', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
-    await expect(page.getByText('Click to complete')).toBeVisible();
-  });
-
-  test('grid not found shows message', async ({ page }) => {
-    await page.goto('/grids/00000000-0000-0000-0000-999999999999');
-    // TanStack Query retries 3 times with exponential backoff before surfacing the error.
-    // Allow up to 15 seconds for the error message to appear.
-    await expect(page.getByText('Grid not found')).toBeVisible({ timeout: 15000 });
-  });
-});
-
-// ─── Visual regression screenshots (mocked API for deterministic dates) ─────
+const TEST_GRID_ID = '00000000-0000-0000-0000-000000000001';
 
 /**
- * Fixed grid response for screenshot tests. Dates are pinned so screenshots
- * don't drift when run on different days. Includes a mix of freshness states:
- * - Cell 1: fresh (completed 2026-03-15)
- * - Cell 2: fresh (completed 2026-03-15, shielded)
- * - Cell 3: incomplete
- * - Cell 4: incomplete
- * - Cell 5: incomplete
+ * Fixed grid response shared by both functional and visual regression tests.
+ * Dates are pinned so screenshots don't drift when run on different days.
+ * Includes a mix of freshness states:
+ * - Cell 1: fresh (completed 2026-03-15, shielded)
+ * - Cell 2: fresh (completed 2026-03-15)
+ * - Cell 3-5: incomplete
  */
 const MOCK_GRID_RESPONSE = {
-  id: '00000000-0000-0000-0000-000000000001',
+  id: TEST_GRID_ID,
   name: 'Audition Prep — Week 1',
   notes: 'Focus on Firebird excerpts and Clarke fundamentals',
   fadeEnabled: true,
@@ -134,24 +65,97 @@ const MOCK_GRID_FADE_OFF = {
   })),
 };
 
+async function mockDashboardList(page: Page) {
+  await page.route('**/api/grids?detail=true', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{
+        id: TEST_GRID_ID, name: 'Audition Prep — Week 1', notes: null, fadeEnabled: true,
+        completionPercentage: 40, createdAt: '2026-03-10T00:00:00.000Z', updatedAt: '2026-03-15T00:00:00.000Z',
+        freshnessSummary: { fresh: 2, aging: 0, stale: 0, decayed: 0, incomplete: 3 },
+        rows: [],
+      }]),
+    });
+  });
+  await page.route('**/api/grids', (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ id: TEST_GRID_ID, name: 'Audition Prep — Week 1' }]),
+    });
+  });
+}
+
+async function mockGridDetail(page: Page, payload: object = MOCK_GRID_RESPONSE) {
+  await page.route(`**/api/grids/${TEST_GRID_ID}`, (route) => {
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(payload) });
+  });
+}
+
+// ─── Functional tests (mocked API — deterministic) ──────────────────────────
+
+test.describe('Grid View', () => {
+  test('landing page shows grid list', async ({ page }) => {
+    await mockDashboardList(page);
+    await page.goto('/');
+    await expect(page.getByText('Audition Prep — Week 1')).toBeVisible();
+  });
+
+  test('grid detail page renders heading and cells', async ({ page }) => {
+    await mockGridDetail(page);
+    await page.goto(`/grids/${TEST_GRID_ID}`);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
+    // Incomplete cells show BPM in their aria-label
+    await expect(page.getByRole('button', { name: /84 BPM/ })).toBeVisible();
+  });
+
+  test('fade toggle is visible and clickable', async ({ page }) => {
+    await mockGridDetail(page);
+    // Stub the fade mutation endpoint — returns the same payload so refetch succeeds
+    await page.route(`**/api/grids/${TEST_GRID_ID}/fade`, (route) => {
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_GRID_RESPONSE) });
+    });
+    await page.goto(`/grids/${TEST_GRID_ID}`);
+    const fadeToggle = page.getByRole('switch', { name: 'Toggle fade' });
+    await expect(fadeToggle).toBeVisible();
+    await fadeToggle.click();
+  });
+
+  test('helper legend is visible', async ({ page }) => {
+    await mockGridDetail(page);
+    await page.goto(`/grids/${TEST_GRID_ID}`);
+    await expect(page.getByText('Click to complete')).toBeVisible();
+  });
+
+  test('grid not found shows message', async ({ page }) => {
+    // Return 404 — NotFoundError short-circuits retry (Pass 4 retry filter),
+    // so the error should surface immediately.
+    await page.route('**/api/grids/00000000-0000-0000-0000-999999999999', (route) => {
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Grid not found' } }),
+      });
+    });
+    await page.goto('/grids/00000000-0000-0000-0000-999999999999');
+    await expect(page.getByText('Grid not found')).toBeVisible();
+  });
+});
+
+// ─── Visual regression screenshots (mocked API for deterministic dates) ─────
+
 test.describe('Grid View — Visual Regression Screenshots', () => {
   test('landing page grid list', async ({ page }) => {
+    await mockDashboardList(page);
     await page.goto('/');
     await expect(page.getByText('Audition Prep — Week 1')).toBeVisible();
     await expect(page).toHaveScreenshot('landing-page-grid-list.png');
   });
 
   test('grid detail with freshness states', async ({ page }) => {
-    // Mock the API to return fixed dates — no real completions created
-    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(MOCK_GRID_RESPONSE),
-      });
-    });
-
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
+    await mockGridDetail(page);
+    await page.goto(`/grids/${TEST_GRID_ID}`);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
     // Cells should show fixed dates (3-15) not today's date
     await expect(page.getByRole('button', { name: /Undo step 1, completed 3-15/ })).toBeVisible();
@@ -159,29 +163,15 @@ test.describe('Grid View — Visual Regression Screenshots', () => {
   });
 
   test('grid detail fade disabled', async ({ page }) => {
-    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(MOCK_GRID_FADE_OFF),
-      });
-    });
-
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
+    await mockGridDetail(page, MOCK_GRID_FADE_OFF);
+    await page.goto(`/grids/${TEST_GRID_ID}`);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
     await expect(page).toHaveScreenshot('grid-detail-fade-disabled.png');
   });
 
   test('grid detail fade enabled', async ({ page }) => {
-    await page.route('**/api/grids/00000000-0000-0000-0000-000000000001', (route) => {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(MOCK_GRID_RESPONSE),
-      });
-    });
-
-    await page.goto('/grids/00000000-0000-0000-0000-000000000001');
+    await mockGridDetail(page);
+    await page.goto(`/grids/${TEST_GRID_ID}`);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Audition Prep');
     await expect(page).toHaveScreenshot('grid-detail-fade-enabled.png');
   });

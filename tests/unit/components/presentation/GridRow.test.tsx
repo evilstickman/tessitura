@@ -4,7 +4,7 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
 import { GridRow, type GridRowProps } from '@/components/presentation/GridRow';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 
 afterEach(() => cleanup());
 

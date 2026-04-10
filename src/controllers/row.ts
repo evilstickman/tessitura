@@ -43,14 +43,19 @@ export async function createRow(gridId: string, request: NextRequest) {
       return errorResponse('passageLabel must be a string', 'VALIDATION_ERROR', 400);
     }
 
-    const result = await createRowModel(gridId, userId, {
-      startMeasure: body.startMeasure,
-      endMeasure: body.endMeasure,
-      targetTempo: body.targetTempo,
-      steps: body.steps,
-      pieceId: body.pieceId ?? null,
-      passageLabel: body.passageLabel ?? null,
-    });
+    const result = await createRowModel(
+      gridId,
+      userId,
+      {
+        startMeasure: body.startMeasure,
+        endMeasure: body.endMeasure,
+        targetTempo: body.targetTempo,
+        steps: body.steps,
+        pieceId: body.pieceId ?? null,
+        passageLabel: body.passageLabel ?? null,
+      },
+      now,
+    );
 
     if (!result) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
@@ -101,7 +106,7 @@ export async function updateRow(gridId: string, rowId: string, request: NextRequ
       return errorResponse('passageLabel must be a string', 'VALIDATION_ERROR', 400);
     }
 
-    const result = await updateRowModel(gridId, rowId, userId, body);
+    const result = await updateRowModel(gridId, rowId, userId, body, now);
 
     if (!result) {
       return errorResponse('Row not found', 'NOT_FOUND', 404);
@@ -133,7 +138,7 @@ export async function updatePriority(gridId: string, rowId: string, request: Nex
       return errorResponse('Priority is required', 'VALIDATION_ERROR', 400);
     }
 
-    const result = await updateRowPriorityModel(gridId, rowId, userId, body.priority);
+    const result = await updateRowPriorityModel(gridId, rowId, userId, body.priority, now);
 
     if (!result) {
       return errorResponse('Row not found', 'NOT_FOUND', 404);
@@ -157,8 +162,9 @@ export async function deleteRow(gridId: string, rowId: string) {
       return errorResponse('Invalid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
-    const deleted = await deleteRowModel(gridId, rowId, userId);
+    const deleted = await deleteRowModel(gridId, rowId, userId, now);
 
     if (!deleted) {
       return errorResponse('Row not found', 'NOT_FOUND', 404);

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { GridTable, type GridTableProps } from '@/components/presentation/GridTable';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 
 afterEach(() => cleanup());
 
@@ -43,11 +43,14 @@ function makeTable(overrides: Partial<GridTableProps> = {}): GridTableProps {
 }
 
 describe('GridTable', () => {
-  it('renders the correct number of rows', () => {
+  it('renders the correct number of body rows', () => {
     render(<GridTable {...makeTable()} />);
-    // Each row renders a tr with buttons
+    // 1 thead row + 3 body rows = 4 total
     const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
+    // Each row has a row-header <th scope="row">
+    const rowHeaders = screen.getAllByRole('rowheader');
+    expect(rowHeaders).toHaveLength(3);
   });
 
   it('renders helper legend text', () => {
@@ -72,14 +75,20 @@ describe('GridTable', () => {
     expect(onComplete).toHaveBeenCalledWith('row-1', 'row-1-c1');
   });
 
-  it('table has aria-label for accessibility', () => {
+  it('table has caption and thead for accessibility', () => {
     render(<GridTable {...makeTable()} />);
-    expect(screen.getByRole('table')).toHaveAttribute('aria-label', 'Practice grid');
+    // Caption describes the table for screen readers
+    expect(screen.getByText(/Practice grid — each row is a passage/)).toBeInTheDocument();
+    // thead contributes column headers
+    const columnHeaders = screen.getAllByRole('columnheader');
+    expect(columnHeaders.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders with zero rows', () => {
+  it('renders with zero body rows', () => {
     render(<GridTable {...makeTable({ rows: [] })} />);
     expect(screen.getByText(/Click to complete/)).toBeInTheDocument();
-    expect(screen.queryAllByRole('row')).toHaveLength(0);
+    // Only the thead row exists when body is empty
+    expect(screen.queryAllByRole('row')).toHaveLength(1);
+    expect(screen.queryAllByRole('rowheader')).toHaveLength(0);
   });
 });

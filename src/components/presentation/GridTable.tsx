@@ -1,5 +1,5 @@
 import { GridRow } from '@/components/presentation/GridRow';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 
 interface RowCellData {
   cellId: string;
@@ -25,10 +25,32 @@ export interface GridTableProps {
   onUndo: (rowId: string, cellId: string) => void;
 }
 
+// Visually-hidden utility for screen-reader-only content.
+const srOnly: React.CSSProperties = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
+
 export function GridTable({ rows, onComplete, onUndo }: GridTableProps) {
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table aria-label="Practice grid">
+      <table>
+        <caption style={srOnly}>
+          Practice grid — each row is a passage, columns are tempo steps.
+        </caption>
+        <thead style={srOnly}>
+          <tr>
+            <th scope="col">Passage</th>
+            <th scope="col">Tempo steps</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map((row) => (
             <GridRow

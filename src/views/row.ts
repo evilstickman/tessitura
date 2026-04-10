@@ -7,7 +7,7 @@ import {
   calculateFreshnessSummary,
   type CellWithState,
   type FreshnessState,
-} from '@/models/freshness';
+} from '@/lib/freshness';
 
 interface RowPiece {
   id: string;

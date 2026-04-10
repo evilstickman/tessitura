@@ -2,6 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { getTestPrisma } from '../../helpers/db';
 import {
+  createSeedUser as createSeedUserWith,
+  createOtherUser as createOtherUserWith,
+  createGridWithCells as createGridWithCellsWith,
+} from '../../helpers/fixtures';
+import {
   createGrid,
   listGrids,
   getGrid,
@@ -10,6 +15,8 @@ import {
 import { completeCell } from '@/controllers/cell';
 
 const prisma = getTestPrisma();
+const createSeedUser = () => createSeedUserWith(prisma);
+const createOtherUser = () => createOtherUserWith(prisma);
 
 function makeRequest(body: unknown): NextRequest {
   return new NextRequest('http://localhost:3000/api/grids', {
@@ -27,30 +34,6 @@ function makeListRequest(params?: Record<string, string>): NextRequest {
     }
   }
   return new NextRequest(url);
-}
-
-async function createSeedUser() {
-  return prisma.user.upsert({
-    where: { email: 'dev-placeholder@tessitura.local' },
-    update: {},
-    create: {
-      email: 'dev-placeholder@tessitura.local',
-      passwordHash: 'not-a-real-hash',
-      name: 'Dev User',
-      instruments: [],
-    },
-  });
-}
-
-async function createOtherUser() {
-  return prisma.user.create({
-    data: {
-      email: `other-${Date.now()}@example.com`,
-      passwordHash: 'hash',
-      name: 'Other User',
-      instruments: [],
-    },
-  });
 }
 
 // ─── Error handling ──────────────────────────────────────────────────────────
@@ -790,36 +773,8 @@ describe('Grid API — Detail Freshness Fields', () => {
     await createSeedUser();
   });
 
-  async function createGridWithCells(userId: string, steps: number) {
-    const grid = await prisma.practiceGrid.create({
-      data: { userId, name: 'Freshness Grid', fadeEnabled: true },
-    });
-    const row = await prisma.practiceRow.create({
-      data: {
-        practiceGridId: grid.id,
-        sortOrder: 0,
-        startMeasure: 1,
-        endMeasure: 4,
-        targetTempo: 120,
-        steps,
-      },
-    });
-    const percentages = Array.from({ length: steps }, (_, i) =>
-      steps === 1 ? 1.0 : 0.4 + (0.6 * i) / (steps - 1),
-    );
-    await prisma.practiceCell.createMany({
-      data: percentages.map((p, i) => ({
-        practiceRowId: row.id,
-        stepNumber: i,
-        targetTempoPercentage: p,
-      })),
-    });
-    const cells = await prisma.practiceCell.findMany({
-      where: { practiceRowId: row.id },
-      orderBy: { stepNumber: 'asc' },
-    });
-    return { grid, row, cells };
-  }
+  const createGridWithCells = (userId: string, steps: number) =>
+    createGridWithCellsWith(prisma, userId, steps, 'Freshness Grid');
 
   it('grid detail includes completionPercentage and freshnessSummary', async () => {
     const user = await prisma.user.findUniqueOrThrow({

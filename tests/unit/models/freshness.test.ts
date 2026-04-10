@@ -9,7 +9,7 @@ import {
   type FreshnessState,
   type CellWithState,
   type CellWithEffectiveState,
-} from '@/models/freshness';
+} from '@/lib/freshness';
 
 // ─── calculateFreshnessState ─────────────────────────────────────────────────
 

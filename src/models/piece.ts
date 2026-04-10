@@ -143,9 +143,9 @@ export async function deletePiece(pieceId: string, userId: string): Promise<bool
   const piece = await findOwnedPiece(pieceId, userId);
   if (!piece) return false;
 
-  await prisma.piece.update({
-    where: { id: pieceId },
-    data: { deletedAt: new Date() },
-  });
+  // Routes through the soft-delete extension in `src/lib/db.ts`, which intercepts
+  // `delete` calls on allowlisted models and converts them to an `update` setting
+  // `deletedAt`. Single source of truth for soft-delete semantics.
+  await prisma.piece.delete({ where: { id: pieceId } });
   return true;
 }
