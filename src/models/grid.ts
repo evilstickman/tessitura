@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/db';
 import { ValidationError } from '@/lib/errors';
 
-export { ValidationError } from '@/lib/errors';
-
 export interface GridInput {
   name: string;
   notes?: string | null;
