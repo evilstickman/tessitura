@@ -47,12 +47,12 @@ test.describe('Dashboard', () => {
     await expect(page.getByText('PRACTICE FOCUS')).toBeVisible();
   });
 
-  test('grid list navigates to grid detail', async ({ page }) => {
+  test('grid name appears in dashboard panes', async ({ page }) => {
     await mockDashboardApi(page);
     await page.goto('/');
-    await expect(page.getByText('Audition Prep — Week 1')).toBeVisible();
-    // Navigation is tested in grid-view.spec.ts; here we verify the click target exists.
-    await expect(page.getByText('Audition Prep — Week 1')).toHaveCount(1);
+    // The grid name renders across multiple panes (MyGrids, Alerts, PracticeFocus);
+    // we only care that at least one exists as a proof of successful render.
+    await expect(page.getByText('Audition Prep — Week 1').first()).toBeVisible();
   });
 
   test('/grids page shows full grid list', async ({ page }) => {
