@@ -240,7 +240,7 @@ describe('GridViewDirector', () => {
           typeof call[0] === 'string' &&
           call[0].includes('/complete'),
       );
-      expect(completeCall).toBeTruthy();
+      expect(completeCall).toBeDefined();
       expect(completeCall![0]).toBe(
         `/api/grids/${GRID_ID}/rows/row-1/cells/cell-2/complete`,
       );
@@ -254,7 +254,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
   });
 
@@ -292,7 +292,7 @@ describe('GridViewDirector', () => {
           typeof call[0] === 'string' &&
           call[0].includes('/undo'),
       );
-      expect(undoCall).toBeTruthy();
+      expect(undoCall).toBeDefined();
       expect(undoCall![0]).toBe(
         `/api/grids/${GRID_ID}/rows/row-1/cells/cell-1/undo`,
       );
@@ -335,7 +335,7 @@ describe('GridViewDirector', () => {
           typeof call[0] === 'string' &&
           call[0].includes('/fade'),
       );
-      expect(fadeCall).toBeTruthy();
+      expect(fadeCall).toBeDefined();
       expect(fadeCall![0]).toBe(`/api/grids/${GRID_ID}/fade`);
       expect(fadeCall![1]).toEqual(
         expect.objectContaining({
@@ -400,7 +400,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
   });
 
@@ -443,7 +443,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
   });
 
@@ -486,7 +486,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
   });
 
@@ -527,7 +527,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
 
     // Grid should still be visible (no error state)
@@ -573,7 +573,7 @@ describe('GridViewDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === `/api/grids/${GRID_ID}`,
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
 
     // Grid should still be visible (no error state)
@@ -628,7 +628,7 @@ describe('GridViewDirector', () => {
       const postCall = fetchSpy.mock.calls.find(
         (c) => c[0] === `/api/grids/${GRID_ID}/rows` && c[1]?.method === 'POST',
       );
-      expect(postCall).toBeTruthy();
+      expect(postCall).toBeDefined();
     });
   });
 });

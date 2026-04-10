@@ -352,15 +352,15 @@ describe('Row API — Create', () => {
       where: { email: 'dev-placeholder@tessitura.local' },
     });
     const grid = await createGrid(user.id);
-    const gridBefore = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
 
-    // Small delay to ensure timestamp difference
-    await new Promise((r) => setTimeout(r, 50));
-
+    // Capture a millisecond-resolution floor BEFORE the mutation — any updatedAt
+    // written by the mutation is guaranteed to be >= this floor (monotonic clock).
+    // No sleeps required.
+    const before = Date.now();
     await createRow(grid.id, makeRequest(VALID_ROW));
 
     const gridAfter = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    expect(gridAfter.updatedAt.getTime()).toBeGreaterThan(gridBefore.updatedAt.getTime());
+    expect(gridAfter.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
   it('returns 400 for empty request body', async () => {
@@ -569,13 +569,11 @@ describe('Row API — Edit', () => {
     const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
     const created = await createRes.json();
 
-    const gridBefore = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    await new Promise((r) => setTimeout(r, 50));
-
+    const before = Date.now();
     await updateRow(grid.id, created.id, makeRequest({ targetTempo: 140 }));
 
     const gridAfter = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    expect(gridAfter.updatedAt.getTime()).toBeGreaterThan(gridBefore.updatedAt.getTime());
+    expect(gridAfter.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
   it('updates passageLabel', async () => {
@@ -769,13 +767,11 @@ describe('Row API — Priority', () => {
     const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
     const created = await createRes.json();
 
-    const gridBefore = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    await new Promise((r) => setTimeout(r, 50));
-
+    const before = Date.now();
     await updatePriority(grid.id, created.id, makeRequest({ priority: 'HIGH' }));
 
     const gridAfter = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    expect(gridAfter.updatedAt.getTime()).toBeGreaterThan(gridBefore.updatedAt.getTime());
+    expect(gridAfter.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
   it('returns 404 for non-existent row', async () => {
@@ -917,13 +913,11 @@ describe('Row API — Delete', () => {
     const createRes = await createRow(grid.id, makeRequest(VALID_ROW));
     const created = await createRes.json();
 
-    const gridBefore = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    await new Promise((r) => setTimeout(r, 50));
-
+    const before = Date.now();
     await deleteRow(grid.id, created.id);
 
     const gridAfter = await prisma.practiceGrid.findUniqueOrThrow({ where: { id: grid.id } });
-    expect(gridAfter.updatedAt.getTime()).toBeGreaterThan(gridBefore.updatedAt.getTime());
+    expect(gridAfter.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
   it('deleted row no longer appears in grid detail', async () => {

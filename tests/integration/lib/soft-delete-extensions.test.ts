@@ -8,7 +8,6 @@ async function createTestUser() {
   return rawPrisma.user.create({
     data: {
       email: 'soft-delete-test@example.com',
-      passwordHash: 'hash',
       name: 'Test User',
       instruments: [],
     },

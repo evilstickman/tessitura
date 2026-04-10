@@ -238,7 +238,7 @@ describe('DashboardDirector', () => {
           call[0] === '/api/grids' &&
           (call[1] as RequestInit)?.method === 'POST',
       );
-      expect(postCall).toBeTruthy();
+      expect(postCall).toBeDefined();
       const body = JSON.parse((postCall![1] as RequestInit).body as string);
       expect(body.name).toBe('My New Grid');
     });
@@ -248,7 +248,7 @@ describe('DashboardDirector', () => {
       const refetchCall = fetchSpy.mock.calls.find(
         (call: unknown[]) => call[0] === '/api/grids?detail=true',
       );
-      expect(refetchCall).toBeTruthy();
+      expect(refetchCall).toBeDefined();
     });
 
     // Form should be hidden after success

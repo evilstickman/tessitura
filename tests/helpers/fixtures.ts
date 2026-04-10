@@ -8,7 +8,7 @@ import type { PrismaClient } from '../../src/generated/prisma/client';
 
 /**
  * Upserts the dev-seed-user that `getCurrentUserId()` resolves to in dev mode.
- * Idempotent — safe to call in beforeEach.
+ * Idempotent — safe to call in beforeEach. No passwordHash (OAuth-only users).
  */
 export async function createSeedUser(prisma: PrismaClient) {
   return prisma.user.upsert({
@@ -16,7 +16,6 @@ export async function createSeedUser(prisma: PrismaClient) {
     update: {},
     create: {
       email: 'dev-placeholder@tessitura.local',
-      passwordHash: 'not-a-real-hash',
       name: 'Dev User',
       instruments: [],
     },
@@ -25,13 +24,12 @@ export async function createSeedUser(prisma: PrismaClient) {
 
 /**
  * Creates a second user with a unique email for ownership/cross-user tests.
- * The email is time-salted so multiple calls in one test still work.
+ * The email is salted so multiple calls in one test still work.
  */
 export async function createOtherUser(prisma: PrismaClient) {
   return prisma.user.create({
     data: {
       email: `other-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`,
-      passwordHash: 'hash',
       name: 'Other User',
       instruments: [],
     },
