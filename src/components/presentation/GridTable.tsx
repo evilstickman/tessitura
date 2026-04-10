@@ -1,5 +1,5 @@
 import { GridRow } from '@/components/presentation/GridRow';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 
 interface RowCellData {
   cellId: string;

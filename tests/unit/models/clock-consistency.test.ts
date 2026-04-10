@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { dateOnlyUTC } from '@/models/cell';
-import { calculateFreshnessState } from '@/models/freshness';
+import { calculateFreshnessState } from '@/lib/freshness';
 
 describe('Clock consistency — dateOnlyUTC', () => {
   it('truncates time portion, preserving UTC date', () => {

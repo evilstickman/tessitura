@@ -92,8 +92,9 @@ export async function deleteGrid(gridId: string) {
       return errorResponse('Invalid grid ID format', 'VALIDATION_ERROR', 400);
     }
 
+    const now = new Date();
     const userId = await getCurrentUserId();
-    const deleted = await deleteGridModel(gridId, userId);
+    const deleted = await deleteGridModel(gridId, userId, now);
 
     if (!deleted) {
       return errorResponse('Grid not found', 'NOT_FOUND', 404);
@@ -127,6 +128,9 @@ export async function updateFade(gridId: string, request: NextRequest) {
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return errorResponse(error.message, 'AUTHENTICATION_ERROR', 401);
+    }
+    if (error instanceof ValidationError) {
+      return errorResponse(error.message, 'VALIDATION_ERROR', 400);
     }
     return errorResponse('Internal server error', 'INTERNAL_ERROR', 500);
   }

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { ConflictError } from '@/lib/errors';
-import { calculateFreshnessState, calculateNewInterval } from '@/models/freshness';
+import { calculateFreshnessState, calculateNewInterval } from '@/lib/freshness';
 
 type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 

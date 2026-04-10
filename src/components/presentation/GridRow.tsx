@@ -1,5 +1,5 @@
 import { PracticeCell } from '@/components/presentation/PracticeCell';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 import { getRowLabel } from '@/lib/api-types';
 
 interface CellData {

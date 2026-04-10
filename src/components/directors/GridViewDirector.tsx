@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GridHeader } from '@/components/presentation/GridHeader';
 import { GridTable } from '@/components/presentation/GridTable';
 import { RowCreateForm } from '@/components/presentation/RowCreateForm';
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 import { AuthError, NotFoundError } from '@/lib/api-errors';
 import type { FreshnessSummary } from '@/lib/api-types';
 

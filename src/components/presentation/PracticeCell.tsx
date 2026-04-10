@@ -1,4 +1,4 @@
-import type { FreshnessState } from '@/models/freshness';
+import type { FreshnessState } from '@/lib/freshness';
 
 export interface PracticeCellProps {
   cellId: string;

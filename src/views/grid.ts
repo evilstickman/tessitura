@@ -3,7 +3,7 @@ import {
   calculateCompletionPercentage,
   calculateFreshnessSummary,
   type CellWithEffectiveState,
-} from '@/models/freshness';
+} from '@/lib/freshness';
 
 interface GridRecord {
   id: string;

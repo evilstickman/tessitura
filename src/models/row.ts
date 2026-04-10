@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { ValidationError } from '@/lib/errors';
+import { findOwnedGrid } from '@/models/grid';
 
 export interface RowInput {
   startMeasure: number;
@@ -118,14 +119,22 @@ export function validateRowUpdate(input: RowUpdateInput): Partial<ValidatedRowIn
 }
 
 /**
- * Finds a grid by ID, scoped to the given user and excluding soft-deleted records.
- * Query-driven: ownership and soft-delete are in the WHERE clause, not post-query checks.
+ * Include clause for returning a row with piece + cells + completions.
+ * Used by createRow, updateRow, and updateRowPriority to keep response shape identical.
  */
-async function findOwnedGrid(gridId: string, userId: string) {
-  return prisma.practiceGrid.findFirst({
-    where: { id: gridId, userId, deletedAt: null },
-  });
-}
+const ROW_RETURN_INCLUDE = {
+  piece: true,
+  practiceCells: {
+    where: { deletedAt: null },
+    orderBy: { stepNumber: 'asc' as const },
+    include: {
+      completions: {
+        where: { deletedAt: null },
+        orderBy: { completionDate: 'asc' as const },
+      },
+    },
+  },
+};
 
 /**
  * Finds a row by ID, verifying it belongs to the specified grid and the grid
@@ -156,7 +165,7 @@ async function validatePieceOwnership(pieceId: string, userId: string): Promise<
   }
 }
 
-export async function createRow(gridId: string, userId: string, input: RowInput) {
+export async function createRow(gridId: string, userId: string, input: RowInput, now: Date) {
   const grid = await findOwnedGrid(gridId, userId);
   if (!grid) return null;
 
@@ -198,35 +207,29 @@ export async function createRow(gridId: string, userId: string, input: RowInput)
       })),
     });
 
-    // Touch parent grid updatedAt
+    // Touch parent grid updatedAt — shares the caller's `now`
     await tx.practiceGrid.update({
       where: { id: gridId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: now },
     });
 
     // Return row with cells and piece for response formatting
     return tx.practiceRow.findUniqueOrThrow({
       where: { id: row.id },
-      include: {
-        piece: true,
-        practiceCells: {
-          where: { deletedAt: null },
-          orderBy: { stepNumber: 'asc' },
-          include: {
-            completions: {
-              where: { deletedAt: null },
-              orderBy: { completionDate: 'asc' },
-            },
-          },
-        },
-      },
+      include: ROW_RETURN_INCLUDE,
     });
   });
 
   return { row, fadeEnabled: grid.fadeEnabled };
 }
 
-export async function updateRow(gridId: string, rowId: string, userId: string, input: RowUpdateInput) {
+export async function updateRow(
+  gridId: string,
+  rowId: string,
+  userId: string,
+  input: RowUpdateInput,
+  now: Date,
+) {
   const found = await findOwnedRow(gridId, rowId, userId);
   if (!found) return null;
 
@@ -262,9 +265,7 @@ export async function updateRow(gridId: string, rowId: string, userId: string, i
 
     // If steps changed, soft-delete old cells + completions, generate new cells
     if (stepsChanged) {
-      const now = new Date();
-
-      // Soft-delete completions on this row's cells
+      // Soft-delete completions on this row's cells — shares the caller's `now`
       await tx.practiceCellCompletion.updateMany({
         where: {
           practiceCell: { practiceRowId: rowId },
@@ -290,28 +291,16 @@ export async function updateRow(gridId: string, rowId: string, userId: string, i
       });
     }
 
-    // Touch parent grid updatedAt
+    // Touch parent grid updatedAt — shares the caller's `now`
     await tx.practiceGrid.update({
       where: { id: gridId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: now },
     });
 
     // Return updated row with nested data
     return tx.practiceRow.findUniqueOrThrow({
       where: { id: rowId },
-      include: {
-        piece: true,
-        practiceCells: {
-          where: { deletedAt: null },
-          orderBy: { stepNumber: 'asc' },
-          include: {
-            completions: {
-              where: { deletedAt: null },
-              orderBy: { completionDate: 'asc' },
-            },
-          },
-        },
-      },
+      include: ROW_RETURN_INCLUDE,
     });
   });
 
@@ -323,6 +312,7 @@ export async function updateRowPriority(
   rowId: string,
   userId: string,
   priority: string,
+  now: Date,
 ) {
   const validPriorities = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
   if (!validPriorities.includes(priority)) {
@@ -340,41 +330,32 @@ export async function updateRowPriority(
       data: { priority: priority as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' },
     });
 
-    // Touch parent grid updatedAt
+    // Touch parent grid updatedAt — shares the caller's `now`
     await tx.practiceGrid.update({
       where: { id: gridId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: now },
     });
 
     return tx.practiceRow.findUniqueOrThrow({
       where: { id: rowId },
-      include: {
-        piece: true,
-        practiceCells: {
-          where: { deletedAt: null },
-          orderBy: { stepNumber: 'asc' },
-          include: {
-            completions: {
-              where: { deletedAt: null },
-              orderBy: { completionDate: 'asc' },
-            },
-          },
-        },
-      },
+      include: ROW_RETURN_INCLUDE,
     });
   });
 
   return { row, fadeEnabled };
 }
 
-export async function deleteRow(gridId: string, rowId: string, userId: string): Promise<boolean> {
+export async function deleteRow(
+  gridId: string,
+  rowId: string,
+  userId: string,
+  now: Date,
+): Promise<boolean> {
   const found = await findOwnedRow(gridId, rowId, userId);
   if (!found) return false;
 
-  const now = new Date();
-
   await prisma.$transaction(async (tx) => {
-    // Cascade: completions → cells → row
+    // Cascade: completions → cells → row — all share the caller's `now`
     await tx.practiceCellCompletion.updateMany({
       where: {
         practiceCell: { practiceRowId: rowId },
@@ -396,7 +377,7 @@ export async function deleteRow(gridId: string, rowId: string, userId: string): 
     // Touch parent grid updatedAt
     await tx.practiceGrid.update({
       where: { id: gridId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: now },
     });
   });
 
