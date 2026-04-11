@@ -298,6 +298,33 @@ describe('Goal API — Update', () => {
     expect(res.status).toBe(400);
   });
 
+  it('PUT rejects non-number targetValue (type check)', async () => {
+    const id = await createdId();
+    const res = await updateGoal(id, makePutRequest(id, { targetValue: '60' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.message.toLowerCase()).toContain('targetvalue');
+  });
+
+  it('PUT rejects non-boolean active (type check)', async () => {
+    const id = await createdId();
+    const res = await updateGoal(id, makePutRequest(id, { active: 'yes' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.message.toLowerCase()).toContain('active');
+  });
+
+  it('PUT rejects empty body', async () => {
+    const id = await createdId();
+    const req = new NextRequest(`http://localhost:3000/api/goals/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not valid json',
+    });
+    const res = await updateGoal(id, req);
+    expect(res.status).toBe(400);
+  });
+
   it('PUT returns 404 for non-existent', async () => {
     const res = await updateGoal(
       '00000000-0000-0000-0000-999999999999',

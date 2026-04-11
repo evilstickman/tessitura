@@ -963,6 +963,69 @@ describe('Grid API — Update (PUT)', () => {
     expect(body.fadeEnabled).toBe(false);
   });
 
+  it('PUT rejects non-boolean archived (type check)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { archived: 'yes' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.message.toLowerCase()).toContain('archived');
+  });
+
+  it('PUT rejects non-boolean fadeEnabled (type check)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { fadeEnabled: 'yes' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.message.toLowerCase()).toContain('fadeenabled');
+  });
+
+  it('PUT rejects non-string name (type check)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { name: 123 }));
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT rejects non-string notes (type check)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { notes: 123 }));
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT rejects non-string gridType (type check)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { gridType: 42 }));
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT accepts notes=null to clear', async () => {
+    const id = await createdGridId();
+    // First set notes, then clear
+    await updateGrid(id, makeUpdateRequest(id, { notes: 'will clear' }));
+    const res = await updateGrid(id, makeUpdateRequest(id, { notes: null }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.notes).toBeNull();
+  });
+
+  it('PUT rejects malformed JSON body', async () => {
+    const id = await createdGridId();
+    const req = new NextRequest(`http://localhost:3000/api/grids/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not valid json',
+    });
+    const res = await updateGrid(id, req);
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT with no updatable fields returns current grid (no-op)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, {}));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.id).toBe(id);
+  });
+
   it('PUT updates multiple fields atomically', async () => {
     const id = await createdGridId();
     const res = await updateGrid(

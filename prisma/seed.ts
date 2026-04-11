@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
+import { validateGridData } from '../src/models/template';
 
 async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
@@ -76,6 +77,39 @@ async function main() {
   }
 
   console.log(`Seed grid: ${grid.id} (${grid.name})`);
+
+  // ─── M2.1: Library template fixture ────────────────────────────────────
+  // A single sample template so dev + E2E can exercise the clone flow.
+  // Admin CRUD is out of scope for M2.1 — the seed is the only way templates
+  // enter the system, so we validate gridData up-front to avoid inserting
+  // malformed blobs that would fail when a user tried to clone them.
+  const templateGridData = {
+    rows: [
+      { passageLabel: 'Study #1', startMeasure: 1, endMeasure: 16, targetTempo: 120, steps: 5 },
+      { passageLabel: 'Study #2', startMeasure: 1, endMeasure: 24, targetTempo: 108, steps: 4 },
+      { passageLabel: 'Study #3', startMeasure: 1, endMeasure: 16, targetTempo: 132, steps: 6 },
+    ],
+  };
+  // Throws ValidationError if the blob is malformed — fail-fast at seed time.
+  validateGridData(templateGridData);
+
+  const template = await prisma.libraryTemplate.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000200' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000200',
+      title: 'Clarke Technical Studies (Selections)',
+      author: 'Herbert L. Clarke',
+      collection: 'Technical Studies for the Cornet',
+      description: 'A curated selection of Clarke Technical Studies for daily trumpet practice.',
+      instrumentTags: ['trumpet', 'cornet', 'brass'],
+      gridType: 'REPERTOIRE',
+      gridData: templateGridData,
+    },
+  });
+
+  console.log(`Seed template: ${template.id} (${template.title})`);
+
   await prisma.$disconnect();
 }
 

@@ -166,6 +166,27 @@ describe('Session API — Create', () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it('POST with non-string practiceGridId returns 400', async () => {
+    const res = await createSession(
+      makePostRequest({
+        sessionDate: '2026-04-01',
+        durationMinutes: 30,
+        practiceGridId: 42,
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('POST with empty JSON body returns 400', async () => {
+    const req = new NextRequest('http://localhost:3000/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not valid json',
+    });
+    const res = await createSession(req);
+    expect(res.status).toBe(400);
+  });
 });
 
 // ─── List ───────────────────────────────────────────────────────────────────
@@ -200,12 +221,32 @@ describe('Session API — List', () => {
   });
 
   it('GET sorts same-day sessions by createdAt desc', async () => {
-    await createSession(
-      makePostRequest({ sessionDate: '2026-04-01', durationMinutes: 10, notes: 'first' }),
-    );
-    await createSession(
-      makePostRequest({ sessionDate: '2026-04-01', durationMinutes: 20, notes: 'second' }),
-    );
+    // Insert directly via raw prisma with explicit, distinct createdAt values.
+    // Going through the controller's POST path would use the Prisma @default(now())
+    // clock, which at microsecond resolution can produce identical values for
+    // back-to-back inserts on a fast runner — flaky.
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'dev-placeholder@tessitura.local' },
+    });
+    await prisma.practiceSession.create({
+      data: {
+        userId: user.id,
+        sessionDate: new Date('2026-04-01T00:00:00.000Z'),
+        durationMinutes: 10,
+        notes: 'first',
+        createdAt: new Date('2026-04-01T10:00:00.000Z'),
+      },
+    });
+    await prisma.practiceSession.create({
+      data: {
+        userId: user.id,
+        sessionDate: new Date('2026-04-01T00:00:00.000Z'),
+        durationMinutes: 20,
+        notes: 'second',
+        createdAt: new Date('2026-04-01T10:00:01.000Z'),
+      },
+    });
+
     const res = await listSessions(makeListRequest());
     const body = await res.json();
     expect(body[0].notes).toBe('second');

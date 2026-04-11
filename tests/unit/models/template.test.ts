@@ -136,4 +136,16 @@ describe('validateGridData — passageLabel', () => {
       }),
     ).toThrow(ValidationError);
   });
+
+  it('rejects non-object rows (null entry)', () => {
+    expect(() =>
+      validateGridData({ rows: [null] } as unknown),
+    ).toThrow(/must be an object/);
+  });
+
+  it('rejects non-object rows (string entry)', () => {
+    expect(() =>
+      validateGridData({ rows: ['not an object'] } as unknown),
+    ).toThrow(/must be an object/);
+  });
 });
