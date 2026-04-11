@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/db';
 import { ValidationError } from '@/lib/errors';
-import { validateRowInput, type RowInput, type ValidatedRowInput } from '@/models/row';
+import {
+  validateRowInput,
+  generateCellPercentages,
+  type RowInput,
+  type ValidatedRowInput,
+} from '@/models/row';
 
 /**
  * Shape of a LibraryTemplate's `gridData` JSON blob.
@@ -116,5 +121,80 @@ export async function listTemplates(instrument?: string | null) {
 export async function getTemplateById(templateId: string) {
   return prisma.libraryTemplate.findFirst({
     where: { id: templateId, active: true, deletedAt: null },
+  });
+}
+
+/**
+ * Clones a LibraryTemplate into a new PracticeGrid owned by the given user.
+ *
+ * The clone is fully transactional — if any row or cell insert fails, the
+ * entire operation rolls back (no partial grid left behind). `gridData` is
+ * validated BEFORE entering the transaction so a 400 failure doesn't even
+ * start a DB transaction.
+ *
+ * Returns:
+ * - the ID of the created grid on success
+ * - `'not-found'` if the template doesn't exist or is inactive
+ * - throws ValidationError for malformed gridData (controller → 400)
+ *
+ * A string literal is used for the "not found" branch instead of null so
+ * the caller can distinguish between "template missing" and "clone failed"
+ * without sentinel arguments.
+ *
+ * Row structure:
+ * - Each gridData row → one PracticeRow with sortOrder = array index
+ * - pieceId is always null (template rows don't link to user pieces)
+ * - passageLabel carries through if present
+ * - Cells generated via generateCellPercentages (same formula as direct
+ *   row creation) so clones behave identically to manual rows
+ */
+export async function cloneTemplate(
+  templateId: string,
+  userId: string,
+): Promise<string | 'not-found'> {
+  const template = await prisma.libraryTemplate.findFirst({
+    where: { id: templateId, active: true, deletedAt: null },
+  });
+  if (!template) return 'not-found';
+
+  const validated = validateGridData(template.gridData);
+
+  return prisma.$transaction(async (tx) => {
+    const grid = await tx.practiceGrid.create({
+      data: {
+        userId,
+        name: template.title,
+        gridType: template.gridType,
+        sourceTemplateId: template.id,
+        fadeEnabled: true,
+      },
+    });
+
+    for (let sortOrder = 0; sortOrder < validated.rows.length; sortOrder++) {
+      const rowData = validated.rows[sortOrder];
+      const row = await tx.practiceRow.create({
+        data: {
+          practiceGridId: grid.id,
+          sortOrder,
+          startMeasure: rowData.startMeasure,
+          endMeasure: rowData.endMeasure,
+          targetTempo: rowData.targetTempo,
+          steps: rowData.steps,
+          passageLabel: rowData.passageLabel,
+          // pieceId intentionally omitted — template rows have no user-piece link
+        },
+      });
+
+      const percentages = generateCellPercentages(rowData.steps);
+      await tx.practiceCell.createMany({
+        data: percentages.map((pct, i) => ({
+          practiceRowId: row.id,
+          stepNumber: i,
+          targetTempoPercentage: pct,
+        })),
+      });
+    }
+
+    return grid.id;
   });
 }
