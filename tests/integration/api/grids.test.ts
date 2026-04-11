@@ -11,6 +11,7 @@ import {
   listGrids,
   getGrid,
   deleteGrid,
+  updateGrid,
 } from '@/controllers/grid';
 import { completeCell } from '@/controllers/cell';
 
@@ -846,5 +847,270 @@ describe('Grid API — Detail Freshness Fields', () => {
     expect(afterCell.freshnessState).toBe('fresh');
     expect(afterCell.lastCompletionDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(typeof afterCell.isShielded).toBe('boolean');
+  });
+});
+
+// ─── M2.1: Update Grid + Archived Filter + New Fields ────────────────────────
+
+function makeUpdateRequest(gridId: string, body: unknown): NextRequest {
+  return new NextRequest(`http://localhost:3000/api/grids/${gridId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+describe('Grid API — New Response Fields (gridType, archived, sourceTemplateId)', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  it('grid create response includes gridType, archived, sourceTemplateId', async () => {
+    const res = await createGrid(makeRequest({ name: 'New Grid' }));
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.gridType).toBe('REPERTOIRE');
+    expect(body.archived).toBe(false);
+    expect(body.sourceTemplateId).toBeNull();
+  });
+
+  it('grid detail response includes gridType, archived, sourceTemplateId', async () => {
+    const create = await createGrid(makeRequest({ name: 'Detail Grid' }));
+    const created = await create.json();
+
+    const res = await getGrid(created.id);
+    const body = await res.json();
+    expect(body.gridType).toBe('REPERTOIRE');
+    expect(body.archived).toBe(false);
+    expect(body.sourceTemplateId).toBeNull();
+  });
+
+  it('grid list response includes gridType, archived, sourceTemplateId', async () => {
+    await createGrid(makeRequest({ name: 'List Grid' }));
+    const res = await listGrids(makeListRequest());
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].gridType).toBe('REPERTOIRE');
+    expect(body[0].archived).toBe(false);
+    expect(body[0].sourceTemplateId).toBeNull();
+  });
+});
+
+describe('Grid API — Update (PUT)', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  async function createdGridId(): Promise<string> {
+    const res = await createGrid(makeRequest({ name: 'Original' }));
+    const body = await res.json();
+    return body.id;
+  }
+
+  it('PUT updates name', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { name: 'Renamed' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.name).toBe('Renamed');
+  });
+
+  it('PUT updates notes', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { notes: 'New notes' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.notes).toBe('New notes');
+  });
+
+  it('PUT updates notes to null', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { notes: null }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.notes).toBeNull();
+  });
+
+  it('PUT updates gridType to TECHNIQUE', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { gridType: 'TECHNIQUE' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.gridType).toBe('TECHNIQUE');
+  });
+
+  it('PUT rejects invalid gridType', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { gridType: 'INVALID' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT updates archived to true', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { archived: true }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.archived).toBe(true);
+  });
+
+  it('PUT updates fadeEnabled', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { fadeEnabled: false }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.fadeEnabled).toBe(false);
+  });
+
+  it('PUT updates multiple fields atomically', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(
+      id,
+      makeUpdateRequest(id, { name: 'Multi', notes: 'x', archived: true, gridType: 'TECHNIQUE' }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.name).toBe('Multi');
+    expect(body.notes).toBe('x');
+    expect(body.archived).toBe(true);
+    expect(body.gridType).toBe('TECHNIQUE');
+  });
+
+  it('PUT rejects empty name', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { name: '' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('PUT rejects whitespace-only name', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(id, makeUpdateRequest(id, { name: '   ' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT rejects sourceTemplateId in body (immutable)', async () => {
+    const id = await createdGridId();
+    const res = await updateGrid(
+      id,
+      makeUpdateRequest(id, { sourceTemplateId: '00000000-0000-0000-0000-000000000001' }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe('VALIDATION_ERROR');
+    expect(body.error.message.toLowerCase()).toContain('sourcetemplateid');
+  });
+
+  it('PUT returns 404 for non-existent grid', async () => {
+    const res = await updateGrid(
+      '00000000-0000-0000-0000-999999999999',
+      makeUpdateRequest('00000000-0000-0000-0000-999999999999', { name: 'x' }),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('PUT returns 400 for malformed UUID', async () => {
+    const res = await updateGrid('bad-uuid', makeUpdateRequest('bad-uuid', { name: 'x' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT enforces ownership (404 for other-user grids)', async () => {
+    const otherUser = await createOtherUser();
+    const otherGrid = await prisma.practiceGrid.create({
+      data: { userId: otherUser.id, name: 'Theirs' },
+    });
+    const res = await updateGrid(otherGrid.id, makeUpdateRequest(otherGrid.id, { name: 'x' }));
+    expect(res.status).toBe(404);
+  });
+
+  it('PUT returns 401 when unauthenticated', async () => {
+    // Delete seed user to trigger auth failure
+    await prisma.user.deleteMany({ where: { email: 'dev-placeholder@tessitura.local' } });
+    const res = await updateGrid(
+      '00000000-0000-0000-0000-000000000000',
+      makeUpdateRequest('00000000-0000-0000-0000-000000000000', { name: 'x' }),
+    );
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('Grid API — Archived Filter', () => {
+  beforeEach(async () => {
+    await createSeedUser();
+  });
+
+  async function createWithArchived(name: string, archived: boolean): Promise<string> {
+    const res = await createGrid(makeRequest({ name }));
+    const body = await res.json();
+    if (archived) {
+      await updateGrid(body.id, makeUpdateRequest(body.id, { archived: true }));
+    }
+    return body.id;
+  }
+
+  it('GET /api/grids excludes archived by default', async () => {
+    await createWithArchived('Active 1', false);
+    await createWithArchived('Archived 1', true);
+
+    const res = await listGrids(makeListRequest());
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].name).toBe('Active 1');
+  });
+
+  it('GET /api/grids?archived=false returns active only (explicit)', async () => {
+    await createWithArchived('Active 1', false);
+    await createWithArchived('Archived 1', true);
+
+    const res = await listGrids(makeListRequest({ archived: 'false' }));
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].name).toBe('Active 1');
+  });
+
+  it('GET /api/grids?archived=true returns archived only', async () => {
+    await createWithArchived('Active 1', false);
+    await createWithArchived('Archived 1', true);
+    await createWithArchived('Archived 2', true);
+
+    const res = await listGrids(makeListRequest({ archived: 'true' }));
+    const body = await res.json();
+    expect(body).toHaveLength(2);
+    expect(body.every((g: { archived: boolean }) => g.archived === true)).toBe(true);
+  });
+
+  it('GET /api/grids?archived=all returns both', async () => {
+    await createWithArchived('Active 1', false);
+    await createWithArchived('Archived 1', true);
+
+    const res = await listGrids(makeListRequest({ archived: 'all' }));
+    const body = await res.json();
+    expect(body).toHaveLength(2);
+  });
+
+  it('GET /api/grids?detail=true&archived=true composes both filters', async () => {
+    await createWithArchived('Active 1', false);
+    await createWithArchived('Archived 1', true);
+
+    const res = await listGrids(makeListRequest({ detail: 'true', archived: 'true' }));
+    const body = await res.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].name).toBe('Archived 1');
+    expect(body[0].archived).toBe(true);
+    // Detail-view fields are present
+    expect(body[0]).toHaveProperty('completionPercentage');
+    expect(body[0]).toHaveProperty('freshnessSummary');
+  });
+
+  it('GET /api/grids/{id} still returns archived grids by direct access', async () => {
+    const id = await createWithArchived('Archived Direct', true);
+
+    const res = await getGrid(id);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.archived).toBe(true);
+    expect(body.name).toBe('Archived Direct');
   });
 });
