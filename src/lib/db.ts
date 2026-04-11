@@ -15,6 +15,8 @@ function createExtendedClient() {
   const SOFT_DELETE_MODELS = new Set([
     'User', 'PracticeGrid', 'PracticeRow', 'PracticeCell',
     'PracticeCellCompletion', 'Piece',
+    // V2 additions (M2.1):
+    'PracticeSession', 'PracticeGoal', 'LibraryTemplate',
   ]);
 
   return base.$extends({

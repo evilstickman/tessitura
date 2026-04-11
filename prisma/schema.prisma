@@ -16,6 +16,28 @@ enum Priority {
   LOW
 }
 
+enum GridType {
+  REPERTOIRE
+  TECHNIQUE
+}
+
+enum SessionSource {
+  MANUAL
+  INFERRED
+}
+
+enum GoalType {
+  DAILY_MINUTES
+  WEEKLY_MINUTES
+  WEEKLY_SESSIONS
+  MONTHLY_GRIDS
+}
+
+enum TierRequired {
+  FREE
+  PRO
+}
+
 // ── Models ─────────────────────────────────────────────────────────
 
 model User {
@@ -32,26 +54,35 @@ model User {
   updatedAt              DateTime               @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt              DateTime?              @map("deleted_at") @db.Timestamptz
 
-  practiceGrids PracticeGrid[]
-  pieces        Piece[]
-  accounts      Account[]
+  practiceGrids    PracticeGrid[]
+  pieces           Piece[]
+  accounts         Account[]
+  practiceSessions PracticeSession[]
+  practiceGoals    PracticeGoal[]
 
   @@map("users")
 }
 
 model PracticeGrid {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  name        String
-  notes       String?
-  fadeEnabled Boolean   @default(true) @map("fade_enabled")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+  id               String            @id @default(uuid()) @db.Uuid
+  userId           String            @map("user_id") @db.Uuid
+  name             String
+  notes            String?
+  fadeEnabled       Boolean           @default(true) @map("fade_enabled")
+  gridType         GridType          @default(REPERTOIRE) @map("grid_type")
+  archived         Boolean           @default(false)
+  sourceTemplateId String?           @map("source_template_id") @db.Uuid
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime?         @map("deleted_at") @db.Timestamptz
 
-  user         User          @relation(fields: [userId], references: [id])
-  practiceRows PracticeRow[]
+  user             User              @relation(fields: [userId], references: [id])
+  practiceRows     PracticeRow[]
+  sourceTemplate   LibraryTemplate?  @relation(fields: [sourceTemplateId], references: [id])
+  practiceSessions PracticeSession[]
 
+  @@index([userId, archived])
+  @@index([sourceTemplateId])
   @@map("practice_grids")
 }
 
@@ -150,4 +181,58 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model PracticeSession {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  practiceGridId  String?       @map("practice_grid_id") @db.Uuid
+  sessionDate     DateTime      @map("session_date") @db.Date
+  durationMinutes Int           @map("duration_minutes")
+  notes           String?
+  source          SessionSource @default(MANUAL)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz
+
+  user         User          @relation(fields: [userId], references: [id])
+  practiceGrid PracticeGrid? @relation(fields: [practiceGridId], references: [id])
+
+  @@index([userId, sessionDate])
+  @@map("practice_sessions")
+}
+
+model PracticeGoal {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  goalType    GoalType  @map("goal_type")
+  targetValue Int       @map("target_value")
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("practice_goals")
+}
+
+model LibraryTemplate {
+  id             String       @id @default(uuid()) @db.Uuid
+  title          String
+  author         String
+  collection     String
+  description    String?
+  instrumentTags String[]     @default([]) @map("instrument_tags")
+  gridType       GridType     @default(REPERTOIRE) @map("grid_type")
+  tierRequired   TierRequired @default(FREE) @map("tier_required")
+  gridData       Json         @map("grid_data")
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz
+
+  clonedGrids PracticeGrid[]
+
+  @@map("library_templates")
 }
