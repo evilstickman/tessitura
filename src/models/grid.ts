@@ -12,6 +12,33 @@ export interface ValidatedGridInput {
 }
 
 /**
+ * Fields accepted by `updateGrid`. `sourceTemplateId` is deliberately absent —
+ * it is set once during clone and is immutable afterward. The controller
+ * rejects it at the HTTP boundary; the model's type guarantees it can't leak
+ * through via Object.assign-style spreading.
+ */
+export interface GridUpdateInput {
+  name?: string;
+  notes?: string | null;
+  gridType?: string;
+  archived?: boolean;
+  fadeEnabled?: boolean;
+}
+
+/**
+ * Possible values for the `archived` list-filter:
+ * - 'false' (default): only non-archived grids
+ * - 'true': only archived grids
+ * - 'all': both
+ */
+export type ArchivedFilter = 'true' | 'false' | 'all';
+
+function archivedWhere(filter: ArchivedFilter): { archived?: boolean } {
+  if (filter === 'all') return {};
+  return { archived: filter === 'true' };
+}
+
+/**
  * Validates and normalizes grid input.
  * Pure function — no database access.
  */
@@ -55,10 +82,13 @@ export async function createGrid(userId: string, input: GridInput) {
 
 /**
  * Lists all grids for a user, sorted by updatedAt descending.
+ * The `archived` filter defaults to 'false' (active grids only) to match
+ * the API spec — archived grids are hidden from list views by default and
+ * only surface with ?archived=true or ?archived=all.
  */
-export async function listGrids(userId: string) {
+export async function listGrids(userId: string, archived: ArchivedFilter = 'false') {
   return prisma.practiceGrid.findMany({
-    where: { userId, deletedAt: null },
+    where: { userId, deletedAt: null, ...archivedWhere(archived) },
     orderBy: { updatedAt: 'desc' },
   });
 }
@@ -123,19 +153,65 @@ export async function getGridById(gridId: string, userId: string) {
 }
 
 /**
- * Updates the fadeEnabled flag on a grid.
- * Returns the full grid detail (via getGridById), or null if not found/not owned.
+ * Updates one or more fields on a grid. Returns the full grid detail (via
+ * getGridById), or null if not found/not owned. Throws ValidationError if
+ * any input field is invalid.
+ *
+ * `sourceTemplateId` cannot be changed — it is set once during clone and
+ * must not leak through update paths. The controller layer also rejects it
+ * at the HTTP boundary so the user gets a clear 400 with an explicit
+ * message rather than a silently ignored field.
+ *
+ * `name` re-uses validateGridInput so the same trim / length / empty-string
+ * rules apply to updates as to creates.
+ *
+ * `notes` is independently updatable: null or empty string normalizes to
+ * null; whitespace is trimmed; max 2000 chars enforced.
  */
-export async function updateGridFade(gridId: string, userId: string, fadeEnabled: boolean) {
+export async function updateGrid(gridId: string, userId: string, input: GridUpdateInput) {
   const grid = await findOwnedGrid(gridId, userId);
   if (!grid) return null;
 
-  await prisma.practiceGrid.update({
-    where: { id: gridId },
-    data: { fadeEnabled },
-  });
+  const data: Record<string, unknown> = {};
 
+  if (input.name !== undefined) {
+    // validateGridInput requires name; pass through current notes if no notes update
+    const currentNotes = input.notes !== undefined ? input.notes : grid.notes;
+    const validated = validateGridInput({ name: input.name, notes: currentNotes });
+    data.name = validated.name;
+    if (input.notes !== undefined) data.notes = validated.notes;
+  } else if (input.notes !== undefined) {
+    const trimmed = input.notes?.trim() ?? null;
+    const normalized = trimmed === '' ? null : trimmed;
+    if (normalized && normalized.length > 2000) {
+      throw new ValidationError('Grid notes must be 2000 characters or less');
+    }
+    data.notes = normalized;
+  }
+
+  if (input.gridType !== undefined) {
+    if (input.gridType !== 'REPERTOIRE' && input.gridType !== 'TECHNIQUE') {
+      throw new ValidationError('gridType must be REPERTOIRE or TECHNIQUE');
+    }
+    data.gridType = input.gridType;
+  }
+
+  if (input.archived !== undefined) data.archived = input.archived;
+  if (input.fadeEnabled !== undefined) data.fadeEnabled = input.fadeEnabled;
+
+  if (Object.keys(data).length === 0) return getGridById(gridId, userId);
+
+  await prisma.practiceGrid.update({ where: { id: gridId }, data });
   return getGridById(gridId, userId);
+}
+
+/**
+ * Thin wrapper retained for the legacy /api/grids/{id}/fade endpoint.
+ * All grid updates funnel through `updateGrid` — there is a single code
+ * path for all grid field mutations.
+ */
+export async function updateGridFade(gridId: string, userId: string, fadeEnabled: boolean) {
+  return updateGrid(gridId, userId, { fadeEnabled });
 }
 
 /**
@@ -190,6 +266,7 @@ export async function deleteGrid(gridId: string, userId: string, now: Date): Pro
 /**
  * Lists all grids for a user with full nested data (rows, cells, completions).
  * Same includes as getGridById but for all grids at once in a single query.
+ * Same archived filter semantics as listGrids.
  *
  * Soft-delete visibility rules:
  * - Grids: hidden when soft-deleted (filtered out)
@@ -198,9 +275,9 @@ export async function deleteGrid(gridId: string, userId: string, now: Date): Pro
  * - Completions: hidden when soft-deleted (filtered out)
  * - Piece: ALWAYS shown, even if the piece itself is soft-deleted.
  */
-export async function listGridsWithDetail(userId: string) {
+export async function listGridsWithDetail(userId: string, archived: ArchivedFilter = 'false') {
   return prisma.practiceGrid.findMany({
-    where: { userId, deletedAt: null },
+    where: { userId, deletedAt: null, ...archivedWhere(archived) },
     orderBy: { updatedAt: 'desc' },
     include: GRID_DETAIL_INCLUDE,
   });

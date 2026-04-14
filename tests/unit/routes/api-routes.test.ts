@@ -15,7 +15,29 @@ vi.mock('@/controllers/grid', () => ({
   listGrids: vi.fn(() => NextResponse.json({ mock: 'listGrids' })),
   getGrid: vi.fn(() => NextResponse.json({ mock: 'getGrid' })),
   deleteGrid: vi.fn(() => new NextResponse(null, { status: 204 })),
+  updateGrid: vi.fn(() => NextResponse.json({ mock: 'updateGrid' })),
   updateFade: vi.fn(() => NextResponse.json({ mock: 'updateFade' })),
+}));
+
+vi.mock('@/controllers/session', () => ({
+  createSession: vi.fn(() => NextResponse.json({ mock: 'createSession' }, { status: 201 })),
+  listSessions: vi.fn(() => NextResponse.json({ mock: 'listSessions' })),
+  getSession: vi.fn(() => NextResponse.json({ mock: 'getSession' })),
+  deleteSession: vi.fn(() => new NextResponse(null, { status: 204 })),
+}));
+
+vi.mock('@/controllers/goal', () => ({
+  createGoal: vi.fn(() => NextResponse.json({ mock: 'createGoal' }, { status: 201 })),
+  listGoals: vi.fn(() => NextResponse.json({ mock: 'listGoals' })),
+  getGoal: vi.fn(() => NextResponse.json({ mock: 'getGoal' })),
+  updateGoal: vi.fn(() => NextResponse.json({ mock: 'updateGoal' })),
+  deleteGoal: vi.fn(() => new NextResponse(null, { status: 204 })),
+}));
+
+vi.mock('@/controllers/template', () => ({
+  listTemplates: vi.fn(() => NextResponse.json({ mock: 'listTemplates' })),
+  getTemplate: vi.fn(() => NextResponse.json({ mock: 'getTemplate' })),
+  cloneTemplate: vi.fn(() => NextResponse.json({ mock: 'cloneTemplate' }, { status: 201 })),
 }));
 
 vi.mock('@/controllers/cell', () => ({
@@ -86,6 +108,16 @@ describe('Grid routes — /api/grids/[id]', () => {
     expect(getGrid).toHaveBeenCalledWith('test-grid-id');
   });
 
+  it('PUT extracts id and delegates to updateGrid', async () => {
+    const { PUT } = await import('@/app/api/grids/[id]/route');
+    const { updateGrid } = await import('@/controllers/grid');
+    const req = makeRequest('PUT');
+    const params = makeParams({ id: 'test-grid-id' });
+
+    await PUT(req, params);
+    expect(updateGrid).toHaveBeenCalledWith('test-grid-id', req);
+  });
+
   it('DELETE extracts id and delegates to deleteGrid', async () => {
     const { DELETE } = await import('@/app/api/grids/[id]/route');
     const { deleteGrid } = await import('@/controllers/grid');
@@ -94,6 +126,129 @@ describe('Grid routes — /api/grids/[id]', () => {
 
     await DELETE(req, params);
     expect(deleteGrid).toHaveBeenCalledWith('test-grid-id');
+  });
+});
+
+// ─── Session routes ──────────────────────────────────────────────────────────
+
+describe('Session routes — /api/sessions', () => {
+  it('POST delegates to createSession', async () => {
+    const { POST } = await import('@/app/api/sessions/route');
+    const { createSession } = await import('@/controllers/session');
+    const req = makeRequest('POST');
+    await POST(req);
+    expect(createSession).toHaveBeenCalledWith(req);
+  });
+
+  it('GET delegates to listSessions', async () => {
+    const { GET } = await import('@/app/api/sessions/route');
+    const { listSessions } = await import('@/controllers/session');
+    const req = makeRequest('GET');
+    await GET(req);
+    expect(listSessions).toHaveBeenCalledWith(req);
+  });
+});
+
+describe('Session routes — /api/sessions/[id]', () => {
+  it('GET extracts id and delegates to getSession', async () => {
+    const { GET } = await import('@/app/api/sessions/[id]/route');
+    const { getSession } = await import('@/controllers/session');
+    const req = makeRequest();
+    const params = makeParams({ id: 'session-1' });
+    await GET(req, params);
+    expect(getSession).toHaveBeenCalledWith('session-1');
+  });
+
+  it('DELETE extracts id and delegates to deleteSession', async () => {
+    const { DELETE } = await import('@/app/api/sessions/[id]/route');
+    const { deleteSession } = await import('@/controllers/session');
+    const req = makeRequest('DELETE');
+    const params = makeParams({ id: 'session-1' });
+    await DELETE(req, params);
+    expect(deleteSession).toHaveBeenCalledWith('session-1');
+  });
+});
+
+// ─── Goal routes ─────────────────────────────────────────────────────────────
+
+describe('Goal routes — /api/goals', () => {
+  it('POST delegates to createGoal', async () => {
+    const { POST } = await import('@/app/api/goals/route');
+    const { createGoal } = await import('@/controllers/goal');
+    const req = makeRequest('POST');
+    await POST(req);
+    expect(createGoal).toHaveBeenCalledWith(req);
+  });
+
+  it('GET delegates to listGoals', async () => {
+    const { GET } = await import('@/app/api/goals/route');
+    const { listGoals } = await import('@/controllers/goal');
+    const req = makeRequest('GET');
+    await GET(req);
+    expect(listGoals).toHaveBeenCalledWith(req);
+  });
+});
+
+describe('Goal routes — /api/goals/[id]', () => {
+  it('GET extracts id and delegates to getGoal', async () => {
+    const { GET } = await import('@/app/api/goals/[id]/route');
+    const { getGoal } = await import('@/controllers/goal');
+    const req = makeRequest();
+    const params = makeParams({ id: 'goal-1' });
+    await GET(req, params);
+    expect(getGoal).toHaveBeenCalledWith('goal-1');
+  });
+
+  it('PUT extracts id and delegates to updateGoal', async () => {
+    const { PUT } = await import('@/app/api/goals/[id]/route');
+    const { updateGoal } = await import('@/controllers/goal');
+    const req = makeRequest('PUT');
+    const params = makeParams({ id: 'goal-1' });
+    await PUT(req, params);
+    expect(updateGoal).toHaveBeenCalledWith('goal-1', req);
+  });
+
+  it('DELETE extracts id and delegates to deleteGoal', async () => {
+    const { DELETE } = await import('@/app/api/goals/[id]/route');
+    const { deleteGoal } = await import('@/controllers/goal');
+    const req = makeRequest('DELETE');
+    const params = makeParams({ id: 'goal-1' });
+    await DELETE(req, params);
+    expect(deleteGoal).toHaveBeenCalledWith('goal-1');
+  });
+});
+
+// ─── Template routes ─────────────────────────────────────────────────────────
+
+describe('Template routes — /api/templates', () => {
+  it('GET delegates to listTemplates', async () => {
+    const { GET } = await import('@/app/api/templates/route');
+    const { listTemplates } = await import('@/controllers/template');
+    const req = makeRequest('GET');
+    await GET(req);
+    expect(listTemplates).toHaveBeenCalledWith(req);
+  });
+});
+
+describe('Template routes — /api/templates/[id]', () => {
+  it('GET extracts id and delegates to getTemplate', async () => {
+    const { GET } = await import('@/app/api/templates/[id]/route');
+    const { getTemplate } = await import('@/controllers/template');
+    const req = makeRequest();
+    const params = makeParams({ id: 'template-1' });
+    await GET(req, params);
+    expect(getTemplate).toHaveBeenCalledWith('template-1');
+  });
+});
+
+describe('Template routes — /api/templates/[id]/clone', () => {
+  it('POST extracts id and delegates to cloneTemplate', async () => {
+    const { POST } = await import('@/app/api/templates/[id]/clone/route');
+    const { cloneTemplate } = await import('@/controllers/template');
+    const req = makeRequest('POST');
+    const params = makeParams({ id: 'template-1' });
+    await POST(req, params);
+    expect(cloneTemplate).toHaveBeenCalledWith('template-1');
   });
 });
 

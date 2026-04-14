@@ -1,12 +1,12 @@
 import { type NextRequest } from 'next/server';
-import { getGrid, deleteGrid, updateGrid } from '@/controllers/grid';
+import { getGoal, updateGoal, deleteGoal } from '@/controllers/goal';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  return getGrid(id);
+  return getGoal(id);
 }
 
 export async function PUT(
@@ -14,7 +14,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  return updateGrid(id, request);
+  return updateGoal(id, request);
 }
 
 export async function DELETE(
@@ -22,5 +22,5 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  return deleteGrid(id);
+  return deleteGoal(id);
 }

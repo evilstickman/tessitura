@@ -7,6 +7,9 @@ const mockGrid = {
   name: 'Test Grid',
   notes: 'Some notes',
   fadeEnabled: true,
+  gridType: 'REPERTOIRE',
+  archived: false,
+  sourceTemplateId: null,
   createdAt: new Date('2026-03-15T10:00:00Z'),
   updatedAt: new Date('2026-03-15T12:00:00Z'),
   deletedAt: null,
@@ -78,6 +81,13 @@ describe('Grid view — formatGrid', () => {
     expect(result).toHaveProperty('updatedAt');
     expect(result).not.toHaveProperty('userId');
     expect(result).not.toHaveProperty('deletedAt');
+  });
+
+  it('includes gridType, archived, sourceTemplateId (M2.1)', () => {
+    const result = formatGrid(mockGrid);
+    expect(result.gridType).toBe('REPERTOIRE');
+    expect(result.archived).toBe(false);
+    expect(result.sourceTemplateId).toBeNull();
   });
 });
 

@@ -11,6 +11,9 @@ interface GridRecord {
   name: string;
   notes: string | null;
   fadeEnabled: boolean;
+  gridType: string;
+  archived: boolean;
+  sourceTemplateId: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -26,6 +29,9 @@ export function formatGrid(grid: GridRecord) {
     name: grid.name,
     notes: grid.notes,
     fadeEnabled: grid.fadeEnabled,
+    gridType: grid.gridType,
+    archived: grid.archived,
+    sourceTemplateId: grid.sourceTemplateId,
     createdAt: grid.createdAt.toISOString(),
     updatedAt: grid.updatedAt.toISOString(),
   };
